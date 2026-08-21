@@ -1,0 +1,19 @@
+node_modules
+.next
+out
+build
+.env
+.env.local
+.DS_Store
+*.log
+src/app/(payload)/admin/importMap.js
+media
+
+tsconfig.tsbuildinfo
+
+# Material bruto do cliente: fotos e videos de consulta, 474MB.
+# Fica de fora por tres motivos: nenhum codigo referencia esses arquivos, a
+# midia do site vive no Cloudinary, e sao imagens de consulta que nao podem ir
+# para repositorio publico sem autorizacao de paciente.
+public/fotos
+public/videos

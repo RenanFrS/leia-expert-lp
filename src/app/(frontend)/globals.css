@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    /* O Lenis assume a rolagem quando o JS carrega. */
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Lenis */
+  html.lenis,
+  html.lenis body {
+    height: auto;
+  }
+  .lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+  }
+  .lenis.lenis-stopped {
+    overflow: hidden;
+  }
+
+  body {
+    @apply bg-porcelana text-tinta font-sans antialiased;
+  }
+
+  ::selection {
+    @apply bg-caramelo/30;
+  }
+
+  /* Foco visivel em qualquer elemento interativo. */
+  :focus-visible {
+    @apply outline-none ring-2 ring-caramelo ring-offset-2 ring-offset-porcelana;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* Pula direto para o conteudo, para quem navega por teclado. */
+  .pular-navegacao {
+    @apply sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-cacau focus:px-4 focus:py-2 focus:text-porcelana;
+  }
+}
