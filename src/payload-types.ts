@@ -214,6 +214,31 @@ export interface Depoimento {
   nome: string;
   texto: string;
   nota: number;
+  /**
+   * Numero de avaliacoes que essa pessoa ja fez no Google, mostrado ao lado do nome.
+   */
+  avaliacoes?: number | null;
+  /**
+   * Marque se o perfil da pessoa no Google exibe o selo "Guia Local".
+   */
+  guiaLocal?: boolean | null;
+  /**
+   * Texto livre, copiado do Google, como "6 meses atras" ou "um ano atras". Nao e calculado a partir de uma data, porque o Google so mostra tempo relativo.
+   */
+  tempoTexto?: string | null;
+  /**
+   * Opcional. Sem foto, o card mostra um circulo colorido com a inicial do nome, igual ao proprio Google faz quando a pessoa nao tem foto.
+   */
+  foto?: (number | null) | Media;
+  /**
+   * Fotos de antes e depois que a pessoa anexou na avaliacao do Google. Opcional.
+   */
+  fotos?:
+    | {
+        arquivo: number | Media;
+        id?: string | null;
+      }[]
+    | null;
   tratamento?: (number | null) | Tratamento;
   publicado?: boolean | null;
   updatedAt: string;
@@ -430,6 +455,16 @@ export interface DepoimentosSelect<T extends boolean = true> {
   nome?: T;
   texto?: T;
   nota?: T;
+  avaliacoes?: T;
+  guiaLocal?: T;
+  tempoTexto?: T;
+  foto?: T;
+  fotos?:
+    | T
+    | {
+        arquivo?: T;
+        id?: T;
+      };
   tratamento?: T;
   publicado?: T;
   updatedAt?: T;

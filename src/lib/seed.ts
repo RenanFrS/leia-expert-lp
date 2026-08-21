@@ -12,15 +12,17 @@ import { MENSAGEM_WHATSAPP_PADRAO } from '@/lib/utils'
  *
  * Pode rodar quantas vezes precisar. O que ja existe e atualizado, nao duplicado.
  *
- * NAO PUBLIQUE SEM REVISAR. Quatro blocos aqui sao invencao para preencher tela e
+ * NAO PUBLIQUE SEM REVISAR. Tres blocos aqui sao invencao para preencher tela e
  * precisam de confirmacao do cliente antes de o site ir ao ar:
  *
  *   1. `metricas`  numeros de atendimento, anos de atuacao e nota do Google
  *   2. `unidades`  endereco e telefone, propositalmente obvios de falsos
- *   3. `depoimentos`  depoimento de paciente inventado nao pode ir ao ar, tanto
- *      pelo CDC quanto pelas regras de publicidade em saude
- *   4. `nomeProfissional` e `credencial`  formacao e registro sao afirmacao
+ *   3. `nomeProfissional` e `credencial`  formacao e registro sao afirmacao
  *      legal e precisam vir da propria profissional, nao daqui
+ *
+ * `depoimentos` nao entra nessa lista: sao seis avaliacoes reais e publicas do
+ * perfil da clinica no Google, transcritas com a acentuacao e a pontuacao de
+ * cada autora, incluindo os emojis originais.
  *
  * Nenhuma foto e criada aqui. Imagem de tratamento, retrato e os pares antes e
  * depois entram pelo painel.
@@ -171,47 +173,82 @@ const perguntas = [
 ]
 
 /**
- * ATENCAO: depoimento inventado. Serve so para ver o componente montado e
- * precisa ser trocado por depoimento real, com autorizacao, antes de publicar.
- * Mistura nomes de homem e de mulher de proposito, porque a clinica atende os dois.
+ * Avaliacoes reais do perfil da clinica no Google Business Profile, transcritas
+ * em 21/08/2026. O tempo relativo (tempoTexto) e o texto exato como aparecem no
+ * Google hoje: o Google so mostra tempo relativo, entao nao ha data real para
+ * gravar. Nenhuma foto de perfil ou anexada esta disponivel como arquivo ainda;
+ * os campos `foto` e `fotos` ficam vazios ate a clinica exportar os arquivos do
+ * Google Business Profile e subir pelo painel.
  */
 const depoimentos = [
   {
-    nome: 'Ana Paula M.',
+    nome: 'Sara Suzan',
     texto:
-      'Eu já tinha tentado de tudo por conta própria. Foi a primeira vez que alguém me explicou o que estava acontecendo antes de oferecer qualquer pacote.',
+      'Amei o cuidado e tratamento! Sempre muito atenciosas, dando uma atenção exclusiva para o meu cabelo. Cheguei com o cabelo destruído (ressecado, elástico, fino) e já na segunda sessão ele já estava com uma aparência de estar mais cheio, na última sessão deu para ver nitidamente a melhora dele em todos os aspectos. Somente a agradecer a Leia e equipe🎉🎉 Recomendo! Fotos de como ele chegou e com as 4 sessões de tratamento',
     nota: 5,
+    avaliacoes: 2,
+    guiaLocal: false,
+    tempoTexto: '6 meses atrás',
   },
   {
-    nome: 'Rodrigo S.',
+    nome: 'Ingrid Damasceno',
     texto:
-      'O exame mudou minha cabeça. Dá para acompanhar mês a mês a diferença de densidade com imagem e número, não no achismo de olhar no espelho.',
+      'Minha experiência com a leia foi ótima, uma profissional honesta que realmente vai identificar a raiz do seu problema e não como alguns que fiz orçamento que querem apenas roubar seu dinheiro, super indico!',
     nota: 5,
+    avaliacoes: 2,
+    guiaLocal: false,
+    tempoTexto: '2 meses atrás',
   },
   {
-    nome: 'Camila T.',
+    nome: 'Raquel R. dos Santos',
     texto:
-      'Minha risca só abria e ninguém levava a sério. Aqui mediram, mostraram na tela e montaram um protocolo que fez sentido para o meu caso.',
+      'Tá sendo maravilhoso,meu tratamento fora o cuidado que ela tem sempre mandando mensagem pra saber se está tendo alguma dificuldade super indico 🤝',
     nota: 5,
+    avaliacoes: 5,
+    guiaLocal: false,
+    tempoTexto: '3 meses atrás',
   },
   {
-    nome: 'Marcelo A.',
+    nome: 'Isabel Silva',
     texto:
-      'Cheguei achando que já era tarde. Fui honestamente informado do que dava e do que não dava para recuperar, e mesmo assim valeu muito a pena.',
+      'Excelente profissional! Atendimento impecável, super humana. O tratamento foi incrível, foram 3 meses com resultados incríveis. Me transformou em uma outra mulher. A Léia é uma profissional incrível em tudo. Se tivesse a opção de mais estrelas com certeza daria ❤️',
     nota: 5,
+    avaliacoes: 13,
+    guiaLocal: true,
+    tempoTexto: 'um ano atrás',
   },
   {
-    nome: 'Juliana R.',
+    nome: 'Franciene Ramos',
     texto:
-      'Tinha muita coceira e descamação. Melhorou depois que comecei o protocolo e parei os produtos que estavam piorando tudo sem eu saber.',
+      'Atendimento impecável. Muito profissional, tratamento proposto foi perfeito pra mim e diminuiu muito minha queda. Cada caso é um caso, mas a Léia explica muito bem e deixa claro todos os passos no tratamento. Indico de olhos fechados ❤️',
     nota: 5,
+    avaliacoes: 6,
+    guiaLocal: false,
+    tempoTexto: 'um ano atrás',
   },
   {
-    nome: 'Thiago B.',
+    nome: 'Ane K. Marketing',
     texto:
-      'Atendimento técnico e sem venda forçada. Saio de cada sessão sabendo exatamente qual é o próximo passo e o que esperar dele.',
-    nota: 4,
+      'Terapeuta capilar maravilhosa. Recuperou meus cabelinhos… me livrei de um "buraco" na cabeça. Recuperei a saude do meu couro cabeludo e dos fios. Explica tudo muito bem. E usa tecnologia de ponta. Nota mil',
+    nota: 5,
+    avaliacoes: 4,
+    guiaLocal: true,
+    tempoTexto: 'um ano atrás',
   },
+]
+
+/**
+ * Os seis depoimentos inventados usados como placeholder antes das avaliacoes
+ * reais do Google. Uma vez apagados aqui, a busca por nome nao acha mais nada e
+ * este bloco vira um no-op nas proximas execucoes do seed.
+ */
+const nomesPlaceholderAntigos = [
+  'Ana Paula M.',
+  'Rodrigo S.',
+  'Camila T.',
+  'Marcelo A.',
+  'Juliana R.',
+  'Thiago B.',
 ]
 
 export const popularConteudo = async (payload: Payload) => {
@@ -239,6 +276,11 @@ export const popularConteudo = async (payload: Payload) => {
     else await payload.create({ collection: 'faq', data })
   }
   registro.push(`${perguntas.length} perguntas gravadas`)
+
+  for (const nome of nomesPlaceholderAntigos) {
+    const id = await idExistente('depoimentos', { nome: { equals: nome } })
+    if (id) await payload.delete({ collection: 'depoimentos', id })
+  }
 
   for (const data of depoimentos) {
     const id = await idExistente('depoimentos', { nome: { equals: data.nome } })

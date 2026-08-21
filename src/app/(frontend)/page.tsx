@@ -26,7 +26,7 @@ export default async function Home() {
     payload.findGlobal({ slug: 'rastreamento', depth: 0 }),
     payload.find({ collection: 'tratamentos', limit: 8, depth: 1, sort: 'ordem' }),
     payload.find({ collection: 'resultados', limit: 6, depth: 1, where: { publicado: { equals: true } } }),
-    payload.find({ collection: 'depoimentos', limit: 6, depth: 0, where: { publicado: { equals: true } } }),
+    payload.find({ collection: 'depoimentos', limit: 6, depth: 1, where: { publicado: { equals: true } } }),
     payload.find({ collection: 'faq', limit: 12, depth: 0, sort: 'ordem' }),
   ])
 
