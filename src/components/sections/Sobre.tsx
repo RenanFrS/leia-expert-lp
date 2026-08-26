@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import { Revelar } from '@/components/Revelar'
 import { AnimatedContent } from '@/components/ui/animated-content'
-import { midia } from '@/lib/utils'
+import { enquadramento, midia } from '@/lib/utils'
 import type { Clinica } from '@/payload-types'
 
 type Props = {
@@ -38,6 +38,7 @@ export function Sobre({ rotulo, resumo, texto, foto, retrato, nomeProfissional, 
                 fill
                 sizes="(max-width: 1200px) 100vw, 1200px"
                 className="object-cover"
+                style={enquadramento(imagem)}
               />
             )}
           </figure>
@@ -62,6 +63,7 @@ export function Sobre({ rotulo, resumo, texto, foto, retrato, nomeProfissional, 
                       height={44}
                       sizes="44px"
                       className="h-11 w-11 rounded-full object-cover"
+                      style={enquadramento(avatar)}
                     />
                   )}
                   <figcaption>

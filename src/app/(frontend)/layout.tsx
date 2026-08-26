@@ -41,7 +41,7 @@ export async function generateMetadata(): Promise<Metadata> {
     payload.findGlobal({ slug: 'clinica', depth: 0 }).catch(() => null),
   ])
 
-  const titulo = seo?.titulo || 'Tricologia clinica e tratamento capilar | Leia Expert'
+  const titulo = seo?.titulo || 'Tricologia clinica e tratamento capilar | Léia Expert'
   const descricao =
     seo?.descricao ||
     'Clinica de tricologia com tricoscopia digital, diagnostico do couro cabeludo e protocolos para queda capilar e alopecia.'
@@ -49,14 +49,14 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     metadataBase: new URL(siteUrl),
-    title: { default: titulo, template: `%s | ${clinica?.nome || 'Leia Expert'}` },
+    title: { default: titulo, template: `%s | ${clinica?.nome || 'Léia Expert'}` },
     description: descricao,
     alternates: { canonical: '/' },
     openGraph: {
       type: 'website',
       locale: 'pt_BR',
       url: siteUrl,
-      siteName: clinica?.nome || 'Leia Expert',
+      siteName: clinica?.nome || 'Léia Expert',
       title: titulo,
       description: descricao,
       images: imagem ? [{ url: imagem, width: 1200, height: 630 }] : undefined,

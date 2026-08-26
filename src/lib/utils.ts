@@ -1,4 +1,5 @@
 import { clsx, type ClassValue } from 'clsx'
+import type { CSSProperties } from 'react'
 import type { Media } from '@/payload-types'
 import { twMerge } from 'tailwind-merge'
 
@@ -40,3 +41,32 @@ export const formatarWhatsapp = (numero: string) => {
  */
 export const midia = (valor?: (number | null) | Media): Media | null =>
   typeof valor === 'object' && valor !== null ? valor : null
+
+/**
+ * Traduz o ponto de foco escolhido no painel em `object-position`.
+ *
+ * Recortar apara o arquivo num retangulo fixo, mas a mesma foto cai em caixas de
+ * proporcoes diferentes no site, e o `object-cover` recorta de novo por cima. O
+ * foco e o que sobrevive a isso: ele diz qual ponto da foto precisa continuar
+ * visivel, seja no painel largo do hero ou num avatar redondo.
+ *
+ * O Payload grava `focalX` e `focalY` em porcentagem, a mesma unidade do
+ * `object-position`, entao nao ha conversao.
+ *
+ * Devolver `undefined` no centro e deliberado, e nao e so economia de bytes: o
+ * Payload ja grava `50` nos dois campos assim que o arquivo sobe, entao sem esse
+ * corte toda foto do site carregaria um `object-position: 50% 50%` inline, que e
+ * exatamente o valor inicial do CSS. O estilo so aparece no HTML quando alguem
+ * de fato arrastou o foco no painel.
+ */
+const CENTRO = 50
+
+export const enquadramento = (item?: Media | null): CSSProperties | undefined => {
+  if (!item) return undefined
+
+  const x = item.focalX ?? CENTRO
+  const y = item.focalY ?? CENTRO
+  if (x === CENTRO && y === CENTRO) return undefined
+
+  return { objectPosition: `${x}% ${y}%` }
+}

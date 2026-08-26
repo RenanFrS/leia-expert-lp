@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
-import { cn, midia } from '@/lib/utils'
+import { cn, enquadramento, midia } from '@/lib/utils'
+import { posterDeVideo } from '@/lib/poster-video'
 import type { Media } from '@/payload-types'
 
 type Entrada = { arquivo: (number | null) | Media; id?: string | null }
@@ -23,8 +24,13 @@ const ehVideo = (item: Media) => item.mimeType?.startsWith('video/') ?? false
  * Video do hero. Fica em componente proprio porque `autoplay` so vale no
  * carregamento: para respeitar quem pede menos movimento e preciso pausar
  * depois, pela referencia.
+ *
+ * O `poster` nao e detalhe. O `prioridade` do MidiaRotativa so tem efeito no
+ * ramo do `<Image>`, entao com video em primeiro o painel pintaria so a chapa de
+ * areia ate o primeiro quadro decodificar. O poster e um quadro do proprio
+ * arquivo, servido como imagem, e e ele que segura o lugar nesse intervalo.
  */
-function Video({ src, reduzido }: { src: string; reduzido: boolean }) {
+function Video({ src, poster, reduzido }: { src: string; poster?: string; reduzido: boolean }) {
   const ref = useRef<HTMLVideoElement>(null)
 
   useEffect(() => {
@@ -38,6 +44,7 @@ function Video({ src, reduzido }: { src: string; reduzido: boolean }) {
     <video
       ref={ref}
       src={src}
+      poster={poster}
       autoPlay
       muted
       loop
@@ -94,7 +101,7 @@ export function MidiaRotativa({ itens, intervalo, prioridade = false, sizes, cla
           )}
         >
           {ehVideo(item) ? (
-            <Video src={item.url!} reduzido={reduzido} />
+            <Video src={item.url!} poster={posterDeVideo(item.url) ?? undefined} reduzido={reduzido} />
           ) : (
             <Image
               src={item.url!}
@@ -103,6 +110,7 @@ export function MidiaRotativa({ itens, intervalo, prioridade = false, sizes, cla
               sizes={sizes}
               priority={prioridade && indice === 0}
               className="object-cover"
+              style={enquadramento(item)}
             />
           )}
         </div>

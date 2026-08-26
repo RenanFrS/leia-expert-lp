@@ -80,8 +80,8 @@ export function Footer({ nome, logo, whatsapp, email, instagram, horarios, unida
         </p>
         <p>
           Site por{' '}
-          <a href="https://renanfrs-portfolio.vercel.app" target="_blank" rel="noopener noreferrer" className="hover:text-cacau">
-            FrS
+          <a href="https://www.instagram.com/renanrocha.01/" target="_blank" rel="noopener noreferrer" className="hover:text-cacau">
+            Renan Rocha
           </a>
         </p>
       </div>

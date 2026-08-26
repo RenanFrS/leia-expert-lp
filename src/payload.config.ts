@@ -31,7 +31,7 @@ export default buildConfig({
   admin: {
     user: Users.slug,
     meta: {
-      titleSuffix: ' | Leia Expert',
+      titleSuffix: ' | Léia Expert',
     },
     components: {},
   },
@@ -52,7 +52,7 @@ export default buildConfig({
   email: process.env.SMTP_HOST
     ? nodemailerAdapter({
         defaultFromAddress: process.env.SMTP_FROM || 'nao-responda@leiaexpert.com.br',
-        defaultFromName: 'Site Leia Expert',
+        defaultFromName: 'Site Léia Expert',
         transportOptions: {
           host: process.env.SMTP_HOST,
           port: Number(process.env.SMTP_PORT || 587),
@@ -74,7 +74,7 @@ export default buildConfig({
     seoPlugin({
       collections: ['tratamentos'],
       uploadsCollection: 'media',
-      generateTitle: ({ doc }) => `${doc?.titulo} | Leia Expert`,
+      generateTitle: ({ doc }) => `${doc?.titulo} | Léia Expert`,
       generateDescription: ({ doc }) => doc?.resumo,
     }),
   ],

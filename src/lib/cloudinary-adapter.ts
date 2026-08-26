@@ -1,6 +1,8 @@
 import { v2 as cloudinary } from 'cloudinary'
 import type { Adapter, GeneratedAdapter } from '@payloadcms/plugin-cloud-storage/types'
 
+import { pastaDaBiblioteca, publicIdDe as toPublicId, tipoDoArquivo } from './cloudinary-url'
+
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -8,37 +10,10 @@ cloudinary.config({
   secure: true,
 })
 
-const folder = process.env.CLOUDINARY_FOLDER || 'leia-expert'
-
-/** O Cloudinary trabalha com public_id sem extensao. */
-const toPublicId = (filename: string) => `${folder}/${filename.replace(/\.[^.]+$/, '')}`
-
-type TipoCloudinary = 'image' | 'video' | 'raw'
-
-const EXTENSOES_DE_VIDEO = new Set(['mp4', 'webm', 'mov', 'm4v', 'ogv', 'avi', 'mkv'])
-
-/**
- * Decide o resource_type que entra na URL, porque o Cloudinary serve imagem em
- * /image/upload/ e video em /video/upload/, e o endereco errado devolve 404.
- *
- * O mimeType so existe no upload. Na leitura o Payload nao entrega o documento:
- * o `checkFileAccess` so vai ao banco quando o `read` da colecao devolve uma
- * condicao de busca, e a Media libera leitura para todo mundo com `() => true`.
- * Sobra a extensao do arquivo, e ela precisa bastar.
- *
- * O padrao e imagem, nao raw. A Media so aceita imagem e video, entao na duvida
- * imagem acerta quase sempre, enquanto raw erraria em todo arquivo do site.
- */
-const tipoDoArquivo = (filename: string, mimeType?: string): TipoCloudinary => {
-  if (mimeType) {
-    if (mimeType.startsWith('image/')) return 'image'
-    if (mimeType.startsWith('video/')) return 'video'
-    return 'raw'
-  }
-
-  const extensao = filename.split('.').pop()?.toLowerCase() ?? ''
-  return EXTENSOES_DE_VIDEO.has(extensao) ? 'video' : 'image'
-}
+// A convencao de public_id e de resource_type mora em `cloudinary-url.ts`,
+// porque o hero tambem precisa dela para apontar o video direto para a CDN, e
+// duas copias da mesma regra acabariam divergindo.
+const folder = pastaDaBiblioteca()
 
 export const cloudinaryAdapter = (): Adapter => {
   return (): GeneratedAdapter => ({
@@ -88,7 +63,16 @@ export const cloudinaryAdapter = (): Adapter => {
         secure: true,
         resource_type: tipoDoArquivo(filename),
       })
-      const upstream = await fetch(url)
+      // O endereco do arquivo nao muda quando o conteudo muda: recortar pelo painel
+      // sobe por cima do mesmo public_id. Por isso a busca nao pode ser cacheada
+      // aqui dentro.
+      //
+      // Isso **nao** resolve sozinho a foto recortada demorar a aparecer. Medindo o
+      // que esta rota recebe, ela pegou 5142 bytes da CDN enquanto a API do
+      // Cloudinary ja reportava 2382: quem segura o conteudo velho e o cache de
+      // borda do Cloudinary, e o `invalidate` do upload e uma purga assincrona que
+      // leva alguns minutos. Nao ha o que fazer deste lado, so esperar.
+      const upstream = await fetch(url, { cache: 'no-store' })
 
       if (!upstream.ok || !upstream.body) {
         return new Response('Arquivo nao encontrado', { status: 404 })
@@ -98,7 +82,12 @@ export const cloudinaryAdapter = (): Adapter => {
         status: 200,
         headers: {
           'Content-Type': upstream.headers.get('content-type') || 'application/octet-stream',
-          'Cache-Control': 'public, max-age=31536000, immutable',
+          // Nao pode ser `immutable`. O endereco e estavel mas o conteudo nao:
+          // recortar troca os bytes por baixo. Com um ano de cache, o navegador de
+          // quem ja tinha visto a foto nunca mais veria o recorte. O custo de
+          // revalidar e baixo porque o site publico e servido pelo `next/image`,
+          // que guarda o resultado ja otimizado sob a politica dele.
+          'Cache-Control': 'public, max-age=0, must-revalidate',
         },
       })
     },

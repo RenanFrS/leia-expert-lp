@@ -9,11 +9,13 @@ import { cn } from '@/lib/utils'
 import type { Clinica } from '@/payload-types'
 
 // O logotipo central ja leva para o topo, entao "Inicio" era link repetido e o
-// lugar dele ficou com o Sobre.
+// lugar dele ficou com as secoes. A ordem acompanha a da pagina, senao o
+// destaque automatico pula para tras conforme o visitante rola.
 const links = [
-  { href: '#sobre', label: 'Sobre' },
   { href: '#tratamentos', label: 'Tratamentos' },
   { href: '#resultados', label: 'Resultados' },
+  { href: '#depoimentos', label: 'Depoimentos' },
+  { href: '#sobre', label: 'Sobre' },
   { href: '#duvidas', label: 'Dúvidas' },
 ]
 
@@ -65,14 +67,20 @@ export function Header({ nome, logo }: Props) {
       )}
     >
       <div className="container grid grid-cols-[1fr_auto_1fr] items-center gap-4">
-        <nav className="hidden items-center gap-7 md:flex" aria-label="Navegação principal">
+        {/* A barra completa so abre no lg. Com cinco itens ela nao cabe no md:
+            a nav empurra o logotipo para fora do centro e ele encosta no CTA.
+            Ate o lg vale o menu recolhido, que e o mesmo do celular.
+            No proprio lg o respiro fica apertado pelo mesmo motivo: a coluna da
+            nav nao pode passar de metade da barra, senao o logotipo sai do
+            centro. Do xl em diante sobra largura e ele volta ao normal. */}
+        <nav className="hidden items-center gap-3 lg:flex xl:gap-7" aria-label="Navegação principal">
           {links.map((link) => (
             <a
               key={link.href}
               href={link.href}
               aria-current={ativo === link.href ? 'true' : undefined}
               className={cn(
-                'rounded-full px-3 py-1.5 text-sm transition-colors',
+                'rounded-full px-2 py-1.5 text-sm transition-colors xl:px-3',
                 ativo === link.href
                   ? 'bg-areia/70 text-cacau-escuro'
                   : 'text-tinta-suave hover:text-cacau',
@@ -83,19 +91,26 @@ export function Header({ nome, logo }: Props) {
           ))}
         </nav>
 
-        <a href="#topo" aria-label={`${nome}, ir para o topo`} className="justify-self-center">
+        {/* Coluna fixa. Sem isso, quando a nav some no display:none, o grid
+            reencaixa o logotipo na primeira coluna e ele sai do centro, com o
+            botao do menu ocupando o meio da barra. */}
+        <a
+          href="#topo"
+          aria-label={`${nome}, ir para o topo`}
+          className="col-start-2 justify-self-center"
+        >
           <Logotipo nome={nome} logo={logo} prioridade className="text-center" />
         </a>
 
-        <div className="flex items-center justify-end gap-2">
-          <Button asChild size="sm" especular className="hidden md:inline-flex">
+        <div className="col-start-3 flex items-center justify-end gap-2">
+          <Button asChild size="sm" especular className="hidden lg:inline-flex">
             <a href="#agendar" onClick={() => pushEvento('clique_agendar', { local: 'header' })}>
               Agendar avaliação
             </a>
           </Button>
           <button
             type="button"
-            className="rounded-md p-2 text-tinta transition-colors hover:bg-areia md:hidden"
+            className="rounded-md p-2 text-tinta transition-colors hover:bg-areia lg:hidden"
             onClick={() => setAberto((valor) => !valor)}
             aria-expanded={aberto}
             aria-label={aberto ? 'Fechar menu' : 'Abrir menu'}
@@ -107,7 +122,7 @@ export function Header({ nome, logo }: Props) {
 
       {aberto && (
         <nav
-          className="container mt-4 flex flex-col gap-1 border-t border-tinta/10 pt-4 md:hidden"
+          className="container mt-4 flex flex-col gap-1 border-t border-tinta/10 pt-4 lg:hidden"
           aria-label="Navegação principal"
         >
           {links.map((link) => (

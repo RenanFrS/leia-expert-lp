@@ -3,7 +3,7 @@ import type { Payload } from 'payload'
 import { MENSAGEM_WHATSAPP_PADRAO } from '@/lib/utils'
 
 /**
- * Conteudo inicial da Leia Expert, para ver as secoes montadas antes de existir
+ * Conteudo inicial da Léia Expert, para ver as secoes montadas antes de existir
  * conteudo real. Roda pela rota /api/dev/seed, com o pnpm dev no ar.
  *
  * Vive aqui e nao em scripts/ porque o config do Payload so carrega dentro do
@@ -12,112 +12,179 @@ import { MENSAGEM_WHATSAPP_PADRAO } from '@/lib/utils'
  *
  * Pode rodar quantas vezes precisar. O que ja existe e atualizado, nao duplicado.
  *
- * NAO PUBLIQUE SEM REVISAR. Tres blocos aqui sao invencao para preencher tela e
- * precisam de confirmacao do cliente antes de o site ir ao ar:
+ * O conteudo aqui e real. Servicos, texto do sobre mim, contato e endereco vem
+ * do site da propria Leia, `https://www.leiaexpert.com.br/`. As metricas vem do
+ * midia kit 2026 e do perfil da clinica no Google. Os `depoimentos` sao seis
+ * avaliacoes reais e publicas do Google, transcritas com a acentuacao e a
+ * pontuacao de cada autora, incluindo os emojis originais.
  *
- *   1. `metricas`  numeros de atendimento, anos de atuacao e nota do Google
- *   2. `unidades`  endereco e telefone, propositalmente obvios de falsos
- *   3. `nomeProfissional` e `credencial`  formacao e registro sao afirmacao
- *      legal e precisam vir da propria profissional, nao daqui
- *
- * `depoimentos` nao entra nessa lista: sao seis avaliacoes reais e publicas do
- * perfil da clinica no Google, transcritas com a acentuacao e a pontuacao de
- * cada autora, incluindo os emojis originais.
+ * NAO PUBLIQUE SEM REVISAR. Sobrou um bloco pendente: as `indicacoes` dos nove
+ * servicos que nao sao "Queda capilar" foram escritas aqui, a partir da
+ * descricao dela. Sao afirmacoes sobre saude e precisam do aval da profissional.
  *
  * Nenhuma foto e criada aqui. Imagem de tratamento, retrato e os pares antes e
  * depois entram pelo painel.
  */
 
 /**
- * A clinica atende homens e mulheres, e os padroes de queda sao diferentes entre
- * os dois. Por isso a lista cobre os dois lados de forma explicita, em vez de
- * falar so em "queda capilar". Os titulos tambem viram as pilulas do hero, entao
- * precisam ser curtos.
+ * Os dez servicos prestados pela clinica, transcritos do site da propria Leia.
+ * O `resumo` e o texto dela, literal. O `titulo` perde o prefixo "Tratamento
+ * para", que e redundante dentro da secao de tratamentos e nao caberia na
+ * pilula do hero, e ganha o acento que faltava em "Estimulo".
+ *
+ * A ordem leva diagnostico antes de tratamento e deixa os servicos de beleza no
+ * fim, que e a jornada que o texto dela descreve.
+ *
+ * O campo `descricao` nao e renderizado em lugar nenhum do site hoje. Fica com
+ * uma frase so, sem inventar conteudo clinico.
+ *
+ * PENDENTE DE REVISAO DA PROFISSIONAL: as `indicacoes` de Queda capilar saem
+ * literais do site, mas as dos outros nove foram escritas aqui a partir da
+ * descricao dela. Sao afirmacoes sobre saude e precisam do aval dela antes de o
+ * site ir ao ar.
  */
 const tratamentos = [
   {
     titulo: 'Queda capilar',
     slug: 'queda-capilar',
     resumo:
-      'Perda acima do ciclo normal, em homens e mulheres. A causa pode ser hormonal, nutricional, inflamatória ou emocional, e cada uma pede uma conduta diferente.',
+      'Eflúvio telógeno, eflúvio anágeno, alopecias, alopecia areata, alopecia traumática, alopecia metabólica e alopecia androgenética.',
     descricao:
-      'Todo mundo perde fio todo dia. O que muda é o quanto, por quanto tempo e se o fio que nasce no lugar volta com a mesma espessura. A avaliação separa a queda passageira, que se resolve sozinha, daquela que já está reduzindo a densidade e precisa de protocolo.',
+      'A queda tem mais de uma causa possível, e cada uma pede uma conduta diferente. A avaliação vem antes do protocolo.',
+    // Unicas indicacoes literais do site: e a lista de condicoes que ela mesma
+    // publica sob este servico.
     indicacoes: [
-      { texto: 'Fios a mais no travesseiro, no banho ou na escova' },
-      { texto: 'Queda que persiste por mais de três meses' },
-      { texto: 'Couro cabeludo aparecendo onde antes não aparecia' },
+      { texto: 'Eflúvio telógeno e eflúvio anágeno' },
+      { texto: 'Alopecia areata, traumática e metabólica' },
+      { texto: 'Alopecia androgenética' },
     ],
     ordem: 1,
   },
   {
-    titulo: 'Calvície masculina',
-    slug: 'calvicie-masculina',
+    titulo: 'Dermatoscopia e tricoscopia',
+    slug: 'dermatoscopia-tricoscopia',
     resumo:
-      'Alopecia androgenética masculina, com recuo das entradas e abertura da coroa. Quanto mais cedo começa o acompanhamento, mais fio dá para preservar.',
+      'Analisamos o couro cabeludo e os fios para identificar oleosidade, queda, obstruções e presença de fungos.',
     descricao:
-      'Segue um padrão previsível: as entradas se aprofundam, a coroa abre e as duas áreas se encontram. Como o processo é progressivo, o objetivo do tratamento é frear a miniaturização e recuperar o que ainda tem folículo vivo. Fio que já foi embora há anos não volta, e isso é dito na avaliação.',
+      'O exame de imagem que abre o atendimento e orienta qual protocolo faz sentido para cada caso.',
     indicacoes: [
-      { texto: 'Entradas mais fundas e linha frontal recuando' },
-      { texto: 'Coroa abrindo na parte de trás da cabeça' },
-      { texto: 'Histórico de calvície na família' },
+      { texto: 'Leitura do couro cabeludo e dos fios em aumento' },
+      { texto: 'Identificação de oleosidade, obstrução e fungos' },
+      { texto: 'Base para escolher o protocolo certo' },
     ],
     ordem: 2,
   },
   {
-    titulo: 'Rarefação feminina',
-    slug: 'rarefacao-feminina',
+    titulo: 'Exame biofísico',
+    slug: 'exame-biofisico',
     resumo:
-      'Alopecia androgenética feminina, que alarga a risca e tira volume sem abrir falhas circulares. Costuma aparecer após parto, menopausa ou mudança hormonal.',
+      'Identificamos as causas do desconforto capilar por meio de uma análise do seu organismo.',
     descricao:
-      'Na mulher a perda raramente forma área lisa. Ela se espalha pelo topo, alarga a risca e afina o rabo de cavalo, o que faz muita paciente demorar a procurar ajuda. A tricoscopia mostra a diferença de espessura entre fios vizinhos, que é o sinal mais confiável nesse caso.',
+      'Olha para além do couro cabeludo, porque parte das causas do desconforto capilar vem de dentro.',
     indicacoes: [
-      { texto: 'Risca do cabelo cada vez mais larga' },
-      { texto: 'Rabo de cavalo visivelmente mais fino' },
-      { texto: 'Perda de volume após gestação ou menopausa' },
+      { texto: 'Investigação das causas internas do desconforto' },
+      { texto: 'Análise do organismo, não apenas do fio' },
+      { texto: 'Complementa a leitura da tricoscopia' },
     ],
     ordem: 3,
   },
   {
-    titulo: 'Afinamento dos fios',
-    slug: 'afinamento-dos-fios',
+    titulo: 'Oxigenação celular e fungicida',
+    slug: 'oxigenacao-celular-fungicida',
     resumo:
-      'O fio continua nascendo, mas cada vez mais fino e mais curto, até deixar de cobrir. É o sinal mais precoce, e o melhor momento para intervir é justamente esse.',
+      'Trata coceira, vermelhidão, descamação, caspa associada a oleosidade excessiva e proliferação de fungos.',
     descricao:
-      'A miniaturização vem antes da falha visível. O folículo encurta o ciclo de crescimento e devolve um fio mais fino a cada volta, até virar penugem. Quem chega nessa fase costuma ter o melhor prognóstico, porque o folículo ainda está ativo.',
+      'Controlar a inflamação e o fungo vem antes de tratar a queda, porque couro cabeludo inflamado não sustenta fio novo.',
     indicacoes: [
-      { texto: 'Fios finos convivendo com fios grossos na mesma área' },
-      { texto: 'Cabelo que não passa de um certo comprimento' },
-      { texto: 'Couro cabeludo aparecendo sob luz forte' },
+      { texto: 'Coceira, vermelhidão e descamação' },
+      { texto: 'Caspa associada a oleosidade excessiva' },
+      { texto: 'Proliferação de fungos no couro cabeludo' },
     ],
     ordem: 4,
   },
   {
-    titulo: 'Caspa e dermatite',
-    slug: 'caspa-dermatite',
+    titulo: 'Estímulo de crescimento',
+    slug: 'estimulo-de-crescimento',
     resumo:
-      'Descamação, coceira e vermelhidão que inflamam o folículo e atrapalham o crescimento. Controlar a inflamação vem antes de tratar a queda.',
+      'Tratamentos que fortalecem os fios, equilibram o couro cabeludo e estimulam o crescimento saudável.',
     descricao:
-      'Couro cabeludo inflamado não sustenta fio saudável. Antes de qualquer protocolo de crescimento é preciso controlar a descamação e a oleosidade, senão o tratamento trabalha contra um terreno hostil e o resultado não se mantém.',
+      'Depois de tratar a causa, o passo seguinte é dar condição para o fio nascer e se manter.',
     indicacoes: [
-      { texto: 'Descamação branca ou amarelada que sempre volta' },
-      { texto: 'Coceira e ardência no couro cabeludo' },
-      { texto: 'Piora em períodos de estresse ou de calor' },
+      { texto: 'Fortalecimento dos fios existentes' },
+      { texto: 'Equilíbrio do couro cabeludo' },
+      { texto: 'Estímulo ao crescimento saudável' },
     ],
     ordem: 5,
   },
   {
-    titulo: 'Recuo da linha frontal',
-    slug: 'recuo-linha-frontal',
+    titulo: 'Microagulhamento capilar',
+    slug: 'microagulhamento-capilar',
     resumo:
-      'A linha do cabelo caminha para trás e expõe a testa. Em mulheres pode indicar alopecia frontal fibrosante, que exige diagnóstico rápido.',
+      'Promove a circulação sanguínea e a produção de colágeno, o que ajuda a combater a queda de cabelo e a estimular o crescimento de novos fios.',
     descricao:
-      'No homem o recuo costuma fazer parte do padrão androgenético. Na mulher, quando vem acompanhado de perda de sobrancelha e de pele mais clara e lisa na área, pode ser alopecia frontal fibrosante, que é cicatricial e não espera. Por isso o exame vem antes da indicação.',
+      'Trabalha a pele do couro cabeludo, que é o terreno onde o folículo está.',
     indicacoes: [
-      { texto: 'Testa parecendo maior do que nas fotos antigas' },
-      { texto: 'Perda de sobrancelha junto com o recuo' },
-      { texto: 'Pele mais clara e lisa na área que recuou' },
+      { texto: 'Aumento da circulação no couro cabeludo' },
+      { texto: 'Estímulo à produção de colágeno' },
+      { texto: 'Apoio no combate à queda' },
     ],
     ordem: 6,
+  },
+  {
+    titulo: 'Ionização capilar',
+    slug: 'ionizacao-capilar',
+    resumo:
+      'Além de favorecer a penetração de substâncias nutritivas, também estimula o couro cabeludo promovendo o aumento do metabolismo e melhora da atividade celular.',
+    descricao:
+      'Faz o ativo chegar onde precisa, em vez de ficar na superfície.',
+    indicacoes: [
+      { texto: 'Melhor penetração dos ativos nutritivos' },
+      { texto: 'Aumento do metabolismo do couro cabeludo' },
+      { texto: 'Melhora da atividade celular' },
+    ],
+    ordem: 7,
+  },
+  {
+    titulo: 'Massagem capilar',
+    slug: 'massagem-capilar',
+    resumo:
+      'Estimula a circulação sanguínea, saúde do couro cabeludo, aumenta a absorção de produtos capilares.',
+    descricao:
+      'Entra como apoio ao protocolo, somando circulação e absorção ao que já está em curso.',
+    indicacoes: [
+      { texto: 'Estímulo à circulação sanguínea' },
+      { texto: 'Saúde do couro cabeludo' },
+      { texto: 'Maior absorção dos produtos capilares' },
+    ],
+    ordem: 8,
+  },
+  {
+    titulo: 'Embelezamento capilar',
+    slug: 'embelezamento-capilar',
+    resumo:
+      'Hidratação, nutrição e reparação dos fios, proporcionando brilho, maciez e vitalidade.',
+    descricao:
+      'Cuida da aparência do fio que já existe, em paralelo ao tratamento do couro cabeludo.',
+    indicacoes: [
+      { texto: 'Hidratação e nutrição dos fios' },
+      { texto: 'Reparação de fios ressecados' },
+      { texto: 'Brilho, maciez e vitalidade' },
+    ],
+    ordem: 9,
+  },
+  {
+    titulo: 'Corte terapêutico',
+    slug: 'corte-terapeutico',
+    resumo:
+      'Remoção das pontas duplas, secas e quebradiças, sem alterar o comprimento, corte ou volume dos cabelos.',
+    descricao:
+      'Tira o que já está comprometido sem mexer no comprimento, o que costuma ser a maior preocupação de quem está em tratamento.',
+    indicacoes: [
+      { texto: 'Remoção de pontas duplas e quebradiças' },
+      { texto: 'Preserva comprimento, corte e volume' },
+      { texto: 'Complemento ao tratamento em andamento' },
+    ],
+    ordem: 10,
   },
 ]
 
@@ -238,6 +305,22 @@ const depoimentos = [
 ]
 
 /**
+ * Os cinco tratamentos que a lista real da clinica substituiu. O seed casa por
+ * `slug`, entao sem apagar aqui eles ficariam no banco e continuariam saindo na
+ * secao, misturados com os servicos de verdade.
+ *
+ * O `queda-capilar` nao entra: ele e reaproveitado pelo servico equivalente do
+ * site dela, entao o documento e atualizado em vez de recriado.
+ */
+const slugsTratamentosAntigos = [
+  'calvicie-masculina',
+  'rarefacao-feminina',
+  'afinamento-dos-fios',
+  'caspa-dermatite',
+  'recuo-linha-frontal',
+]
+
+/**
  * Os seis depoimentos inventados usados como placeholder antes das avaliacoes
  * reais do Google. Uma vez apagados aqui, a busca por nome nao acha mais nada e
  * este bloco vira um no-op nas proximas execucoes do seed.
@@ -261,6 +344,11 @@ export const popularConteudo = async (payload: Payload) => {
   ) => {
     const { docs } = await payload.find({ collection, where, limit: 1, depth: 0 })
     return docs[0]?.id
+  }
+
+  for (const slug of slugsTratamentosAntigos) {
+    const id = await idExistente('tratamentos', { slug: { equals: slug } })
+    if (id) await payload.delete({ collection: 'tratamentos', id })
   }
 
   for (const data of tratamentos) {
@@ -292,36 +380,39 @@ export const popularConteudo = async (payload: Payload) => {
   await payload.updateGlobal({
     slug: 'clinica',
     data: {
-      nome: 'Leia Expert',
+      nome: 'Léia Expert',
       chamada:
         'Tricologia clínica para homens e mulheres. Todo protocolo começa por uma tricoscopia, porque o tratamento certo depende do diagnóstico certo.',
       sobreRotulo: 'Minha história',
+      // Texto da propria Leia, transcrito do site dela. A abertura fica no
+      // resumo e o corpo no `sobre`, que e curto de proposito: ele ocupa metade
+      // da grade em corpo grande, e texto longo ali desequilibra a secao.
       sobreResumo:
-        'Atendo homens e mulheres, e os dois chegam quase sempre com a mesma frase: já tentei de tudo. Na maioria das vezes tentaram bastante, só que sem nunca ter sabido o que estavam tratando.',
-      // O bloco e curto de proposito. Ele ocupa metade da grade em corpo grande,
-      // e texto longo ali desequilibra a secao inteira.
+        'Prazer, me chamo Léia! Sou especialista em Saúde Capilar, formada em estética e cosmética, pós-graduada em tricologia funcional.',
       sobre:
-        'Eu não indico protocolo antes de ver o couro cabeludo na tela. É o exame que evita o erro mais comum em tratamento capilar: resolver um problema individual com uma solução genérica.',
-      // PLACEHOLDER: nome e credencial precisam vir da propria profissional.
-      nomeProfissional: 'Leia',
-      credencial: 'Tricologista clínica',
-      whatsapp: process.env.NEXT_PUBLIC_WHATSAPP || '5511000000000',
+        'Ofereço consultas especializadas, com avaliação detalhada do couro cabeludo e dos fios, além de exames biofísicos e programas personalizados de cuidados capilares. Cada tratamento é planejado de forma exclusiva, unindo ciência, tecnologia e acolhimento, para que você tenha resultados reais e duradouros.',
+      nomeProfissional: 'Léia Varjão de Jesus',
+      credencial: 'Especialista em Saúde Capilar, pós-graduada em Tricologia Funcional',
+      whatsapp: '5511991834175',
       mensagemWhatsapp: MENSAGEM_WHATSAPP_PADRAO,
-      horarios: 'Segunda a sexta, das 9h às 19h. Sábado, das 9h às 13h.',
-      // PLACEHOLDER: confirmar os numeros reais com o cliente antes de publicar.
+      email: 'leia.expert@gmail.com',
+      instagram: 'leiaexpertoficial',
+      horarios: 'Atendimento exclusivamente com agendamento prévio.',
+      // As quatro do print do Google e do midia kit. Ficaram de fora os dados
+      // demograficos do midia kit, do tipo 75% mulheres e 22% Rio de Janeiro:
+      // descrevem quem segue o Instagram, nao quem se trata, e a clinica e em
+      // Sao Paulo.
       metricas: [
-        { valor: '1.200+', rotulo: 'Avaliações capilares realizadas' },
-        { valor: '800+', rotulo: 'Pacientes em acompanhamento' },
-        { valor: '5+', rotulo: 'Anos de atuação' },
-        { valor: '4.9', rotulo: 'Nota média no Google' },
+        { valor: '5,0', rotulo: 'Nota no Google' },
+        { valor: '143', rotulo: 'Avaliações no Google' },
+        { valor: '7.260', rotulo: 'Seguidores nas redes' },
+        { valor: '+194 mil', rotulo: 'Visualizações nas redes' },
       ],
-      // PLACEHOLDER de proposito obvio: endereco errado manda paciente para o
-      // lugar errado, entao aqui e melhor parecer falso do que parecer pronto.
       unidades: [
         {
-          nome: 'Unidade a confirmar',
-          endereco: 'Rua Exemplo, 000, Sala 00\nBairro, Cidade, UF',
-          telefone: '(00) 00000-0000',
+          nome: 'Artur Alvim',
+          endereco: 'R. Maria Eugênia Célso, 35\nArtur Alvim, São Paulo, SP\n03568-050',
+          telefone: '(11) 99183-4175',
         },
       ],
     },
@@ -331,16 +422,18 @@ export const popularConteudo = async (payload: Payload) => {
   await payload.updateGlobal({
     slug: 'seo',
     data: {
-      titulo: 'Tratamento capilar para homens e mulheres | Leia Expert',
+      titulo: 'Tratamento capilar em São Paulo | Léia Expert',
       descricao:
-        'Tricologia clínica com tricoscopia digital para queda, calvície, rarefação feminina e dermatite. Avaliação individual para homens e mulheres.',
+        'Tricologia clínica na Zona Leste de São Paulo. Tricoscopia, exame biofísico e protocolo individual para queda capilar, alopecias e saúde do couro cabeludo.',
       palavrasChave: [
         { termo: 'tricologia clínica' },
-        { termo: 'tratamento capilar' },
+        { termo: 'tratamento capilar São Paulo' },
         { termo: 'queda capilar' },
-        { termo: 'calvície masculina' },
-        { termo: 'rarefação feminina' },
-        { termo: 'tricoscopia digital' },
+        { termo: 'alopecia androgenética' },
+        { termo: 'tricoscopia' },
+        { termo: 'exame biofísico capilar' },
+        { termo: 'microagulhamento capilar' },
+        { termo: 'tricologista Artur Alvim' },
       ],
     },
   })

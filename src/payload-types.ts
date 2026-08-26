@@ -602,21 +602,9 @@ export interface Clinica {
    */
   heroIntervalo?: number | null;
   /**
-   * O bloco grande. O primeiro arquivo é o que carrega primeiro.
+   * O primeiro arquivo é o que carrega primeiro, e é ele que aparece no topo.
    */
   heroPainel?:
-    | {
-        arquivo: number | Media;
-        id?: string | null;
-      }[]
-    | null;
-  heroBlocoEsquerda?:
-    | {
-        arquivo: number | Media;
-        id?: string | null;
-      }[]
-    | null;
-  heroBlocoDireita?:
     | {
         arquivo: number | Media;
         id?: string | null;
@@ -758,18 +746,6 @@ export interface ClinicaSelect<T extends boolean = true> {
   logo?: T;
   heroIntervalo?: T;
   heroPainel?:
-    | T
-    | {
-        arquivo?: T;
-        id?: T;
-      };
-  heroBlocoEsquerda?:
-    | T
-    | {
-        arquivo?: T;
-        id?: T;
-      };
-  heroBlocoDireita?:
     | T
     | {
         arquivo?: T;

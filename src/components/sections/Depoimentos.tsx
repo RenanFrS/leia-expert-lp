@@ -2,7 +2,7 @@ import Image from 'next/image'
 import { BadgeCheck, MoreVertical, Star } from 'lucide-react'
 import { Revelar } from '@/components/Revelar'
 import { AnimatedContent } from '@/components/ui/animated-content'
-import { midia } from '@/lib/utils'
+import { enquadramento, midia } from '@/lib/utils'
 import type { Depoimento } from '@/payload-types'
 
 // Paleta oficial do Google, usada so neste componente para o card lembrar uma
@@ -50,7 +50,7 @@ export function Depoimentos({ depoimentos }: { depoimentos: Depoimento[] }) {
   if (!depoimentos.length) return null
 
   return (
-    <section className="border-y border-tinta/10 bg-areia py-24">
+    <section id="depoimentos" className="border-y border-tinta/10 bg-areia py-24">
       <div className="container">
         <Revelar>
           {/* Sobre a areia o caramelo cheio nao alcanca contraste, entao aqui escurece. */}
@@ -93,6 +93,7 @@ export function Depoimentos({ depoimentos }: { depoimentos: Depoimento[] }) {
                         height={40}
                         sizes="40px"
                         className="h-10 w-10 shrink-0 rounded-full object-cover"
+                        style={enquadramento(avatar)}
                       />
                     ) : (
                       <span
@@ -148,7 +149,7 @@ export function Depoimentos({ depoimentos }: { depoimentos: Depoimento[] }) {
                       {fotos.slice(0, 4).map((foto, posicao) => (
                         <div key={posicao} className="relative aspect-square overflow-hidden rounded-md bg-neutral-100">
                           {/* O filtro acima so estreita o item para Media, nao para url dentro dela. */}
-                          <Image src={foto.url as string} alt={foto.alt || ''} fill sizes="80px" className="object-cover" />
+                          <Image src={foto.url as string} alt={foto.alt || ''} fill sizes="80px" className="object-cover" style={enquadramento(foto)} />
                         </div>
                       ))}
                     </div>

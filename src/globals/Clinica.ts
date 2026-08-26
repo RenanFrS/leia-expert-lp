@@ -12,7 +12,7 @@ export const Clinica: GlobalConfig = {
         {
           label: 'Identidade',
           fields: [
-            { name: 'nome', type: 'text', required: true, defaultValue: 'Leia Expert' },
+            { name: 'nome', type: 'text', required: true, defaultValue: 'Léia Expert' },
             { name: 'chamada', type: 'text', label: 'Frase de apoio' },
             { name: 'logo', type: 'upload', relationTo: 'media' },
           ],
@@ -20,7 +20,7 @@ export const Clinica: GlobalConfig = {
         {
           label: 'Hero',
           description:
-            'As mídias do topo da página. Cada bloco aceita foto e vídeo. Com mais de um arquivo no mesmo bloco, eles se alternam em esmaecimento.',
+            'A mídia do topo da página. Aceita foto e vídeo. Com mais de um arquivo, eles se alternam em esmaecimento.',
           fields: [
             {
               name: 'heroIntervalo',
@@ -39,37 +39,7 @@ export const Clinica: GlobalConfig = {
               type: 'array',
               label: 'Painel principal',
               labels: { singular: 'Arquivo', plural: 'Arquivos' },
-              admin: { description: 'O bloco grande. O primeiro arquivo é o que carrega primeiro.' },
-              fields: [
-                {
-                  name: 'arquivo',
-                  type: 'upload',
-                  relationTo: 'media',
-                  required: true,
-                  label: 'Foto ou vídeo',
-                },
-              ],
-            },
-            {
-              name: 'heroBlocoEsquerda',
-              type: 'array',
-              label: 'Bloco menor da esquerda',
-              labels: { singular: 'Arquivo', plural: 'Arquivos' },
-              fields: [
-                {
-                  name: 'arquivo',
-                  type: 'upload',
-                  relationTo: 'media',
-                  required: true,
-                  label: 'Foto ou vídeo',
-                },
-              ],
-            },
-            {
-              name: 'heroBlocoDireita',
-              type: 'array',
-              label: 'Bloco menor da direita',
-              labels: { singular: 'Arquivo', plural: 'Arquivos' },
+              admin: { description: 'O primeiro arquivo é o que carrega primeiro, e é ele que aparece no topo.' },
               fields: [
                 {
                   name: 'arquivo',

@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(google-chrome --headless --disable-gpu --no-sandbox --hide-scrollbars --screenshot=header-768.png --window-size=768,700 --virtual-time-budget=9000 http://localhost:3000/)",
+      "Bash(google-chrome --headless --disable-gpu --no-sandbox --hide-scrollbars --screenshot=hdr-390.png --window-size=390,220 --virtual-time-budget=9000 http://localhost:3000/)",
+      "Bash(google-chrome --headless --disable-gpu --no-sandbox --hide-scrollbars --screenshot=nv2-1024.png --window-size=1024,500 --virtual-time-budget=9000 http://localhost:3000/)",
+      "Bash(curl -s http://localhost:3000/)",
+      "Bash(google-chrome --headless --disable-gpu --no-sandbox --hide-scrollbars --screenshot=trat-a.png --window-size=1280,900 --virtual-time-budget=12000 \"http://localhost:3000/#queda-capilar\")",
+      "Bash(google-chrome --headless --disable-gpu --no-sandbox --hide-scrollbars --screenshot=trat-b.png --window-size=1280,900 --virtual-time-budget=12000 \"http://localhost:3000/#calvicie-masculina\")",
+      "Bash(google-chrome --headless --disable-gpu --no-sandbox --enable-logging=stderr --v=0 --virtual-time-budget=10000 --dump-dom \"http://localhost:3000/#queda-capilar\")",
+      "Bash(google-chrome --headless --disable-gpu --no-sandbox --hide-scrollbars --screenshot=tall.png --window-size=1280,2800 --virtual-time-budget=15000 \"http://localhost:3000/\")",
+      "Bash(python3 -c ' *)",
+      "Bash(pnpm dev *)",
+      "Bash(echo \"iniciado, pid $!\")",
+      "Bash(curl -s -o /tmp/claude-1000/-mnt-dados-Workspace-leia-expert/e6cac033-113e-4d78-bce7-853cad077f1f/scratchpad/home.html -w \"%{http_code}\\\\n\" http://localhost:3000/)"
+    ]
+  }
+}

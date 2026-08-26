@@ -6,6 +6,7 @@ import { ArrowUpRight, Loader2 } from 'lucide-react'
 import { BotaoWhatsapp } from '@/components/BotaoWhatsapp'
 import { Button } from '@/components/ui/button'
 import { CartaoVidro } from '@/components/ui/cartao-vidro'
+import { VideoFundo } from '@/components/ui/video-fundo'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -13,7 +14,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Revelar } from '@/components/Revelar'
 import { AnimatedContent } from '@/components/ui/animated-content'
 import { lerUtms, pushEvento, registrarLead } from '@/lib/analytics'
-import { formatarWhatsapp, midia } from '@/lib/utils'
+import { enquadramento, formatarWhatsapp, midia } from '@/lib/utils'
 import type { Clinica } from '@/payload-types'
 
 const motivos = [
@@ -115,7 +116,16 @@ export function Agendamento({
   }
 
   return (
-    <section id="agendar" className="bg-cacau py-24 text-porcelana md:py-32">
+    // O `isolate` sustenta o video de fundo: sem contexto de empilhamento proprio,
+    // a camada em `-z-10` cai atras do fundo de um ancestral e some. O `bg-cacau`
+    // continua valendo como reserva enquanto o arquivo carrega.
+    <section id="agendar" className="relative isolate bg-cacau py-24 text-porcelana md:py-32">
+      {/* O veu vai em `cacau/85` por conta: sobre o pixel mais claro do arquivo,
+          porcelana da 5,6 de contraste e porcelana/85 da 4,6, que e o piso do
+          texto corrido. Afrouxar o veu comeca a apagar o corpo do texto no quadro
+          claro do video. */}
+      <VideoFundo src="/backgrounds/background-agendamento.mp4" />
+
       <div className="container grid gap-12 lg:grid-cols-5 lg:items-stretch lg:gap-14">
         <div className="relative lg:col-span-3">
           <figure className="relative aspect-[3/5] overflow-hidden rounded-lg bg-cacau-escuro sm:aspect-[4/3] lg:aspect-auto lg:h-full lg:min-h-[620px]">
@@ -126,6 +136,7 @@ export function Agendamento({
                 fill
                 sizes="(max-width: 1024px) 100vw, 60vw"
                 className="object-cover"
+                style={enquadramento(imagem)}
               />
             )}
           </figure>

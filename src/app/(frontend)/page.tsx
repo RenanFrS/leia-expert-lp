@@ -24,7 +24,9 @@ export default async function Home() {
   const [clinica, rastreamento, tratamentos, resultados, depoimentos, perguntas] = await Promise.all([
     payload.findGlobal({ slug: 'clinica', depth: 1 }),
     payload.findGlobal({ slug: 'rastreamento', depth: 0 }),
-    payload.find({ collection: 'tratamentos', limit: 8, depth: 1, sort: 'ordem' }),
+    // Limite acima do numero de servicos de proposito: com 10 cadastrados e
+    // limite 8, dois sumiriam da pagina sem erro nenhum.
+    payload.find({ collection: 'tratamentos', limit: 12, depth: 1, sort: 'ordem' }),
     payload.find({ collection: 'resultados', limit: 6, depth: 1, where: { publicado: { equals: true } } }),
     payload.find({ collection: 'depoimentos', limit: 6, depth: 1, where: { publicado: { equals: true } } }),
     payload.find({ collection: 'faq', limit: 12, depth: 0, sort: 'ordem' }),
@@ -70,19 +72,29 @@ export default async function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(dadosEstruturados) }}
       />
 
-      <Header nome={clinica?.nome || 'Leia Expert'} logo={clinica?.logo} />
+      <Header nome={clinica?.nome || 'Léia Expert'} logo={clinica?.logo} />
 
       <main id="conteudo">
         <Hero
-          nome={clinica?.nome || 'Leia Expert'}
+          nome={clinica?.nome || 'Léia Expert'}
           chamada={clinica?.chamada}
-          motivos={tratamentos.docs.map(({ titulo, slug }) => ({ titulo, slug }))}
+          // O hero usa os tratamentos duas vezes: no carrossel e nas pilulas.
+          // Vai so o que as duas precisam, para nao mandar o documento inteiro
+          // de cada tratamento para o cliente.
+          tratamentos={tratamentos.docs.map(({ titulo, slug, resumo, imagem }) => ({
+            titulo,
+            slug,
+            resumo,
+            imagem,
+          }))}
           painel={clinica?.heroPainel}
-          blocoEsquerda={clinica?.heroBlocoEsquerda}
-          blocoDireita={clinica?.heroBlocoDireita}
           intervalo={clinica?.heroIntervalo}
         />
         <Metricas metricas={clinica?.metricas || []} />
+        <Tratamentos tratamentos={tratamentos.docs} />
+        <Tricoscopia />
+        <Resultados resultados={resultados.docs} />
+        <Depoimentos depoimentos={depoimentos.docs} />
         <Sobre
           rotulo={clinica?.sobreRotulo}
           resumo={clinica?.sobreResumo}
@@ -92,10 +104,6 @@ export default async function Home() {
           nomeProfissional={clinica?.nomeProfissional}
           credencial={clinica?.credencial}
         />
-        <Tratamentos tratamentos={tratamentos.docs} />
-        <Tricoscopia />
-        <Resultados resultados={resultados.docs} />
-        <Depoimentos depoimentos={depoimentos.docs} />
         <Duvidas perguntas={perguntas.docs} />
         <Agendamento
           googleAdsId={rastreamento?.googleAdsId}
@@ -109,7 +117,7 @@ export default async function Home() {
       </main>
 
       <Footer
-        nome={clinica?.nome || 'Leia Expert'}
+        nome={clinica?.nome || 'Léia Expert'}
         logo={clinica?.logo}
         whatsapp={whatsapp}
         email={clinica?.email}

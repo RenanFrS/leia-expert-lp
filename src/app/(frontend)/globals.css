@@ -51,4 +51,50 @@
   .pular-navegacao {
     @apply sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-cacau focus:px-4 focus:py-2 focus:text-porcelana;
   }
+
+  /*
+    A divisa do comparador antes e depois.
+
+    O proprio `input[type=range]` cobre a foto inteira e e a alca de arrasto. Ele
+    resolve de graca quatro coisas que a versao anterior fazia na mao e errava:
+    arrasto que continua fora da caixa, toque no celular sem rolar a pagina,
+    teclado com setas e Home e End, e papel de slider anunciado por leitor de
+    tela. Nao troque por div com `onPointerMove`.
+
+    **O thumb e invisivel de proposito.** Com a pista em altura total, o WebKit
+    encosta o thumb no topo da pista em vez de centralizar, e nao ha jeito
+    confiavel de mover isso pelo pseudo elemento. Entao o thumb fica so como area
+    de pega e quem aparece e a alca desenhada ao lado, posicionada pelo React na
+    mesma conta do `left` da linha.
+  */
+  .comparador-divisa {
+    @apply absolute inset-0 m-0 h-full w-full cursor-ew-resize appearance-none bg-transparent;
+  }
+
+  .comparador-divisa::-webkit-slider-runnable-track {
+    @apply h-full bg-transparent;
+  }
+
+  .comparador-divisa::-moz-range-track {
+    @apply h-full bg-transparent;
+  }
+
+  .comparador-divisa::-webkit-slider-thumb {
+    @apply h-14 w-14 cursor-ew-resize appearance-none rounded-full border-0 bg-transparent;
+  }
+
+  .comparador-divisa::-moz-range-thumb {
+    @apply h-14 w-14 cursor-ew-resize rounded-full border-0 bg-transparent;
+  }
+
+  .comparador-divisa:focus {
+    @apply outline-none;
+  }
+
+  /* O foco aparece na alca, nao numa moldura em volta da foto inteira. */
+  .comparador-divisa:focus-visible ~ [data-alca] .comparador-alca {
+    box-shadow:
+      0 6px 20px -6px rgba(46, 33, 26, 0.65),
+      0 0 0 3px theme('colors.caramelo.DEFAULT');
+  }
 }
