@@ -6,7 +6,16 @@ build
 .env.local
 .DS_Store
 *.log
-src/app/(payload)/admin/importMap.js
+# O import map do Payload precisa ser versionado.
+#
+# Ele estava ignorado aqui e foi o que derrubou o deploy: o `pnpm dev` regera o
+# arquivo na maquina de quem desenvolve, entao o build local passava, mas a
+# Vercel clona o repositorio sem ele e o webpack quebra com
+# `Can't resolve '../importMap.js'` em tres arquivos do painel.
+#
+# Nao adianta gerar no build: o CLI do Payload nao carrega o config neste
+# projeto, entao `payload generate:importmap` falha. Ver a secao sobre o CLI no
+# CLAUDE.md. Commite o arquivo sempre que ele mudar.
 media
 
 tsconfig.tsbuildinfo
