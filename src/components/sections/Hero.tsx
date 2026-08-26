@@ -99,7 +99,10 @@ export function Hero({ nome, chamada, tratamentos, painel, intervalo }: Props) {
     // `overflow-x-clip` por causa da entrada lateral do titulo: ele nasce 48px a
     // esquerda, o que passa da borda da tela, e sem o recorte isso vira barra de
     // rolagem horizontal enquanto a animacao nao termina.
-    <section id="topo" className="overflow-x-clip pt-28 pb-16 md:pt-32 md:pb-20">
+    // O `pt` acompanha a altura do header fixo, que passou a 96px quando o
+    // logotipo cresceu para 56px. Com o `pt-28` de antes sobravam 16px entre a
+    // barra e o titulo, e a frase encostava nela.
+    <section id="topo" className="overflow-x-clip pt-32 pb-16 md:pt-36 md:pb-20">
       <div className="container">
         <div className="relative isolate flex flex-col gap-6 lg:block lg:gap-0">
           {/*

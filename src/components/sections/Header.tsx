@@ -67,20 +67,23 @@ export function Header({ nome, logo }: Props) {
       )}
     >
       <div className="container grid grid-cols-[1fr_auto_1fr] items-center gap-4">
-        {/* A barra completa so abre no lg. Com cinco itens ela nao cabe no md:
-            a nav empurra o logotipo para fora do centro e ele encosta no CTA.
-            Ate o lg vale o menu recolhido, que e o mesmo do celular.
-            No proprio lg o respiro fica apertado pelo mesmo motivo: a coluna da
-            nav nao pode passar de metade da barra, senao o logotipo sai do
-            centro. Do xl em diante sobra largura e ele volta ao normal. */}
-        <nav className="hidden items-center gap-3 lg:flex xl:gap-7" aria-label="Navegação principal">
+        {/* A barra completa so abre no `xl`, e antes abria no `lg`. O logotipo
+            cresceu para 56px e a coluna do meio cresceu junto, entao no `lg` a
+            nav de cinco itens passava a metade da barra e empurrava o logotipo
+            para fora do centro, encostando no CTA. Abaixo do `xl` vale o menu
+            recolhido, que e o mesmo do celular e ja existia.
+
+            Mexer no tamanho do logotipo pede refazer essa conta: a soma das
+            larguras da nav nao pode passar da coluna lateral, que e
+            `(container - logotipo - gaps) / 2`. */}
+        <nav className="hidden items-center gap-1 xl:flex" aria-label="Navegação principal">
           {links.map((link) => (
             <a
               key={link.href}
               href={link.href}
               aria-current={ativo === link.href ? 'true' : undefined}
               className={cn(
-                'rounded-full px-2 py-1.5 text-sm transition-colors xl:px-3',
+                'rounded-full px-2.5 py-1.5 text-sm transition-colors',
                 ativo === link.href
                   ? 'bg-areia/70 text-cacau-escuro'
                   : 'text-tinta-suave hover:text-cacau',
@@ -103,14 +106,14 @@ export function Header({ nome, logo }: Props) {
         </a>
 
         <div className="col-start-3 flex items-center justify-end gap-2">
-          <Button asChild size="sm" especular className="hidden lg:inline-flex">
+          <Button asChild size="sm" especular className="hidden xl:inline-flex">
             <a href="#agendar" onClick={() => pushEvento('clique_agendar', { local: 'header' })}>
               Agendar avaliação
             </a>
           </Button>
           <button
             type="button"
-            className="rounded-md p-2 text-tinta transition-colors hover:bg-areia lg:hidden"
+            className="rounded-md p-2 text-tinta transition-colors hover:bg-areia xl:hidden"
             onClick={() => setAberto((valor) => !valor)}
             aria-expanded={aberto}
             aria-label={aberto ? 'Fechar menu' : 'Abrir menu'}
@@ -122,7 +125,7 @@ export function Header({ nome, logo }: Props) {
 
       {aberto && (
         <nav
-          className="container mt-4 flex flex-col gap-1 border-t border-tinta/10 pt-4 lg:hidden"
+          className="container mt-4 flex flex-col gap-1 border-t border-tinta/10 pt-4 xl:hidden"
           aria-label="Navegação principal"
         >
           {links.map((link) => (

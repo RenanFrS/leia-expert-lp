@@ -20,14 +20,22 @@ export function Logotipo({ nome, logo, tamanho = 'md', prioridade = false, class
   const marca = midia(logo)
 
   if (marca?.url) {
+    // As medidas intrinsecas saem do proprio arquivo, nao de um numero fixo. O
+    // logotipo desta clinica e quadrado, 500x500, e o par 168x36 que estava aqui
+    // descrevia um wordmark deitado: o `next/image` reservava a caixa na
+    // proporcao errada. Quem manda no tamanho na tela e a altura da classe, com
+    // `w-auto`, entao um logotipo mais largo continua funcionando.
+    const largura = marca.width || 500
+    const altura = marca.height || 500
+
     return (
       <Image
         src={marca.url}
         alt={marca.alt || nome}
-        width={tamanho === 'lg' ? 224 : 168}
-        height={tamanho === 'lg' ? 48 : 36}
+        width={largura}
+        height={altura}
         priority={prioridade}
-        className={cn('w-auto object-contain', tamanho === 'lg' ? 'h-12' : 'h-9', className)}
+        className={cn('w-auto object-contain', tamanho === 'lg' ? 'h-20' : 'h-14', className)}
       />
     )
   }
@@ -37,7 +45,7 @@ export function Logotipo({ nome, logo, tamanho = 'md', prioridade = false, class
       <span
         className={cn(
           'font-display uppercase tracking-[0.2em] text-tinta',
-          tamanho === 'lg' ? 'text-2xl' : 'text-lg',
+          tamanho === 'lg' ? 'text-3xl' : 'text-xl',
         )}
       >
         {nome}
