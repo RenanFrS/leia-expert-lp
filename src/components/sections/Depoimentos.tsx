@@ -2,8 +2,10 @@ import Image from 'next/image'
 import { BadgeCheck, MoreVertical, Star } from 'lucide-react'
 import { Revelar } from '@/components/Revelar'
 import { AnimatedContent } from '@/components/ui/animated-content'
+import { VideoFundo } from '@/components/ui/video-fundo'
+import { urlDeEntrega } from '@/lib/cloudinary-url'
 import { enquadramento, midia } from '@/lib/utils'
-import type { Depoimento } from '@/payload-types'
+import type { Clinica, Depoimento } from '@/payload-types'
 
 // Paleta oficial do Google, usada so neste componente para o card lembrar uma
 // avaliacao real. Nao entra no tailwind.config.ts porque a paleta do projeto e
@@ -46,11 +48,43 @@ function LogoGoogle({ className }: { className?: string }) {
   )
 }
 
-export function Depoimentos({ depoimentos }: { depoimentos: Depoimento[] }) {
+export function Depoimentos({
+  depoimentos,
+  video,
+}: {
+  depoimentos: Depoimento[]
+  video?: Clinica['videoDepoimentos']
+}) {
   if (!depoimentos.length) return null
 
+  const arquivo = midia(video)
+
+  /*
+    Mesma transformacao agressiva da Tricoscopia, `q_auto:eco,w_1600`: sao
+    1,4 MB em vez de 3,3 MB, e o video vive atras de um veu de 90%, entao a
+    perda nao chega a aparecer.
+  */
+  const fonte =
+    arquivo?.filename && arquivo.mimeType?.startsWith('video/')
+      ? urlDeEntrega(arquivo.filename, 'f_auto,q_auto:eco,w_1600')
+      : null
+
   return (
-    <section id="depoimentos" className="border-y border-tinta/10 bg-areia py-24">
+    // `relative isolate` sustenta o video, e o `bg-areia` continua como reserva.
+    <section id="depoimentos" className="relative isolate border-y border-tinta/10 bg-areia py-24">
+      {/*
+        O veu vai em `areia/90`, e aqui a conta e o inverso das outras duas
+        secoes com video: esta e clara com texto escuro, entao o risco vem do
+        pixel mais **escuro** do arquivo, nao do mais claro.
+
+        O deste video e preto puro, o vao entre os fios. Sobre ele, o
+        `cacau-escuro` do eyebrow da 4.83 com veu de 90% e cai para 4.28 com 85%,
+        abaixo do piso. O `tinta` do titulo da 8.08, com folga. Os cartoes sao
+        brancos opacos, entao nao entram na conta.
+
+        Trocou o arquivo? Refaca a conta contra o pixel mais escuro do novo.
+      */}
+      {fonte && <VideoFundo src={fonte} veu="bg-areia/90" />}
       <div className="container">
         <Revelar>
           {/* Sobre a areia o caramelo cheio nao alcanca contraste, entao aqui escurece. */}

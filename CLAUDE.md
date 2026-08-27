@@ -50,7 +50,7 @@ src/
     (frontend)/        layout, globals.css e a home publica
     (payload)/         painel em /admin e API REST e GraphQL do Payload
     api/leads/         rota publica que recebe o formulario
-    api/dev/           seed, gerar-tipos e subir-midia, so em desenvolvimento
+    api/dev/           seed, gerar-tipos, gerar-importmap e subir-midia, so em dev
     sitemap.ts robots.ts
   collections/         Tratamentos, Resultados, Depoimentos, Faq, Leads, Media, Users
   globals/             Clinica, Seo, Rastreamento, todos no grupo Configuracoes do painel
@@ -68,6 +68,7 @@ src/
     Analytics.tsx      GTM, GA4, Pixel, Ads e banner de consentimento
     SmoothScroll.tsx   Lenis
     Revelar.tsx        reveal on scroll com IntersectionObserver
+    painel/            componentes do admin do Payload, nao do site
   lib/
     analytics.ts       camada unica de eventos e leitura de UTM
     acesso.ts          regra de papel usada no access control
@@ -112,8 +113,24 @@ cliente. Antes esse clique saia como `clique_whatsapp`,
 o que inflava o numero de conversas abertas sem nenhuma conversa ter sido aberta. Nao volte a juntar os
 dois: a agencia otimiza campanha em cima desse dado.
 
+**Hoje quem dispara `clique_agendar` e so o botao da Tricoscopia**, com `local="tricoscopia"`. Os CTAs
+que diziam "Agendar avaliacao", no header e no menu do celular, passaram a abrir o WhatsApp com o texto
+"Agendar consulta tricologica", entao saem como `clique_whatsapp` com os locais `header` e
+`menu-mobile`. **Isso nao contradiz o paragrafo acima**: a regra e que o evento siga o comportamento, e
+esses botoes passaram a abrir conversa de verdade. Se um deles voltar a rolar para o formulario, o
+evento volta junto.
+
+**O `local="hero"` nao existe mais.** O CTA de dentro do painel foi removido a pedido do cliente. Vale
+saber o efeito colateral, porque ele nao e obvio: o CTA do header e `hidden xl:inline-flex`, entao
+**abaixo de 1280px nao sobra nenhum botao de agendar visivel acima da dobra**, so o do menu recolhido e
+o WhatsApp flutuante. Se a agencia estranhar a queda de `clique_whatsapp`, e daqui.
+
 Abrir o WhatsApp e sempre pelo `components/BotaoWhatsapp.tsx`, que monta o link e dispara o evento com o
 local de origem. Nao monte `wa.me` na mao em componente.
+
+O rodape ja quebrou essa regra: ele tinha um `<a>` com o `whatsappLink` montado direto, entao abria
+conversa sem aparecer em relatorio nenhum. Hoje passa pelo componente, com `local="footer"`, e as
+classes so tiram a casca de botao para ele ler como os links vizinhos.
 
 O envio bem sucedido passa por `registrarLead`, que empurra `envio_formulario` no dataLayer e ainda
 dispara `generate_lead` no GA4, `Lead` no Meta e a conversao do Google Ads quando o ID e o rotulo estao
@@ -173,13 +190,34 @@ o upload manda `asset_folder` alem do caminho no `public_id`, senao a clinica ve
 
 #### Recorte e ponto de foco
 
-A clinica enquadra as fotos por dois controles do painel, no botao de editar imagem. Eles resolvem
-coisas diferentes e os dois precisam existir:
+A clinica enquadra as fotos por dois controles, e eles resolvem coisas diferentes:
 
 - **recorte** apara o arquivo num retangulo fixo
 - **ponto de foco** marca o que nao pode sair de quadro. Uma mesma foto cai em caixas de proporcoes
   diferentes, do painel largo do hero ao avatar redondo do depoimento, e o `object-cover` recorta de
   novo por cima do recorte salvo. So o foco sobrevive a todas.
+
+**O recorte nativo do Payload esta desligado, `crop: false`.** No lugar dele entrou o
+`src/components/painel/RecorteImagem.tsx`, com o endpoint `POST /api/media/:id/recortar` na propria
+colecao. A diferenca que importa: **o nosso gera um arquivo novo e nunca encosta no original**.
+
+O nativo sobrescrevia o original no mesmo `public_id`, e como o endereco nao muda quando o conteudo
+muda, a foto recortada ficava presa no cache de borda por minutos e um segundo recorte estourava com
+`extract_area: bad extract area`. Todo esse diagnostico esta mais abaixo, e continua valendo como
+historia.
+
+Tres decisoes do recorte novo:
+
+- **Quem recorta e o Cloudinary, por `c_crop` na URL, nao o sharp.** O endpoint so busca os bytes ja
+  prontos e cria o documento. Isso derruba de uma vez a cadeia frangil do nativo: reler o original pela
+  rota do proprio site, passar pelo `safeFetch` e subir por cima do mesmo arquivo.
+- **A area vai em porcentagem, nunca em pixel.** E o que desacopla o recorte das dimensoes que o
+  navegador acha que o arquivo tem, que era a origem do `extract_area`. Testado recortando duas vezes
+  seguidas sem recarregar, o caminho que antes quebrava: passou nas duas.
+- **O arquivo novo guarda de onde veio**, nos campos `recortadaDe` e `recorte`, os dois somente leitura.
+  Sem isso a biblioteca vira um monte de arquivo parecido sem procedencia.
+
+O recorte **nao troca nada sozinho no site**: ele entra na biblioteca e alguem escolhe onde usar.
 
 Tres coisas ali nao sao opcionais:
 
@@ -242,13 +280,16 @@ tres colunas `1fr auto 1fr`, entao ele cresceu e as colunas laterais encolheram.
 itens passava a metade da barra, empurrava o logotipo para fora do centro e encostava no CTA. Abaixo do
 `xl` vale o menu recolhido, que e o mesmo do celular.
 
-**Mexeu no tamanho do logotipo? Refaca a conta.** A soma das larguras dos atalhos nao pode passar da
-coluna lateral, que e `(container - logotipo - gaps) / 2`. Com o logotipo em 56px isso da 536px de
-coluna para 445px de atalhos, ou seja 107px de folga ate a marca. Era esse numero que estava negativo
-antes, e a nav aparecia colada no logotipo com um vao grande sobrando do outro lado.
+**Mexeu no tamanho do logotipo, ou na largura do container? Refaca a conta.** A soma das larguras dos
+atalhos nao pode passar da coluna lateral, que e `(container - logotipo - gaps) / 2`. Com o container
+em 1440 e o logotipo em 56px, sao 644px de coluna para 445px de atalhos, ou seja 199px de folga ate a
+marca. No `xl`, a largura mais apertada onde a barra completa aparece, a folga cai para 131px. O CTA do
+lado direito ocupa 192px.
 
 O `pt` do hero acompanha a altura do header, porque ele e fixo e nao empurra nada. Com a barra em 96px,
-o `pt-28` de antes deixava 16px entre ela e o titulo e a frase encostava; hoje sao `pt-32` e `md:pt-36`.
+o `pt-28` de antes deixava 16px entre ela e o titulo e a frase encostava. Hoje sao `pt-28` e `md:pt-32`
+abaixo do `lg`, o que devolve os mesmos 16px de folga com o titulo menor, e `lg:pt-24` dali para cima,
+onde o painel encosta no header sem folga nenhuma.
 O `scroll-mt-28` dos cartoes de tratamento continua valendo, porque 112px ainda limpam os 96px.
 
 ### Hero
@@ -259,47 +300,76 @@ do projeto a partir da referencia visual, nao codigo copiado. Mesma situacao do 
 `contact34`. **Nao tente rodar `npx shadcn add @reactbits-pro/hero-12`**: sem licenca o registry
 recusa.
 
-E um painel de midia unico com o titulo recortado no canto superior esquerdo. O recorte e feito de
-blocos de fundo porcelana com o canto inferior direito arredondado. Nao ha mascara nem `clip-path`: o
-canto invertido e o proprio arredondamento do bloco branco visto pelo lado de fora.
+E um painel de midia unico com o titulo recortado **no formato do notch do iPhone**: um bloco de fundo
+porcelana centralizado, pendurado na borda de cima do painel, de topo reto e cantos de baixo
+arredondados, com a midia passando dos dois lados. Nao ha mascara nem `clip-path`: o canto invertido e
+o proprio arredondamento do bloco branco visto pelo lado de fora.
 
-**O recorte e uma escada, com um bloco por linha do titulo, nao um bloco so.** Cada `span` do `h1`
-encolhe ate a largura do proprio texto e leva o proprio canto arredondado, entao a linha larga forma o
-primeiro degrau e a curta o segundo, com a midia aparecendo no vao. Com um bloco unico o recorte vira
-um retangulo e a forma da referencia se perde.
+**Houve uma escada aqui antes**, com um bloco por linha do titulo, larguras diferentes e recorte no
+canto superior esquerdo. Ela saiu a pedido do cliente. Qualquer receita antiga que fale em degrau, em
+linha larga contra linha curta ou em recorte no canto esquerdo **nao vale mais**.
 
-**Os tres cantos da midia precisam de filete.** Onde a midia emerge de tras do titulo ela forma um
-canto superior esquerdo, e sao tres pontos assim: no alto, a esquerda do CTA; no degrau entre a linha
-larga e a curta; e na borda esquerda, abaixo do titulo. Em todos, sem filete, o canto sai reto e a
-midia entra no branco em bico.
+**Os dois cantos onde a midia encosta no notch precisam de filete.** Em cada lado a midia forma um
+canto de 90 graus contra a borda de cima do painel, e sem o filete ele sai em bico. `border-radius`
+**nao resolve** ali: o vertice nasce do encontro de duas caixas diferentes e nao e canto de elemento
+nenhum. Quem faz o servico e o `FileteCanto`, em `Hero.tsx`: um quadrado do tamanho do raio com um
+`radial-gradient` que deixa transparente o disco de um dos cantos de baixo e pinta o resto de
+porcelana. E o negativo exato de um canto arredondado, entao o arco encosta tangente nas duas bordas
+vizinhas. **O raio acompanha o `rounded-b` do notch**: mudou num lugar, muda no outro.
 
-`border-radius` **nao resolve** ali: o vertice nasce do encontro de duas caixas diferentes e nao e
-canto de elemento nenhum. Quem faz o servico e o `FileteCanto`, em `Hero.tsx`: um quadrado do tamanho
-do raio com um `radial-gradient` que deixa transparente o disco do canto inferior direito e pinta o
-resto de porcelana. E o negativo exato de um canto arredondado, entao o arco encosta tangente nas
-duas bordas vizinhas e nao aparece emenda. **O raio do filete acompanha o `rounded-br` das linhas**:
-mudou num lugar, muda no outro.
+**A prop `lado` do filete escolhe qual canto vira o disco transparente**, e errar isso deixa o filete
+de costas: em vez de abrir a curva para a midia, ele fecha um quadrado branco sobre ela.
 
-Quatro coisas que quebram a escada se forem mexidas sem cuidado:
+**Cada filete monta 1px sobre o notch, pelo `-mr-px` e `-ml-px`, e isso nao e folga inventada.** O
+bloco fica centrado por `-translate-x-1/2`, entao a borda dele cai em coordenada fracionaria. Filete e
+fundo sao os dois brancos, mas cada um e composto separadamente sobre a foto e cada um cobre so uma
+fracao daquele pixel: medido, sobrava 22% de midia e a emenda aparecia como um fio de `(230,221,220)`
+contra o branco. Sobrepor nao muda nada, porque a cor e a mesma, e mata o fio.
 
-- **A primeira linha precisa ser mais larga que a segunda.** Hoje sao 864px contra 282px. Se o titulo
-  mudar e as duas ficarem parecidas, os degraus somem e parece defeito.
+Cinco coisas que quebram o notch se forem mexidas sem cuidado:
+
+- **As duas linhas querem larguras parecidas**, o oposto da escada. Hoje sao 407px e 407px em 1440.
+  Num bloco centralizado, linhas desiguais deixam um degrau invisivel de um lado so e o recorte para
+  de parecer proposital.
+- **A fonte cai para `display-lg` no `lg`**, e so ali. Em `display-xl` a linha mais larga da 576px e o
+  bloco passaria de 670px, quase metade do painel, largo demais para ler como notch. Abaixo do `lg`
+  nao ha notch e o titulo continua em `display-xl`.
+- **O respiro lateral aperta abaixo do `xl`, `lg:px-8 xl:px-12`.** O notch cresce em proporcao
+  conforme a janela encolhe, porque o `clamp` da fonte desacelera antes do container: 37% do painel em
+  1440 e 41% em 1024. Com `px-12` nos dois sobravam **12px** entre o notch e o CTA do canto. Em
+  `px-8` a folga vai a 28px. **Mexeu na fonte ou no CTA, refaca a medida em 1024**, que e o pior caso,
+  e lembre que o bloco e centralizado: encolher 32px afasta so 16 de cada lado.
 - **As duas linhas ficam dentro do mesmo `h1`.** Tirar uma para fora deixa o titulo da pagina pela
   metade para leitor de tela.
-- **A linha com descendente precisa de `pb`.** O `display-xl` tem entrelinha `0.98`, mais apertada que
-  o descendente da fonte, e sem o `pb` a cedilha de "começa" vaza do bloco branco para cima da midia.
-- **Os filetes sao `hidden lg:block`.** Abaixo do `lg` nao ha escada, e como as linhas ocupam a
-  largura toda eles apareceriam como quadrados brancos soltos na borda da tela.
+- **A linha com descendente precisa de `pb`.** A entrelinha do display e mais apertada que o
+  descendente da fonte, e sem o `pb` a cedilha de "começa" vaza do bloco branco para cima da midia.
 
-Nao ha eyebrow no hero, de proposito: ele seria um terceiro bloco estreito acima da linha larga e a
-silhueta viraria um zigue-zague. O eyebrow segue nas outras secoes.
+Os filetes sao `hidden lg:block`. Abaixo do `lg` nao ha notch, e como as linhas ocupam a largura toda
+eles apareceriam como quadrados brancos soltos na borda da tela.
 
-O que fica **dentro** da imagem: o CTA no canto superior direito, a chamada com as estrelas no
-inferior esquerdo e o carrossel de tratamentos no inferior direito. Fora dela, so o titulo.
+Nao ha eyebrow no hero, de proposito: ele seria uma terceira linha dentro do notch e engordaria o
+bloco justamente na altura. O eyebrow segue nas outras secoes.
+
+O que fica **dentro** da imagem: a chamada com as estrelas no canto inferior esquerdo e o carrossel de
+tratamentos no inferior direito. Fora dela, so o titulo. Havia um CTA no canto superior direito e ele
+saiu a pedido do cliente.
 
 Texto sobre foto nao tem contraste garantido, porque quem escolhe a imagem e a clinica. Por isso a
-chamada fica sobre um veu, um gradiente de `tinta` subindo do pe do painel, com o texto em
-`porcelana`. Se mexer no veu, confira o contraste com uma foto clara.
+chamada fica sobre um veu, um gradiente de `tinta` subindo do pe do painel, com o texto em `porcelana`.
+
+**A altura do veu e fixa, `h-[22rem]`, e nao uma fracao do painel.** Enquanto era `h-2/3` ele
+acompanhava a altura do painel, mas a chamada fica ancorada no **pe** dele: no celular, com painel
+curto, ela subia para a parte fraca do gradiente. Medido naquele estado, contra uma foto de jaleco
+branco, o fundo atras do texto era `rgb(244,243,243)` e o contraste caia para **1.11**, ou seja texto
+branco sobre branco.
+
+Com a altura fixa a chamada cai por volta de tinta/72 em qualquer largura. Medido depois da correcao,
+escondendo o texto por folha injetada para sobrar so o fundo composto: `rgb(102,92,87)` no celular e
+`rgb(102,92,88)` no desktop, os dois dando **6.49** na porcelana cheia e **5.26** no `porcelana/85` da
+linha das estrelas.
+
+Contra aquele pixel de jaleco branco o piso de 4.5 pede **tinta/60**. Mexeu no veu ou moveu a chamada?
+Refaca a conta contra o pixel mais claro, nao contra a media.
 
 Duas coisas sustentam a montagem:
 
@@ -338,22 +408,50 @@ URL que o Payload grava, `/api/media/file/...`, tres coisas dao errado de uma ve
 A troca vale **so para video**. Imagem continua saindo pela rota do Payload, porque quem otimiza ela e
 o `next/image`, e mexer nisso mudaria a midia do site inteiro de uma vez.
 
-O painel recorta vertical e sempre recortou: no `lg` ele tem cerca de 1160 por 640 e um video 9:16
-aparece em 31% da altura, tirado do centro. No telefone o painel e quase quadrado e sobe para 71%. A
-foto vertical que estava ali antes ja mostrava 41%, entao isso e a forma do painel, nao defeito do
-arquivo.
+**O painel e full bleed e nao tem canto arredondado.** Ele saiu do `container`, entao vai de borda a
+borda da janela em qualquer largura. O `rounded-[28px]` foi junto: canto arredondado encostado na borda
+da tela deixa quatro falhas brancas nas pontas.
+
+**No `lg` o painel preenche o que sobra da janela**, `calc(100vh - 6rem)`, e os 6rem sao exatamente a
+altura do header. Com o `lg:pt-24` da secao valendo os mesmos 96px, o painel encosta no header sem
+folga e o pe dele cai na dobra. Nao ha mais altura fixa de 780px.
+
+**O `min-h` de 640px nao e enfeite.** A chamada e o carrossel sao absolutos no pe do painel; em janela
+baixa, sem o piso, os dois se espremem um sobre o outro.
+
+O painel recorta vertical e sempre recortou: um video 9:16 aparece em cerca de um terco da altura,
+tirado do centro. No telefone o painel e quase quadrado e sobe para 84%. A foto vertical que estava ali
+antes mostrava 41%, entao isso e a forma do painel, nao defeito do arquivo. Como a altura agora
+acompanha a janela, essa fatia muda de monitor para monitor.
+
+**A foto so vai ate o topo se o header for resolvido junto, e por isso ela nao vai.** Tentado e medido:
+com o painel em `pt-0`, o header fixo passa por cima da foto e colide com o notch em dois pontos. A nav
+pede 445px e a coluna ao lado do notch tem 436px, entao **ela nao cabe em largura nenhuma**, e o
+logotipo, centralizado como o notch, cai 42px em cima da primeira linha do titulo. Com o painel
+comecando nos 96px nao ha colisao nenhuma: o menu termina em 76px e o notch comeca em 96px.
 
 O hero fica acima da dobra, entao nada ali pode usar o `AnimatedContent`. Continua tudo no `Revelar`.
 
-**O titulo entra pela esquerda, nao de baixo.** E o `Revelar` com `direcao="esquerda"`, que desloca
-3rem no eixo horizontal em vez de 1rem no vertical. O padrao do `Revelar` segue sendo subir, e todas as
-outras secoes continuam nele: a direcao e opcao, nao troca de comportamento.
+**O titulo desce de cima, nao entra pela esquerda.** E o `Revelar` com `direcao="cima"`, que desloca
+1.5rem para cima no eixo vertical. O padrao do `Revelar` segue sendo subir, e todas as outras secoes
+continuam nele: a direcao e opcao, nao troca de comportamento. A `esquerda` ficou no mapa, herdada da
+silhueta em escada.
 
-Subindo, o bloco branco do recorte varria a midia de baixo para cima e brigava com a escada. Deslizando,
-ele acompanha a leitura da frase.
+O sentido acompanha a forma: o notch esta pendurado na borda de cima, entao ele assenta descendo.
 
-Isso obriga o `overflow-x-clip` na secao do hero. O titulo nasce 48px a esquerda, e no telefone isso o
-poe 28px fora da tela: sem o recorte, vira barra de rolagem horizontal enquanto a animacao nao termina.
+**O curso e curto de proposito, 24px, e nao os 48px da entrada lateral.** No `lg` o titulo assenta a
+96px do topo da secao, pelo `lg:pt-24`, encostado no header, que ocupa exatamente esses 96px **sem
+fundo proprio** enquanto a pagina esta no topo. Com 48px de curso o titulo nasceria no meio dos links
+do menu.
+
+Mesmo com 24px a margem e justa: medido, a base do logotipo fica em 76px e a primeira linha do titulo,
+no inicio da animacao, tambem em 76px. Encostam, mas naquele instante a opacidade ainda e zero. **Se
+aumentar o curso, refaca essa medida.**
+
+O `overflow-x-clip` da secao ficou de heranca: ele existia porque o titulo nascia 48px a esquerda e no
+telefone isso o punha fora da tela. Com a entrada vertical isso nao acontece mais, mas ele fica, porque
+a secao continua tendo filhos absolutos encostados nas bordas do painel e o `clip` e barato. E `clip` e
+nao `hidden` de proposito, para nao criar container de rolagem novo.
 
 ### Carrossel de tratamentos
 
@@ -381,9 +479,65 @@ O link "Mais informacoes" dispara `ver_tratamento` com o slug e o local. Esse ev
 `EventoNome` desde o inicio e nunca era disparado em lugar nenhum: a agencia tinha um evento tipado que
 nao existia na pratica.
 
+**Quando a midia do tratamento e video, aqui entra o quadro parado dele, nao o arquivo.** Sao duas
+razoes. O cartao desenha com `next/image`, e o otimizador responde **400, "The requested resource isn't
+a valid image"**, para um `.mov` ou um `.mp4`, entao sem isso o slide fica vazio. E este carrossel vive
+acima da dobra, ao lado do painel que ja e o LCP: somar video tocando num cartao de 320px que troca
+sozinho custaria caro. Quem monta o quadro e o `Hero.tsx`, que e server component, com o
+`posterDeVideo`. Na secao de tratamentos, bem abaixo, o mesmo arquivo toca de verdade.
+
 Houve pilulas com o nome de cada tratamento abaixo do painel, e elas **foram removidas a pedido do
 cliente**. Com isso o unico link interno para tratamento no topo da pagina e o do cartao visivel no
 momento. As ancoras em si continuam existindo nos cartoes da secao de tratamentos.
+
+### Fundo em video
+
+Tres secoes tem video de fundo, todas pelo mesmo `components/ui/video-fundo.tsx`: o agendamento, a
+tricoscopia e os depoimentos. Os arquivos das duas ultimas saem do painel, na aba **Videos de fundo** da
+global Clinica, nos campos `videoTricoscopia` e `videoDepoimentos`. Sem arquivo, a secao volta ao fundo
+chapado.
+
+**A conta do veu muda de sinal conforme a secao.** Nao existe valor padrao, e copiar o de uma secao para
+outra da errado:
+
+- **secao escura com texto claro**, como a tricoscopia: o risco vem do pixel mais **claro** do arquivo
+- **secao clara com texto escuro**, como os depoimentos: o risco vem do pixel mais **escuro**
+
+Nos depoimentos isso pesou de verdade. O pixel mais escuro daquele video e **preto puro**, o vao entre
+os fios, e sobre ele o `cacau-escuro` do eyebrow so passa de 4.5 com veu de **90%**: em 85% cai para
+4.28. O `tinta` do titulo da 8.08, com folga, e os cartoes sao brancos opacos, entao ficam de fora da
+conta.
+
+Um veu de `porcelana/75` deixaria o video bem mais visivel e tambem passaria, mas a secao perderia o tom
+areia, que existe para quebrar o ritmo da pagina. Foi escolha, nao descuido.
+
+**A transformacao e mais agressiva do que a do hero**, `f_auto,q_auto:eco,w_1600`, nas duas secoes. Nos
+depoimentos sao 1,4 MB em vez de 3,3 MB. Vale porque o video vive atras de um veu forte. No hero nao
+valeria, porque la ele e o assunto.
+
+Cada secao com video precisa de `relative isolate`, senao a camada em `-z-10` cai atras do fundo de um
+ancestral e some. A cor de fundo original continua como reserva.
+
+### Tricoscopia
+
+A secao do exame tem video de fundo, pelo mesmo `components/ui/video-fundo.tsx` do agendamento. O
+arquivo sai do painel, no campo `videoTricoscopia` da global Clinica, aba **Exame**. Sem arquivo a
+secao volta ao fundo escuro chapado, que era o comportamento antigo.
+
+Tres coisas medidas, nao estimadas:
+
+- **O veu e `tinta/80`.** O pixel mais claro do arquivo e `rgb(197,194,202)`, onde porcelana sem veu
+  daria 1.76 de contraste. Sob 80% a porcelana da 9.9, o `porcelana/65` do texto das etapas da 5.3 e o
+  `caramelo-claro` do eyebrow e dos numeros da 5.2. **Em 70% os dois ultimos caem para 4.35 e 4.05**,
+  abaixo do piso. Trocou o arquivo, refaca a conta contra o pixel mais claro do novo.
+- **A transformacao e mais agressiva que a do hero**, `f_auto,q_auto:eco,w_1600` em vez de
+  `f_auto,q_auto`. Sao 4,9 MB contra 7,4 MB no mesmo arquivo. Vale porque o video vive atras de um veu
+  de 80% e a perda nao chega a aparecer. No hero nao valeria, porque la o video e o assunto.
+- **A URL aponta direto para a CDN**, pelo `urlDeEntrega`, e nao para a rota do Payload. Mesmo motivo do
+  hero: aquela rota nao transforma, nao responde a `Range` e passa os bytes pelo servidor do Next.
+
+A secao precisa de `relative isolate`, senao a camada em `-z-10` cai atras do fundo de um ancestral e o
+video some. O `bg-tinta` continua como reserva.
 
 ### Sobre e formulario
 
@@ -403,6 +557,21 @@ um segundo caminho de WhatsApp fora do componente que grava o evento.
 O `Label` nao fixa cor. Ela vem da secao, porque o formulario cai sobre cacau, onde o `text-neutro` que
 estava preso no primitivo dava 1.2 de contraste e sumia. Se um dia o formulario voltar para fundo claro,
 troque a cor no `<form>`, nao no primitivo.
+
+O formulario e de campo alto: `h-14` e `rounded-xl` nos campos e no select, `min-h-36` na area de texto.
+Os quatro campos curtos ficam em duas colunas a partir do `sm`, e voltam a empilhar abaixo disso, onde a
+coluna e estreita demais. O rotulo e frase normal, nao versalete em mono: ao lado de campo desse tamanho
+a etiqueta miuda sumia.
+
+**`Input`, `Textarea`, `Label` e `Checkbox` sao usados so por esta secao**, entao mexer neles nao respinga
+em outro lugar do site. Se um segundo formulario aparecer, essa liberdade acaba.
+
+O select leva `appearance-none` e uma seta desenhada, porque a nativa muda de desenho em cada sistema e
+destoava do resto. O icone precisa de `pointer-events-none`, senao ele come o clique que deveria abrir a
+lista.
+
+O botao de envio e pilula, com icone a esquerda, e ao lado dele fica a linha que explica o que acontece
+depois. Em coluna estreita essa linha desce para baixo do botao, pelo `flex-wrap`, e continua legivel.
 
 O fundo da secao e o video `public/backgrounds/background-agendamento.mp4`, uma textura abstrata de
 10 segundos na propria paleta da marca, entregue pelo `components/ui/video-fundo.tsx`. Ele entra mudo,
@@ -453,6 +622,104 @@ Duas coisas que parecem detalhe e nao sao:
 A alca nunca encosta na borda: ela para a meia largura de distancia. A linha usa a mesma conta no
 `left`, senao as duas se separam nos extremos.
 
+#### O carrossel
+
+Os resultados vivem num carrossel na forma do **skiper47 do skiper-ui**, escolhido pelo cliente, e nao
+mais num grid. **A licenca do skiper-ui pede atribuicao na versao gratuita**, e ela esta no comentario
+do componente.
+
+O `effect: coverflow` do Swiper vai com `rotate: 0` e `stretch: 0`, que sao os valores da referencia.
+Com rotacao zero ele **nao gira nada**: so empurra os vizinhos no eixo Z, e a perspectiva transforma
+isso em escala. Medido no centro: o cartao ativo fica em escala 1, com 443px, e sao os vizinhos que
+encolhem, para 361px e 305px. **O cartao central nao aumenta, o resto e que diminui**, entao mexer em
+`depth` ou `modifier` nao aumenta o destaque, so afunda mais os lados.
+
+Duas coisas mudaram em relacao ao skiper47, e as duas por pedido: `slidesPerView` bem acima do 2.43 do
+original, que era exatamente o numero que fazia aparecerem so dois e meio, e o par das pontas cortado
+pela borda do container, com veu esmaecendo.
+
+**A armadilha grande e o arraste.** A divisa e um `input[type=range]` esticado sobre o cartao inteiro, e
+arrastar nela e o mesmo gesto que troca de slide. Sao tres travas, e nenhuma delas e opcional:
+
+- **`noSwipingSelector: '.comparador-divisa'`.** Recurso do proprio Swiper: toque que comeca na divisa
+  nao vira swipe.
+- **Tudo que nao e a divisa fica `pointer-events-none`**: as duas fotos e as duas pilulas. Sem isso o
+  alvo do ponteiro dentro do carrossel e a `<img>`, o `closest('.comparador-divisa')` do Swiper da
+  falso, ele assume o gesto e chama `preventDefault`. **Sintoma medido: a divisa nao saia do lugar e o
+  carrossel andava no lugar dela, enquanto o teclado continuava funcionando.** Foi o teclado que
+  denunciou que o problema era de ponteiro e nao de estado.
+- **O painel de legenda, ao contrario, recebe ponteiro de proposito.** Ele nao tem nada clicavel e
+  passa a ser a area de arraste do carrossel. Sem ele sobrava so a fresta do vizinho: 24px de cada lado
+  no celular, contra os 278x104 do painel.
+- **A divisa precisa de `translateZ(0)`, e isso nao e supersticao.** O coverflow poe `perspective` no
+  `.swiper` e `preserve-3d` nos slides, e **o slide ativo nao para exatamente em Z zero**: medido, ele
+  carrega um residuo que cresce com o indice, 0, -0.058, -0.117, -0.175, vindo do `slidesPerView`
+  fracionario. Isso e invisivel, as caixas batem no pixel, mas desregula o hit-test: em **dois dos oito
+  cartoes** o `pointerdown` caia no `div.swiper-wrapper` e a divisa ficava presa em 50%, enquanto os
+  outros seis funcionavam normalmente. O `translateZ(0)` nao move nada, so promove a divisa a camada
+  propria. Antes 6 de 8, depois 8 de 8, com arraste de mouse e com toque.
+
+**Cuidado ao diagnosticar bug dessa secao: setar `input.value` por script nao serve.** O `posicao` e
+estado do React, entao mexer no valor pela mao nao muda o `clip-path` e a comparacao sai igual nos dois
+extremos, o que parece defeito e nao e. Teste com arraste de ponteiro de verdade.
+
+Mais tres decisoes:
+
+- **So o cartao do meio e interativo.** Os vizinhos vao com `aria-hidden`, `tabIndex={-1}` na divisa e
+  `pointer-events-none` na figure. Sem o `tabIndex` o Tab entra em slider invisivel; com o
+  `pointer-events-none` o clique cai no slide e o `slideToClickedSlide` traz aquele resultado ao centro.
+- **`loop` desligado.** O loop do Swiper clona slide, e aqui slide e um comparador com duas fotos e um
+  `aria-label` proprio: clonar cria divisa duplicada e dobra requisicao de imagem.
+- **Autoplay desligado**, como na referencia. Cartao que sai sozinho no meio do arrasto e hostil.
+
+**Um `AnimatedContent` so, em volta do carrossel, e nunca um por cartao.** Ele nasce com
+`visibility: hidden` e so aparece quando o ScrollTrigger dispara contra a janela: cartao deslocado para
+fora na horizontal nunca intersecta, e ficaria invisivel para sempre.
+
+**O CSS do Swiper e importado no `globals.css`, e nao no componente.** Importado no componente ele cai
+na folha da pagina, que carrega depois da folha do layout, e vence todo empate de especificidade contra
+as nossas regras. Foi assim que a linha de controles quebrou: o
+`.swiper-pagination-bullets.swiper-pagination-horizontal` do Swiper e 0,2,0, o mesmo peso do nosso
+seletor, e a ordem desempatava para o lado dele.
+
+**As setas e os pontinhos ficam fora do Swiper**, numa linha propria embaixo. O `.swiper` ganha
+`perspective` do coverflow, o que cria contexto de empilhamento: com os controles la dentro, o veu das
+pontas passa por cima deles e nenhum `z-index` de filho alcanca de volta. A primeira tentativa usava
+`mask-image` no `.swiper` e as setas saiam lavadas junto com as fotos. **Mascara de pai nao se desfaz no
+filho.**
+
+Detalhe do Swiper que custou uma investigacao: num elemento de paginacao **externo** ele carimba so as
+variantes, `swiper-pagination-bullets`, `-horizontal` e `-clickable`, e **nao** a classe base
+`swiper-pagination`. Amarrar CSS nela nao casa nada.
+
+#### Caso em tratamento
+
+Nem todo caso terminou. O checkbox `emTratamento`, na colecao Resultados, marca aquele em que a segunda
+foto e do meio do tratamento, e nao do fim.
+
+**A foto continua indo no campo `depois`, que segue obrigatorio.** O checkbox nao muda onde o arquivo
+mora, so o que o site afirma sobre ele. Foi o que permitiu ligar isso sem invalidar resultado ja
+cadastrado.
+
+A afirmacao aparece em **quatro lugares**, e eles precisam andar juntos, senao o cartao diz duas coisas:
+
+- a pilula da direita, que le "Em tratamento" no lugar de "Depois"
+- o texto alternativo de reserva da segunda foto, "durante o tratamento" no lugar de "depois do tratamento"
+- o `aria-label` do slider, "Comparar antes e durante"
+- o `aria-valuetext`, "X% da foto em tratamento"
+
+**A pilula em tratamento precisa ser opaca.** As duas normais usam `bg-porcelana/90`, e `text-caramelo`
+sobre esse fundo translucido, com foto escura por baixo, da **3.70** e reprova. Em `bg-caramelo` cheio
+com `text-porcelana` sao **4.64**, medidos no navegador. A folga ate o piso de 4.5 e de 0.14, entao
+trocar o token pede refazer a conta.
+
+Isso nao e preciosismo de rotulo: dizer "Depois" sobre uma foto de meio de tratamento e afirmar que o
+caso terminou quando ele nao terminou, num site de clinica.
+
+**A ordem de publicar importa.** O banco e o mesmo da producao e a home e ISR com `revalidate = 300`,
+entao conteudo novo entra no ar sem deploy. Um caso em tratamento criado antes de a Vercel receber a
+pilula sai rotulado de "Depois". Crie ele despublicado e ligue depois do deploy.
+
 ### Design
 
 Paleta de quatro cores fechada com o cliente, em marrom e bege. Use sempre os tokens de
@@ -468,6 +735,22 @@ Paleta de quatro cores fechada com o cliente, em marrom e bege. Use sempre os to
 | `caramelo-claro` | `#E0B48C` | derivada, acento legivel sobre fundo escuro |
 | `tinta` e `tinta-suave` | `#2E211A` e `#4A362B` | texto principal e secundario |
 | `neutro` | `#78685E` | texto terciario e placeholder |
+
+O container trava em **1440px**, com 2rem de respiro lateral a partir dessa largura, o que da 1376px de
+conteudo util.
+
+**O hero e a unica secao sem `container`.** O painel dele vai de borda a borda da janela, a pedido do
+cliente. O que fica **sobre** a foto, a chamada e o carrossel, tem um `container` proprio por dentro,
+entao continua alinhado com a coluna do resto da pagina em vez de encostar na borda: conferido em 1920,
+1440, 1280 e 1024, com a chamada caindo no mesmo pixel do conteudo das outras secoes. O titulo e o
+carrossel levam `px-5` proprio abaixo do `lg`, que e onde saem do posicionamento absoluto.
+
+**O respiro extra fica na chave `2xl` do `container.padding`, e nao em `lg`.** O Tailwind casa cada
+chave contra `theme('container.screens', theme('screens'))`, e aqui o `container.screens` tem uma
+entrada so, entao qualquer outra chave e descartada em silencio. Ficou tempo com um `lg: '2rem'`
+escrito que nunca chegou ao CSS. Trazer o `lg` para o `screens` nao conserta: o valor ali e ao mesmo
+tempo o `min-width` da media query e o `max-width` do container, entao ele limitaria a pagina a 1024px
+entre 1024 e 1440.
 
 As cinco derivadas existem porque a paleta de quatro cores nao traz tom de texto nem estado de botao.
 Todas ficam na mesma matiz do cacau, entao o conjunto continua lendo como uma familia so.
@@ -501,6 +784,11 @@ Tres sistemas convivem, cada um com um papel:
 
 O framer-motion entrou so por causa do parallax, entao o projeto carrega dois motores de animacao.
 Antes de usar ele em coisa nova, veja se o gsap com `scrub`, que ja estava aqui, nao resolve.
+
+O **Swiper** e um terceiro, e move so o carrossel de resultados. Ele entrou por escolha do cliente, que
+pediu fidelidade ao skiper47. A alternativa levantada era reconstruir com o framer-motion que ja estava
+aqui, ja que o coverflow com `rotate: 0` e so escala mais deslocamento. Nao use ele em coisa nova sem
+refazer essa conta.
 
 A entrada lateral dos tratamentos usa o `AnimatedContent`, com `direction="horizontal"`. Esta descrita
 na secao Tratamentos em zig-zag. Ela substituiu um empilhamento em `position: sticky`, entao qualquer
@@ -550,6 +838,21 @@ Cinco cuidados, todos ja pagos:
 - **O conector e `aria-hidden` e o numero nao volta para dentro do cartao.** Ele e informacao visual,
   e o titulo do tratamento ja identifica o cartao. Anunciado, viraria um numero solto antes de cada
   artigo.
+- **O cartao aceita video, e nao so foto.** O campo `imagem` do tratamento
+  aponta para a Media, que aceita os dois, e por muito tempo o cartao desenhava
+  com `<Image>` sem olhar o tipo: video ali nao aparecia. Quem resolve os dois
+  casos hoje e o `MidiaRotativa`, o mesmo do painel do hero, com um item so.
+  Video sai pela CDN com `f_mp4,q_auto,w_800`: medido no `.mov` da queda
+  capilar, **17,6 MB pela rota do Payload contra 933 KB pela CDN**.
+  **A transformacao fixa `f_mp4` de proposito**, porque `f_auto` devolve o
+  `.mov` ainda como `video/quicktime`. O Chrome toca assim mesmo, por
+  reconhecer o H.264 por dentro, mas o peso e identico nos dois e o `f_mp4`
+  declara o tipo certo em vez de depender do sniffing.
+- **O video do cartao so carrega quando o cartao aparece.** E a prop
+  `soQuandoVisivel` do `MidiaRotativa`, e ela segura o **`src`**, nao so o
+  `play()`. Medido: so com `autoplay` desligado e `preload="metadata"`, com a
+  pagina parada no topo, o Chrome ja tinha 11,7s do primeiro video em buffer.
+  Sem `src` ele nao pede byte nenhum, e o `poster` segura o lugar.
 - **A foto fica na borda de fora.** O cartao docado a direita leva a foto a direita e o texto rente a
   espinha, e o par inverte os dois. E isso que mantem a coluna de leitura sempre junto do fio.
 - **A linha interna e flex, nao grid.** As duas colunas tem larguras diferentes, entao com grid o
@@ -565,6 +868,40 @@ para baixo o cartao volta a largura cheia e so a espinha continua, reta: em 64% 
 O `scroll-mt-28` do cartao serve a ancora `#slug`, que e o destino do link do carrossel do hero. O
 header e fixo, entao sem ele o cartao para escondido embaixo.
 
+### Painel em portugues
+
+O `payload.config.ts` traz `i18n: { fallbackLanguage: 'pt', supportedLanguages: { pt } }`, com o `pt`
+vindo do proprio `@payloadcms/translations`.
+
+Duas notas:
+
+- **O pacote precisou ser declarado no `package.json`**, fixado em 3.88.0, igual ao Payload. Ele ja
+  existia como dependencia transitiva, mas o pnpm e estrito e o import direto nao resolvia. Mesmo caso
+  do `react-image-crop`, fixado em 10.1.8 porque e a versao que o `@payloadcms/ui` usa.
+- **A traducao e a do Payload, e nao cobre tudo.** Na tela de login, por exemplo, "Senha" e "Esqueceu a
+  senha?" saem traduzidos e "Email" e "Login" continuam em ingles. Nao ha o que fazer do nosso lado sem
+  manter traducao propria.
+
+### Rodape
+
+O rodape traz o mapa da unidade num iframe do Google e um botao **Definir rota**.
+
+- **O endereco do embed vem do painel**, no campo `mapaEmbed` de cada unidade. Ele aceita tanto a URL
+  quanto o codigo inteiro do iframe, porque e isso que o Google entrega no botao de incorporar, e o
+  `enderecoDoMapa` de `src/lib/utils.ts` reduz os dois ao endereco.
+- **Esse helper valida o dominio de proposito.** Ele so devolve endereco `https` em `google.com` sob
+  `/maps/embed`. Sem essa trava, um campo de texto do painel viraria porta para incorporar qualquer
+  coisa de fora dentro do rodape do site.
+- **A rota vai pelo nome da clinica mais o endereco, nao por coordenada.** Assim ela continua certa se a
+  clinica mudar de endereco sem ninguem lembrar de atualizar uma latitude. Cuidado para nao passar o
+  nome da **unidade**: aqui ele e o bairro, e o destino sairia "Artur Alvim, R. Maria Eugenia Celso".
+- **O `loading="lazy"` do iframe nao e detalhe.** Ele e conteudo de terceiro no pe da pagina, entao a
+  maioria das visitas nunca chega a carregar. Sem isso, todas pagariam o custo.
+
+**Ponto em aberto, de privacidade.** O embed do Google Maps e terceiro e grava cookie, e hoje ele carrega
+sem passar pelo banner de consentimento. Como fica no pe e e `lazy`, o alcance e pequeno, mas se a
+clinica quiser rigor de LGPD o caminho e trocar por um cartao que so carrega o mapa apos o aceite.
+
 ### Acessibilidade
 
 Foco visivel global, link de pular navegacao, `prefers-reduced-motion` respeitado inclusive desligando o
@@ -575,6 +912,23 @@ de tela.
 
 Todo texto e original, escrito sobre as palavras chave de tricologia clinica. Nao aproveite copy de outros
 sites do segmento, porque conteudo duplicado derruba o proprio SEO alem do risco autoral.
+
+**A consulta e cobrada.** O site ja prometeu avaliacao gratuita e nao promete mais: a primeira pergunta
+do FAQ hoje responde que nao, explicando que a consulta e atendimento clinico, com exame e diagnostico,
+e nao visita comercial. O valor nao aparece escrito, para nao brigar com a pergunta "Quanto custa o
+tratamento?", que diz que a clinica nao trabalha com tabela fechada. Se alguem reescrever essa area,
+confira antes se nao voltou promessa de gratuidade em outro lugar.
+
+**O vocabulario e "consulta tricologica", nao "avaliacao".** Vale para o CTA, para o titulo da secao de
+agendamento, para o rotulo do motivo do formulario e para as respostas do FAQ.
+
+**Cuidado com o homonimo.** "Avaliacao" tambem significa review do Google, e nesse sentido ela fica:
+"Avaliacoes reais de pacientes no Google" no hero, "Avaliacoes verificadas no Google" nos depoimentos e
+a metrica "Avaliacoes no Google". Trocar por consulta ali vira erro de sentido.
+
+**O rotulo do motivo muda, o `valor` nao.** O `valor` vai gravado em cada lead e e o que o `z.enum` da
+rota valida, entao mexer nele invalida lead ja gravado e derruba envio. A lista esta duplicada em
+`src/lib/motivos.ts` e no proprio formulario, e as duas precisam andar juntas.
 
 ## O CLI do Payload nao carrega o config
 
@@ -591,12 +945,35 @@ Consequencias e como contornar:
   repositorio sem ele e o webpack quebra com `Can't resolve '../importMap.js'` em tres arquivos do
   painel. E nao da para gerar no build, porque o CLI nao carrega o config. Mexeu em config e o arquivo
   mudou? Commite junto.
-- **Seed**: com o `pnpm dev` no ar, acesse `/api/dev/seed`. O conteudo vive em `src/lib/seed.ts` e pode
-  ser rodado quantas vezes precisar, porque atualiza em vez de duplicar.
+- **Seed**: com o `pnpm dev` no ar, acesse `/api/dev/seed`. O conteudo vive em `src/lib/seed.ts`.
+
+  **Pare antes de rodar. Ele deixou de ser inofensivo.** O seed atualiza o que encontra, mas **cria o
+  que nao encontra**, e a clinica passou a apagar conteudo pelo painel. Hoje o seed tem 10 tratamentos e
+  o banco tem 4: rodar agora ressuscitaria os seis que ela apagou. Antes de executar, compare
+  `/api/tratamentos`, `/api/faq` e `/api/depoimentos` com os arrays do seed e resolva a diferenca, seja
+  aposentando no seed o que saiu, seja aceitando o que vai voltar.
+
+  Para aplicar so um pedaco, escreva uma rota de desenvolvimento dirigida aquela colecao, use e apague.
+  Foi assim que a troca do FAQ entrou sem encostar nos tratamentos.
+
+  **A resposta do FAQ respeita quebra de linha.** O campo e um `textarea` e o
+  `AccordionContent` leva `whitespace-pre-line`, entao resposta em etapas, uma por linha, sai em linhas
+  na tela. E o caso de "O que e avaliado na consulta?". Nao ha marcador de lista: o campo e texto puro,
+  sem rich text.
+- **O FAQ casa por `pergunta`.** Mudar o texto de uma pergunta faz o seed criar item novo e deixar o
+  velho, e o site passa a mostrar as duas respostas, uma contradizendo a outra. Quando mudar o texto,
+  ponha o antigo em `perguntasAntigas`, que e apagado antes da escrita. Mesmo padrao de
+  `slugsTratamentosAntigos` e `nomesPlaceholderAntigos`.
+- **Nome de arquivo com acento passa.** Testado ponta a ponta com `calvaço.mp4`: o Payload grava o
+  acento, a URL sai percent encoded e o Cloudinary guarda o `public_id` com o acento, servindo pela CDN
+  normalmente, inclusive com transformacao.
 - **Upload**: com o `pnpm dev` no ar, `/api/dev/subir-midia?arquivo=videos/hero.mp4&alt=Descricao&hero=1`
   sobe um arquivo de `public/` para a Media e, com `hero=1`, ja troca o painel do hero por ele. Pela
   Local API o arquivo vai como buffer, em processo, entao um video de 25 MB nao esbarra em limite de
   corpo de requisicao. Repetir nao duplica: reaproveita o documento e corrige o `alt` se mudou.
+- **Import map, na pratica**: com o `pnpm dev` no ar, acesse `/api/dev/gerar-importmap`. O dev **nao**
+  regerou sozinho quando registramos o primeiro componente custom, entao a rota existe para nao depender
+  disso. Ela chama a mesma `generateImportMap` que o CLI usaria.
 - **Tipos**: com o `pnpm dev` no ar, acesse `/api/dev/gerar-tipos`. A rota chama a mesma API publica que
   o CLI usaria, so que de dentro do Next, onde o config carrega. Ela responde 404 fora de desenvolvimento.
   Rode isso sempre que mexer em colecao ou global, e commite o `src/payload-types.ts`.

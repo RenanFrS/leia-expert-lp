@@ -24,6 +24,7 @@
     "@payloadcms/plugin-cloud-storage": "^3.28.0",
     "@payloadcms/plugin-seo": "^3.28.0",
     "@payloadcms/richtext-lexical": "^3.28.0",
+    "@payloadcms/translations": "3.88.0",
     "@payloadcms/ui": "^3.28.0",
     "@radix-ui/react-accordion": "^1.2.3",
     "@radix-ui/react-checkbox": "^1.1.4",
@@ -43,7 +44,9 @@
     "payload": "^3.28.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-image-crop": "10.1.8",
     "sharp": "^0.33.5",
+    "swiper": "^14.2.0",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
     "zod": "^3.24.1"

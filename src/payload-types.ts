@@ -178,6 +178,19 @@ export interface Media {
    */
   alt: string;
   legenda?: string | null;
+  /**
+   * Preenchido quando esta imagem nasce de um recorte de outra.
+   */
+  recortadaDe?: (number | null) | Media;
+  /**
+   * Em porcentagem da imagem de origem.
+   */
+  recorte?: {
+    x?: number | null;
+    y?: number | null;
+    largura?: number | null;
+    altura?: number | null;
+  };
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -198,9 +211,16 @@ export interface Resultado {
   id: number;
   titulo: string;
   antes: number | Media;
+  /**
+   * Com "Em tratamento" marcado, esta é a foto do meio do tratamento, e o site rotula ela assim.
+   */
   depois: number | Media;
   meses?: number | null;
   tratamento?: (number | null) | Tratamento;
+  /**
+   * Marque quando o caso ainda está em andamento e a segunda foto não é o resultado final.
+   */
+  emTratamento?: boolean | null;
   publicado?: boolean | null;
   updatedAt: string;
   createdAt: string;
@@ -443,6 +463,7 @@ export interface ResultadosSelect<T extends boolean = true> {
   depois?: T;
   meses?: T;
   tratamento?: T;
+  emTratamento?: T;
   publicado?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -512,6 +533,15 @@ export interface LeadsSelect<T extends boolean = true> {
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
   legenda?: T;
+  recortadaDe?: T;
+  recorte?:
+    | T
+    | {
+        x?: T;
+        y?: T;
+        largura?: T;
+        altura?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   url?: T;
@@ -611,6 +641,14 @@ export interface Clinica {
       }[]
     | null;
   /**
+   * Fundo da Tricoscopia digital. Só vídeo.
+   */
+  videoTricoscopia?: (number | null) | Media;
+  /**
+   * Fundo do bloco "Quem já tratou". Só vídeo.
+   */
+  videoDepoimentos?: (number | null) | Media;
+  /**
    * Texto miúdo que abre a grade, à esquerda do resumo.
    */
   sobreRotulo?: string | null;
@@ -659,6 +697,10 @@ export interface Clinica {
         endereco: string;
         telefone?: string | null;
         mapaUrl?: string | null;
+        /**
+         * No Google Maps, use Compartilhar e depois Incorporar um mapa. Cole aqui o endereço que aparece em src, ou o código inteiro do iframe.
+         */
+        mapaEmbed?: string | null;
         id?: string | null;
       }[]
     | null;
@@ -751,6 +793,8 @@ export interface ClinicaSelect<T extends boolean = true> {
         arquivo?: T;
         id?: T;
       };
+  videoTricoscopia?: T;
+  videoDepoimentos?: T;
   sobreRotulo?: T;
   sobreResumo?: T;
   sobre?: T;
@@ -771,6 +815,7 @@ export interface ClinicaSelect<T extends boolean = true> {
         endereco?: T;
         telefone?: T;
         mapaUrl?: T;
+        mapaEmbed?: T;
         id?: T;
       };
   horarios?: T;

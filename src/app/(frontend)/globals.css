@@ -1,3 +1,22 @@
+/*
+  CSS do Swiper, usado pelo carrossel de resultados.
+
+  **Fica aqui e nao no componente de proposito.** Importado la, ele vai parar na
+  folha da pagina, que carrega depois da folha do layout, e passa a vencer todo
+  empate de especificidade contra as nossas regras. Foi assim que a linha de
+  controles do carrossel quebrou: o `.swiper-pagination-bullets.swiper-pagination-horizontal`
+  do Swiper e 0,2,0, exatamente o mesmo peso do nosso seletor, e a ordem
+  desempatava para o lado dele.
+
+  Importando antes, no mesmo arquivo, o desempate volta a ser nosso e nao
+  precisa de `!important` em lugar nenhum.
+*/
+@import 'swiper/css';
+@import 'swiper/css/effect-coverflow';
+@import 'swiper/css/pagination';
+@import 'swiper/css/navigation';
+@import 'swiper/css/a11y';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -96,5 +115,107 @@
     box-shadow:
       0 6px 20px -6px rgba(46, 33, 26, 0.65),
       0 0 0 3px theme('colors.caramelo.DEFAULT');
+  }
+
+  /*
+    Controles do carrossel de resultados.
+
+    O Swiper traz CSS proprio, em azul, e os pontinhos so mudam por variavel.
+    Elas ficam aqui e nao no componente porque e onde o `.comparador-divisa` ja
+    mora, e as duas coisas vivem no mesmo cartao.
+
+    Contraste, medido: `caramelo` sobre `porcelana` da 4.64 e `cacau` da 6.57.
+    Os dois passam o piso de 3 que vale para controle de interface.
+  */
+  .resultados-carrossel {
+    --swiper-theme-color: theme('colors.caramelo.DEFAULT');
+    --swiper-pagination-color: theme('colors.caramelo.DEFAULT');
+    --swiper-pagination-bullet-inactive-color: theme('colors.tinta.DEFAULT');
+    --swiper-pagination-bullet-inactive-opacity: 0.3;
+    --swiper-pagination-bullet-size: 0.5rem;
+    --swiper-pagination-bullet-horizontal-gap: 0.25rem;
+  }
+
+  /*
+    Esmaecimento das pontas, para os cartoes cortados na borda sumirem em vez de
+    terminar em bico.
+
+    **E camada por cima, e nao `mask-image` no `.swiper`.** Mascara de pai
+    alcanca todo descendente e nao se desfaz no filho: com ela, as setas e os
+    pontinhos saiam lavados junto com as fotos. Por isso os controles tambem
+    moram fora do Swiper.
+  */
+  /*
+    A divisa precisa de camada propria dentro do carrossel.
+
+    O coverflow poe `perspective` no `.swiper` e `preserve-3d` nos slides, e o
+    slide ativo nao para exatamente em Z zero: medido, ele carrega um residuo
+    que cresce com o indice, 0, -0.058, -0.117, -0.175, vindo do
+    `slidesPerView` fracionario. Isso e invisivel na tela, as caixas batem no
+    pixel, mas desregula o hit-test: em dois dos oito cartoes o `pointerdown`
+    caia no `div.swiper-wrapper` em vez de cair na divisa, e ela ficava presa
+    em 50% enquanto os outros seis funcionavam.
+
+    `translateZ(0)` nao move nada. Ele promove a divisa a camada propria, e com
+    isso o alvo do ponteiro passa a ser sempre ela. Testado com arraste de mouse
+    de verdade nos oito cartoes, antes 6 de 8 e depois 8 de 8.
+
+    Fica preso ao carrossel de proposito: fora de um contexto 3D isso nao e
+    necessario, e o comparador nao deveria carregar o remendo consigo.
+  */
+  .resultados-swiper .comparador-divisa {
+    transform: translateZ(0);
+  }
+
+  .resultados-veu {
+    @apply pointer-events-none absolute inset-y-0 z-10 w-[7%];
+  }
+
+  .resultados-veu-esquerda {
+    @apply left-0;
+    background: linear-gradient(to right, theme('colors.porcelana'), transparent);
+  }
+
+  .resultados-veu-direita {
+    @apply right-0;
+    background: linear-gradient(to left, theme('colors.porcelana'), transparent);
+  }
+
+  .resultados-seta {
+    @apply flex h-11 w-11 items-center justify-center rounded-full border border-tinta/15
+      text-cacau transition-colors;
+  }
+
+  .resultados-seta:hover {
+    @apply border-cacau/40 bg-cacau/5;
+  }
+
+  /* O Swiper marca a seta da ponta, e sem isso ela nao parece desligada. */
+  .resultados-seta.swiper-button-disabled {
+    @apply pointer-events-none opacity-35;
+  }
+
+  /*
+    O Swiper carimba `swiper-pagination` no elemento que a gente passa, e o CSS
+    dele da `width: 100%`, para o caso normal em que os pontinhos ficam por cima
+    do slide. Aqui eles moram numa linha de flex fora do carrossel, entao
+    precisam voltar a largura do conteudo: sem isso o bloco toma a linha inteira
+    e as duas setas escorregam para as bordas.
+
+    **O seletor sobe pelo ancestral de proposito.** Num elemento externo o
+    Swiper carimba so as variantes, `swiper-pagination-bullets`,
+    `-horizontal` e `-clickable`, e **nao** a classe base `swiper-pagination`.
+    Amarrar nela nao casa nada, e amarrar numa variante empata em
+    especificidade com o CSS do proprio Swiper e passa a depender da ordem de
+    importacao.
+  */
+  .resultados-carrossel .resultados-pontos {
+    @apply static flex w-auto items-center justify-center gap-1;
+  }
+
+  /* O Swiper nao desenha foco visivel em nenhum dos dois. */
+  .resultados-seta:focus-visible,
+  .resultados-pontos .swiper-pagination-bullet:focus-visible {
+    @apply outline-none ring-2 ring-caramelo ring-offset-2 ring-offset-porcelana;
   }
 }

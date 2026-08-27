@@ -14,6 +14,11 @@ type Props = {
   intervalo?: number | null
   /** Liga no primeiro arquivo do painel do hero, que e o LCP da pagina. */
   prioridade?: boolean
+  /**
+   * Segura o video ate o bloco entrar na tela. Ligue abaixo da dobra: sem isso
+   * o navegador baixa e toca antes de alguem chegar la.
+   */
+  soQuandoVisivel?: boolean
   sizes: string
   className?: string
 }
@@ -29,23 +34,69 @@ const ehVideo = (item: Media) => item.mimeType?.startsWith('video/') ?? false
  * ramo do `<Image>`, entao com video em primeiro o painel pintaria so a chapa de
  * areia ate o primeiro quadro decodificar. O poster e um quadro do proprio
  * arquivo, servido como imagem, e e ele que segura o lugar nesse intervalo.
+ *
+ * **`soQuandoVisivel` existe para quem esta abaixo da dobra.** No hero o video
+ * comeca junto com a pagina, e e o certo, porque ele ja esta na tela. Num cartao
+ * de tratamento nao: sem trava o navegador baixa e toca os arquivos antes de
+ * alguem chegar la.
+ *
+ * **Nao basta segurar o `play()`, tem que segurar o `src`.** Medido: so com o
+ * `autoplay` desligado e `preload="metadata"`, com a pagina parada no topo, o
+ * Chrome ja tinha 11,7s do primeiro video em buffer. Sem `src` ele nao pede
+ * nada, e o `poster` sozinho segura o lugar.
+ *
+ * Uma vez carregado o `src` fica. Tirar de volta ao sair da tela faria o
+ * navegador baixar tudo de novo na proxima rolagem.
  */
-function Video({ src, poster, reduzido }: { src: string; poster?: string; reduzido: boolean }) {
+function Video({
+  src,
+  poster,
+  reduzido,
+  soQuandoVisivel = false,
+}: {
+  src: string
+  poster?: string
+  reduzido: boolean
+  soQuandoVisivel?: boolean
+}) {
   const ref = useRef<HTMLVideoElement>(null)
+  const [visivel, setVisivel] = useState(!soQuandoVisivel)
+  const [carregado, setCarregado] = useState(!soQuandoVisivel)
+
+  useEffect(() => {
+    if (!soQuandoVisivel) return
+    const video = ref.current
+    if (!video) return
+
+    const observador = new IntersectionObserver(
+      ([entrada]) => setVisivel(entrada.isIntersecting),
+      { threshold: 0.2 },
+    )
+
+    observador.observe(video)
+    return () => observador.disconnect()
+  }, [soQuandoVisivel])
+
+  useEffect(() => {
+    if (visivel) setCarregado(true)
+  }, [visivel])
 
   useEffect(() => {
     const video = ref.current
-    if (!video) return
-    if (reduzido) video.pause()
+    if (!video || !carregado) return
+    if (reduzido || !visivel) video.pause()
     else void video.play().catch(() => {})
-  }, [reduzido])
+  }, [visivel, carregado, reduzido])
 
   return (
     <video
       ref={ref}
-      src={src}
+      // Sem `src` o navegador nao pede byte nenhum. Quem liga e o observador.
+      src={carregado ? src : undefined}
       poster={poster}
-      autoPlay
+      // Com a trava ligada quem manda tocar e o efeito acima, depois que o
+      // `src` entrou.
+      autoPlay={!soQuandoVisivel}
       muted
       loop
       playsInline
@@ -62,7 +113,14 @@ function Video({ src, poster, reduzido }: { src: string; poster?: string; reduzi
  * Sob `prefers-reduced-motion` a troca nao acontece: fica so o primeiro arquivo,
  * e o video pausa.
  */
-export function MidiaRotativa({ itens, intervalo, prioridade = false, sizes, className }: Props) {
+export function MidiaRotativa({
+  itens,
+  intervalo,
+  prioridade = false,
+  soQuandoVisivel = false,
+  sizes,
+  className,
+}: Props) {
   const lista = (itens || [])
     .map((entrada) => midia(entrada.arquivo))
     .filter((item): item is Media => Boolean(item?.url))
@@ -101,7 +159,12 @@ export function MidiaRotativa({ itens, intervalo, prioridade = false, sizes, cla
           )}
         >
           {ehVideo(item) ? (
-            <Video src={item.url!} poster={posterDeVideo(item.url) ?? undefined} reduzido={reduzido} />
+            <Video
+              src={item.url!}
+              poster={posterDeVideo(item.url) ?? undefined}
+              reduzido={reduzido}
+              soQuandoVisivel={soQuandoVisivel}
+            />
           ) : (
             <Image
               src={item.url!}

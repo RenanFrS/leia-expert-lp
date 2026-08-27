@@ -27,7 +27,16 @@ export default async function Home() {
     // Limite acima do numero de servicos de proposito: com 10 cadastrados e
     // limite 8, dois sumiriam da pagina sem erro nenhum.
     payload.find({ collection: 'tratamentos', limit: 12, depth: 1, sort: 'ordem' }),
-    payload.find({ collection: 'resultados', limit: 6, depth: 1, where: { publicado: { equals: true } } }),
+    // Mesmo cuidado do limite dos tratamentos, logo acima: com 9 cadastrados e
+    // limite 6, tres sumiriam da pagina sem erro nenhum. Quem escolhe o que
+    // aparece e o checkbox `publicado` do painel, nao um numero no codigo.
+    payload.find({
+      collection: 'resultados',
+      limit: 24,
+      depth: 1,
+      sort: '-createdAt',
+      where: { publicado: { equals: true } },
+    }),
     payload.find({ collection: 'depoimentos', limit: 6, depth: 1, where: { publicado: { equals: true } } }),
     payload.find({ collection: 'faq', limit: 12, depth: 0, sort: 'ordem' }),
   ])
@@ -72,7 +81,12 @@ export default async function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(dadosEstruturados) }}
       />
 
-      <Header nome={clinica?.nome || 'Léia Expert'} logo={clinica?.logo} />
+      <Header
+        nome={clinica?.nome || 'Léia Expert'}
+        logo={clinica?.logo}
+        whatsapp={whatsapp}
+        mensagemWhatsapp={clinica?.mensagemWhatsapp}
+      />
 
       <main id="conteudo">
         <Hero
@@ -92,9 +106,9 @@ export default async function Home() {
         />
         <Metricas metricas={clinica?.metricas || []} />
         <Tratamentos tratamentos={tratamentos.docs} />
-        <Tricoscopia />
+        <Tricoscopia video={clinica?.videoTricoscopia} />
         <Resultados resultados={resultados.docs} />
-        <Depoimentos depoimentos={depoimentos.docs} />
+        <Depoimentos depoimentos={depoimentos.docs} video={clinica?.videoDepoimentos} />
         <Sobre
           rotulo={clinica?.sobreRotulo}
           resumo={clinica?.sobreResumo}

@@ -18,6 +18,41 @@ export const whatsappLink = (numero: string, mensagem?: string) => {
 }
 
 /**
+ * Rota ate a unidade no Google Maps. Vai pelo nome da clinica mais o endereco,
+ * e nao por
+ * coordenada, porque o endereco ja esta no painel e a clinica e um lugar
+ * registrado no Google. Assim continua funcionando se ela mudar de endereco sem
+ * ninguem lembrar de atualizar uma latitude.
+ */
+export const rotaNoMapa = (nome: string, endereco: string) =>
+  `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+    `${nome}, ${endereco.replace(/\s*\n\s*/g, ', ')}`,
+  )}`
+
+/**
+ * O painel aceita tanto o endereco de `src` quanto o codigo inteiro do iframe,
+ * porque e isso que o Google entrega no botao de incorporar e ninguem deveria
+ * precisar recortar na mao. Aqui reduzimos os dois ao endereco.
+ *
+ * Devolve `null` no que nao for embed do Google Maps, para nao virar porta de
+ * incorporar qualquer coisa de fora no rodape.
+ */
+export const enderecoDoMapa = (valor?: string | null) => {
+  if (!valor) return null
+  const bruto = valor.trim()
+  const src = bruto.startsWith('<') ? bruto.match(/src=["']([^"']+)["']/)?.[1] : bruto
+  if (!src) return null
+
+  try {
+    const url = new URL(src)
+    const dominioValido = url.protocol === 'https:' && /(^|\.)google\.com$/.test(url.hostname)
+    return dominioValido && url.pathname.startsWith('/maps/embed') ? url.toString() : null
+  } catch {
+    return null
+  }
+}
+
+/**
  * Deixa o numero do painel legivel na tela. Ele e gravado so com digitos e com
  * o DDI, formato que o wa.me exige, e nesse estado ninguem consegue ler nem
  * copiar de olho. Numero fora do padrao brasileiro volta como veio.

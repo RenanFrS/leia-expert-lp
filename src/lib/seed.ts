@@ -50,7 +50,7 @@ const tratamentos = [
     resumo:
       'Eflúvio telógeno, eflúvio anágeno, alopecias, alopecia areata, alopecia traumática, alopecia metabólica e alopecia androgenética.',
     descricao:
-      'A queda tem mais de uma causa possível, e cada uma pede uma conduta diferente. A avaliação vem antes do protocolo.',
+      'A queda tem mais de uma causa possível, e cada uma pede uma conduta diferente. A consulta vem antes do protocolo.',
     // Unicas indicacoes literais do site: e a lista de condicoes que ela mesma
     // publica sob este servico.
     indicacoes: [
@@ -190,52 +190,60 @@ const tratamentos = [
 
 const perguntas = [
   {
-    pergunta: 'A avaliação capilar é gratuita mesmo?',
+    pergunta: 'A consulta e o exame tricológico são gratuitos?',
     resposta:
-      'É. A avaliação inicial com tricoscopia não é cobrada e não obriga a fechar tratamento. Ela existe para responder duas perguntas: o que está acontecendo no seu couro cabeludo e se há indicação de protocolo para o seu caso.',
+      'Não. A consulta é um atendimento clínico: inclui a tricoscopia, a leitura do couro cabeludo e dos fios e termina com um diagnóstico e uma conduta na mão. Você sai sabendo o que está acontecendo mesmo que decida não seguir com tratamento nenhum. É justamente por ser cobrada que ela pode terminar em "não há indicação para o seu caso", em vez de virar vitrine de protocolo.',
     ordem: 1,
+  },
+  {
+    pergunta: 'O que é avaliado na consulta?',
+    // Resposta em etapas, uma por linha. Quem preserva a quebra na tela e o
+    // `whitespace-pre-line` do `AccordionContent`, em `Duvidas.tsx`.
+    resposta:
+      'Investigação da causa\nAvaliação do couro cabeludo e dos fios\nExames de tricoscopia e dermatoscopia\nDefinição de tratamento\nAcompanhamento e evolução',
+    ordem: 2,
   },
   {
     pergunta: 'A clínica atende homens e mulheres?',
     resposta:
       'Sim, os dois. Os padrões de perda são diferentes: no homem costuma recuar a linha frontal e abrir a coroa, na mulher costuma alargar a risca e tirar volume sem formar falha. Por isso a avaliação e o protocolo são montados caso a caso, não por sexo.',
-    ordem: 2,
+    ordem: 3,
   },
   {
     pergunta: 'Preciso levar exames ou encaminhamento médico?',
     resposta:
-      'Não para a primeira avaliação. Se durante o exame aparecer algum sinal que sugira causa sistêmica, como alteração da tireoide ou anemia, orientamos quais exames buscar e o acompanhamento segue junto com o seu médico.',
-    ordem: 3,
+      'Não para a primeira consulta. Se durante o exame aparecer algum sinal que sugira causa sistêmica, como alteração da tireoide ou anemia, orientamos quais exames buscar e o acompanhamento segue junto com o seu médico.',
+    ordem: 4,
   },
   {
     pergunta: 'A tricoscopia dói ou precisa raspar o cabelo?',
     resposta:
       'Nenhum dos dois. É uma câmera que amplia o couro cabeludo em até duzentas vezes, encostada na pele. Não corta, não fura e não precisa de preparo. O ideal é vir com o cabelo seco e sem produto de fixação.',
-    ordem: 4,
+    ordem: 5,
   },
   {
     pergunta: 'Em quanto tempo aparecem os primeiros resultados?',
     resposta:
       'O fio tem ciclo próprio e não acelera por vontade. Na maioria dos casos a diferença começa a aparecer entre o terceiro e o sexto mês. Antes disso o que se acompanha é a resposta do couro cabeludo, que a tricoscopia já mostra bem antes do espelho.',
-    ordem: 5,
+    ordem: 6,
   },
   {
     pergunta: 'Com que frequência preciso ir à clínica?',
     resposta:
-      'Depende do protocolo indicado. A frequência é definida na avaliação, junto com a intensidade das sessões, e é combinada com a sua rotina. Nada é fechado antes de você saber quantas sessões são e em que intervalo.',
-    ordem: 6,
+      'Depende do protocolo indicado. A frequência é definida na consulta, junto com a intensidade das sessões, e é combinada com a sua rotina. Nada é fechado antes de você saber quantas sessões são e em que intervalo.',
+    ordem: 7,
   },
   {
     pergunta: 'E se não houver indicação de tratamento para mim?',
     resposta:
       'A gente diz isso na hora. Existe queda passageira que se resolve sozinha e existe perda antiga que já não responde. Nos dois casos indicar protocolo seria vender expectativa, e não é assim que trabalhamos.',
-    ordem: 7,
+    ordem: 8,
   },
   {
     pergunta: 'Quanto custa o tratamento?',
     resposta:
-      'O valor depende do protocolo, da quantidade de sessões e da frequência, que só ficam claros depois da avaliação. Por isso não trabalhamos com tabela fechada por telefone: seria chutar antes de saber o que você tem.',
-    ordem: 8,
+      'O valor depende do protocolo, da quantidade de sessões e da frequência, que só ficam claros depois da consulta e exame tricológico. Por isso não trabalhamos com tabela fechada por telefone: seria chutar antes de saber o que você tem.',
+    ordem: 9,
   },
 ]
 
@@ -334,6 +342,17 @@ const nomesPlaceholderAntigos = [
   'Thiago B.',
 ]
 
+/**
+ * Perguntas que sairam de linha. O seed casa FAQ por `pergunta`, entao mudar o
+ * texto de uma cria um item novo e deixa o velho no banco: o site passaria a
+ * mostrar as duas, uma contradizendo a outra. Mesmo papel do
+ * `slugsTratamentosAntigos`.
+ *
+ * A primeira daqui dizia que a avaliacao era gratuita, e a clinica passou a
+ * cobrar pela consulta.
+ */
+const perguntasAntigas = ['A avaliação capilar é gratuita mesmo?']
+
 export const popularConteudo = async (payload: Payload) => {
   const registro: string[] = []
 
@@ -357,6 +376,11 @@ export const popularConteudo = async (payload: Payload) => {
     else await payload.create({ collection: 'tratamentos', data })
   }
   registro.push(`${tratamentos.length} tratamentos gravados`)
+
+  for (const pergunta of perguntasAntigas) {
+    const id = await idExistente('faq', { pergunta: { equals: pergunta } })
+    if (id) await payload.delete({ collection: 'faq', id })
+  }
 
   for (const data of perguntas) {
     const id = await idExistente('faq', { pergunta: { equals: data.pergunta } })

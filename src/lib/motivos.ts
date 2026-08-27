@@ -7,7 +7,7 @@ export const motivos = [
   { valor: 'queda-capilar', rotulo: 'Queda capilar' },
   { valor: 'alopecia', rotulo: 'Alopecia' },
   { valor: 'caspa-dermatite', rotulo: 'Caspa e dermatite' },
-  { valor: 'tricoscopia', rotulo: 'Avaliacao e tricoscopia' },
+  { valor: 'tricoscopia', rotulo: 'Consulta e tricoscopia' },
   { valor: 'outro', rotulo: 'Outro assunto' },
 ]
 

@@ -53,6 +53,27 @@ export const Clinica: GlobalConfig = {
           ],
         },
         {
+          label: 'Vídeos de fundo',
+          description:
+            'Vídeos que entram atrás de uma seção. Sempre com um véu por cima, calculado para o texto continuar legível. Sem arquivo, a seção fica com o fundo chapado.',
+          fields: [
+            {
+              name: 'videoTricoscopia',
+              type: 'upload',
+              relationTo: 'media',
+              label: 'Seção do exame',
+              admin: { description: 'Fundo da Tricoscopia digital. Só vídeo.' },
+            },
+            {
+              name: 'videoDepoimentos',
+              type: 'upload',
+              relationTo: 'media',
+              label: 'Seção dos depoimentos',
+              admin: { description: 'Fundo do bloco "Quem já tratou". Só vídeo.' },
+            },
+          ],
+        },
+        {
           label: 'Sobre',
           description:
             'Alimenta a seção Sobre da página. O texto fala em primeira pessoa, como se a profissional estivesse se apresentando.',
@@ -145,6 +166,15 @@ export const Clinica: GlobalConfig = {
                 { name: 'endereco', type: 'textarea', required: true },
                 { name: 'telefone', type: 'text' },
                 { name: 'mapaUrl', type: 'text', label: 'Link do Google Maps' },
+                {
+                  name: 'mapaEmbed',
+                  type: 'textarea',
+                  label: 'Mapa incorporado',
+                  admin: {
+                    description:
+                      'No Google Maps, use Compartilhar e depois Incorporar um mapa. Cole aqui o endereço que aparece em src, ou o código inteiro do iframe.',
+                  },
+                },
               ],
             },
             {

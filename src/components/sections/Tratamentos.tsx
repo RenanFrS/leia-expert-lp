@@ -1,8 +1,9 @@
-import Image from 'next/image'
 import { Revelar } from '@/components/Revelar'
 import { AnimatedContent } from '@/components/ui/animated-content'
 import { CamadaParallax } from '@/components/ui/camada-parallax'
-import { cn, enquadramento, midia } from '@/lib/utils'
+import { MidiaRotativa } from '@/components/ui/midia-rotativa'
+import { urlDeEntrega } from '@/lib/cloudinary-url'
+import { cn, midia } from '@/lib/utils'
 import type { Tratamento } from '@/payload-types'
 
 /**
@@ -45,7 +46,32 @@ export function Tratamentos({ tratamentos }: { tratamentos: Tratamento[] }) {
         </Revelar>
 
         {tratamentos.map((tratamento, indice) => {
-          const imagem = midia(tratamento.imagem)
+          const arquivo = midia(tratamento.imagem)
+
+          /*
+            O campo aceita foto **ou** video, e por muito tempo o cartao
+            renderizava `<Image>` sem olhar o tipo: video ali simplesmente nao
+            aparecia. Quem resolve os dois casos e o `MidiaRotativa`, o mesmo do
+            painel do hero, com um item so. Ele ja sabe escolher entre `<Image>`
+            e `<video>`, poe o poster, respeita `prefers-reduced-motion` e cai
+            na chapa de areia quando nao ha arquivo.
+
+            Video aponta direto para a CDN, como no hero e na tricoscopia. A
+            rota do Payload entrega o original: medido neste `.mov`, **17,6 MB
+            contra 933 KB** pela CDN, e ela ainda nao responde a `Range`.
+
+            **A transformacao fixa `f_mp4`, e nao `f_auto`.** Testado contra a
+            conta real, o `f_auto` devolve o `.mov` ainda como
+            `video/quicktime`. O Chrome toca assim mesmo, porque reconhece o
+            H.264 por dentro, mas depender disso e apostar no sniffing do
+            navegador. O peso e o mesmo nos dois, 933 KB, entao `f_mp4` sai de
+            graca e declara o tipo certo. O `w_800` e a largura do cartao com
+            folga para tela de 2x.
+          */
+          const fonte =
+            arquivo?.filename && arquivo.mimeType?.startsWith('video/')
+              ? urlDeEntrega(arquivo.filename, 'f_mp4,q_auto,w_800')
+              : null
           // O par entra pela esquerda e fica docado a esquerda. A foto acompanha,
           // sempre na borda de fora, o que mantem o texto rente a espinha.
           const daEsquerda = indice % 2 === 1
@@ -111,16 +137,15 @@ export function Tratamentos({ tratamentos }: { tratamentos: Tratamento[] }) {
                         sem altura fixa no cartao, a linha do flex encolheria ate
                         o texto. */}
                     <figure className="relative aspect-[4/3] overflow-hidden rounded-lg bg-areia md:aspect-auto md:w-[38%] md:min-h-[17rem] md:shrink-0 lg:w-[36%]">
-                      {imagem?.url && (
+                      {arquivo?.url && (
                         <CamadaParallax preencher distancia="10%" reverso={daEsquerda}>
-                          <Image
-                            src={imagem.url}
-                            alt={imagem.alt || tratamento.titulo}
-                            fill
+                          <MidiaRotativa
+                            itens={[{ arquivo: fonte ? { ...arquivo, url: fonte } : arquivo }]}
                             sizes="(max-width: 768px) 100vw, (max-width: 1024px) 38vw, 24vw"
-                            className="object-cover"
-                            loading={indice === 0 ? 'eager' : 'lazy'}
-                            style={enquadramento(imagem)}
+                            // A secao vive bem abaixo da dobra: sem isso o
+                            // navegador baixaria e tocaria os videos dos quatro
+                            // cartoes antes de alguem rolar ate eles.
+                            soQuandoVisivel
                           />
                         </CamadaParallax>
                       )}

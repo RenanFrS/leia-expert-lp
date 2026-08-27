@@ -31,7 +31,16 @@ export function Duvidas({ perguntas }: { perguntas: Faq[] }) {
             {perguntas.map((item) => (
               <AccordionItem key={item.id} value={String(item.pergunta)}>
                 <AccordionTrigger>{item.pergunta}</AccordionTrigger>
-                <AccordionContent>{item.resposta}</AccordionContent>
+                {/*
+                  `whitespace-pre-line` faz a quebra de linha que a clinica
+                  digitar no painel chegar na tela. O campo `resposta` e um
+                  `textarea` renderizado como texto puro, entao sem isso uma
+                  resposta em etapas viraria um paragrafo corrido.
+
+                  Nao mexe no que ja existe: conferido, nenhuma das respostas
+                  gravadas tem quebra de linha.
+                */}
+                <AccordionContent className="whitespace-pre-line">{item.resposta}</AccordionContent>
               </AccordionItem>
             ))}
           </Accordion>

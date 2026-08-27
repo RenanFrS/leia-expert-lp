@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { ArrowUpRight, Loader2 } from 'lucide-react'
+import { ArrowUpRight, CalendarCheck, ChevronDown, Loader2 } from 'lucide-react'
 import { BotaoWhatsapp } from '@/components/BotaoWhatsapp'
 import { Button } from '@/components/ui/button'
 import { CartaoVidro } from '@/components/ui/cartao-vidro'
@@ -21,7 +21,7 @@ const motivos = [
   { valor: 'queda-capilar', rotulo: 'Queda capilar' },
   { valor: 'alopecia', rotulo: 'Alopecia' },
   { valor: 'caspa-dermatite', rotulo: 'Caspa e dermatite' },
-  { valor: 'tricoscopia', rotulo: 'Avaliacao e tricoscopia' },
+  { valor: 'tricoscopia', rotulo: 'Consulta e tricoscopia' },
   { valor: 'outro', rotulo: 'Outro assunto' },
 ]
 
@@ -195,7 +195,7 @@ export function Agendamento({
               <h2 className="font-display text-display-md">Recebemos seu contato</h2>
               <p className="mt-4 text-porcelana/85">
                 A equipe responde pelo WhatsApp em horário comercial para confirmar o melhor dia da sua
-                avaliação.
+                consulta.
               </p>
             </div>
           ) : (
@@ -203,7 +203,7 @@ export function Agendamento({
               <Revelar>
                 {/* Sobre o cacau so tom claro alcanca contraste, entao o eyebrow perde o caramelo. */}
                 <p className="text-eyebrow font-mono uppercase text-porcelana">Agendamento</p>
-                <h2 className="mt-4 font-display text-display-lg">Comece pela avaliação</h2>
+                <h2 className="mt-4 font-display text-display-lg">Comece pela consulta</h2>
                 <p className="mt-4 text-porcelana/85">
                   Preencha os campos e a equipe entra em contato para encontrar o melhor horário. Sem
                   compromisso de fechar tratamento.
@@ -219,60 +219,79 @@ export function Agendamento({
                   noValidate
                   className="mt-8 space-y-5 text-porcelana/80"
                 >
-                  <div className="space-y-2">
-                    <Label htmlFor="nome">
-                      Nome
-                      <Obrigatorio />
-                    </Label>
-                    <Input id="nome" name="nome" required autoComplete="name" placeholder="Seu nome completo" />
-                  </div>
+                  {/* Duas colunas nos campos curtos. Abaixo do `sm` a coluna e
+                      estreita demais e eles voltam a empilhar. */}
+                  <div className="grid gap-5 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="nome">
+                        Nome completo
+                        <Obrigatorio />
+                      </Label>
+                      <Input id="nome" name="nome" required autoComplete="name" placeholder="Como podemos te chamar" />
+                    </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="whatsapp">
-                      WhatsApp
-                      <Obrigatorio />
-                    </Label>
-                    <Input
-                      id="whatsapp"
-                      name="whatsapp"
-                      required
-                      inputMode="tel"
-                      autoComplete="tel"
-                      placeholder="(11) 90000-0000"
-                    />
-                  </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email">E mail</Label>
+                      <Input id="email" name="email" type="email" autoComplete="email" placeholder="voce@email.com" />
+                    </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="email">E mail</Label>
-                    <Input id="email" name="email" type="email" autoComplete="email" placeholder="voce@email.com" />
-                  </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="whatsapp">
+                        WhatsApp
+                        <Obrigatorio />
+                      </Label>
+                      <Input
+                        id="whatsapp"
+                        name="whatsapp"
+                        required
+                        inputMode="tel"
+                        autoComplete="tel"
+                        placeholder="(11) 90000-0000"
+                      />
+                    </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="motivo">
-                      Motivo do contato
-                      <Obrigatorio />
-                    </Label>
-                    <select
-                      id="motivo"
-                      name="motivo"
-                      required
-                      defaultValue=""
-                      className="flex h-12 w-full rounded-md border border-tinta/15 bg-porcelana px-4 text-sm text-tinta focus-visible:border-cacau focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cacau/20"
-                    >
-                      <option value="" disabled>
-                        Selecione
-                      </option>
-                      {motivos.map((motivo) => (
-                        <option key={motivo.valor} value={motivo.valor}>
-                          {motivo.rotulo}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="space-y-2">
+                      <Label htmlFor="motivo">
+                        Sobre o que quer falar
+                        <Obrigatorio />
+                      </Label>
+                      {/* `appearance-none` mais a seta desenhada: a seta nativa
+                          muda de desenho em cada sistema e destoava do resto do
+                          formulario. O `pointer-events-none` no icone mantem o
+                          clique chegando no select. */}
+                      <div className="relative">
+                        <select
+                          id="motivo"
+                          name="motivo"
+                          required
+                          defaultValue=""
+                          className="flex h-14 w-full appearance-none rounded-xl border border-tinta/15 bg-porcelana px-5 pr-12 text-base text-tinta focus-visible:border-cacau focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cacau/20"
+                        >
+                          <option value="" disabled>
+                            Selecione
+                          </option>
+                          {motivos.map((motivo) => (
+                            <option key={motivo.valor} value={motivo.valor}>
+                              {motivo.rotulo}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown
+                          aria-hidden
+                          className="pointer-events-none absolute right-5 top-1/2 h-5 w-5 -translate-y-1/2 text-neutro"
+                        />
+                      </div>
+                    </div>
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="mensagem">Conte um pouco do seu caso</Label>
-                    <Textarea id="mensagem" name="mensagem" rows={4} placeholder="Opcional" />
+                    <Textarea
+                      id="mensagem"
+                      name="mensagem"
+                      rows={5}
+                      placeholder="Descrição do seu caso ou dúvidas sobre o tratamento"
+                    />
                   </div>
 
                   <div className="flex items-start gap-3">
@@ -281,13 +300,9 @@ export function Agendamento({
                       id="autorizacao"
                       checked={autorizado}
                       onCheckedChange={(valor) => setAutorizado(valor === true)}
-                      className="mt-0.5 border-porcelana/55 data-[state=checked]:border-porcelana data-[state=checked]:bg-porcelana data-[state=checked]:text-cacau-escuro"
+                      className="mt-0.5 h-5 w-5 border-porcelana/55 data-[state=checked]:border-porcelana data-[state=checked]:bg-porcelana data-[state=checked]:text-cacau-escuro"
                     />
-                    <Label
-                      id="rotulo-autorizacao"
-                      htmlFor="autorizacao"
-                      className="text-porcelana/85 normal-case tracking-normal"
-                    >
+                    <Label id="rotulo-autorizacao" htmlFor="autorizacao" className="text-porcelana/85">
                       Autorizo o contato pelo WhatsApp e o uso dos meus dados para agendamento.
                     </Label>
                   </div>
@@ -295,7 +310,7 @@ export function Agendamento({
                   {erro && (
                     <p
                       role="alert"
-                      className="rounded-md bg-porcelana px-3 py-2 text-sm font-medium text-cacau-escuro"
+                      className="rounded-xl bg-porcelana px-4 py-3 text-sm font-medium text-cacau-escuro"
                     >
                       {erro}
                     </p>
@@ -304,26 +319,33 @@ export function Agendamento({
                   {/* O botao so libera com a autorizacao marcada. O
                       aria-describedby aponta para o rotulo dela, senao o botao
                       desabilitado nao explica o proprio motivo. */}
-                  <Button
-                    type="submit"
-                    variant="destaque"
-                    size="lg"
-                    especular
-                    disabled={!autorizado || estado === 'enviando'}
-                    aria-describedby="rotulo-autorizacao"
-                    className="w-full"
-                  >
-                    {estado === 'enviando' ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" /> Enviando
-                      </>
-                    ) : (
-                      <>
-                        Enviar e agendar
-                        <ArrowUpRight className="h-4 w-4" />
-                      </>
-                    )}
-                  </Button>
+                  <div className="flex flex-wrap items-center gap-x-6 gap-y-4 pt-1">
+                    <Button
+                      type="submit"
+                      variant="destaque"
+                      size="lg"
+                      especular
+                      disabled={!autorizado || estado === 'enviando'}
+                      aria-describedby="rotulo-autorizacao"
+                      className="w-full rounded-full sm:w-auto"
+                    >
+                      {estado === 'enviando' ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" /> Enviando
+                        </>
+                      ) : (
+                        <>
+                          <CalendarCheck className="h-5 w-5" />
+                          Enviar e agendar
+                        </>
+                      )}
+                    </Button>
+
+                    <p className="max-w-xs text-sm text-porcelana/70">
+                      Retornamos pelo WhatsApp em horário comercial.
+                    </p>
+                  </div>
+
                 </form>
               </AnimatedContent>
             </>

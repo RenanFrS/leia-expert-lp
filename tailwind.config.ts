@@ -6,8 +6,21 @@ const config: Config = {
   theme: {
     container: {
       center: true,
-      padding: { DEFAULT: '1.25rem', lg: '2rem' },
-      screens: { '2xl': '1200px' },
+      /*
+        O respiro maior fica na chave `2xl`, e nao em `lg`, e isso nao e escolha
+        de gosto. O Tailwind casa cada chave de `padding` contra
+        `theme('container.screens', theme('screens'))`, em `corePlugins.js`. Como
+        aqui o `container.screens` foi reduzido a uma entrada, so existe um
+        breakpoint para casar, e qualquer outra chave e descartada em silencio.
+        Ficou meses um `lg: '2rem'` escrito que nunca chegou ao CSS.
+
+        Trazer o `lg` de volta ao `screens` **nao** resolve: o valor ali e ao
+        mesmo tempo o `min-width` da media query e o `max-width` do container,
+        entao um `lg` limitaria a pagina a 1024px entre 1024 e 1440, deixando
+        tudo mais estreito do que e hoje.
+      */
+      padding: { DEFAULT: '1.25rem', '2xl': '2rem' },
+      screens: { '2xl': '1440px' },
     },
     extend: {
       colors: {

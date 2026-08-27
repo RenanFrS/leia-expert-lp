@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Menu, X } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { pushEvento } from '@/lib/analytics'
+import { BotaoWhatsapp } from '@/components/BotaoWhatsapp'
 import { Logotipo } from '@/components/Logotipo'
 import { cn } from '@/lib/utils'
 import type { Clinica } from '@/payload-types'
@@ -22,9 +21,11 @@ const links = [
 type Props = {
   nome: string
   logo?: Clinica['logo']
+  whatsapp: string
+  mensagemWhatsapp?: string | null
 }
 
-export function Header({ nome, logo }: Props) {
+export function Header({ nome, logo, whatsapp, mensagemWhatsapp }: Props) {
   const [compacto, setCompacto] = useState(false)
   const [aberto, setAberto] = useState(false)
   // Nasce vazio: no topo da pagina nenhuma secao da lista esta em tela ainda.
@@ -106,11 +107,16 @@ export function Header({ nome, logo }: Props) {
         </a>
 
         <div className="col-start-3 flex items-center justify-end gap-2">
-          <Button asChild size="sm" especular className="hidden xl:inline-flex">
-            <a href="#agendar" onClick={() => pushEvento('clique_agendar', { local: 'header' })}>
-              Agendar avaliação
-            </a>
-          </Button>
+          <BotaoWhatsapp
+            numero={whatsapp}
+            mensagem={mensagemWhatsapp}
+            local="header"
+            size="sm"
+            especular
+            className="hidden xl:inline-flex"
+          >
+            Agendar consulta tricológica
+          </BotaoWhatsapp>
           <button
             type="button"
             className="rounded-md p-2 text-tinta transition-colors hover:bg-areia xl:hidden"
@@ -138,17 +144,15 @@ export function Header({ nome, logo }: Props) {
               {link.label}
             </a>
           ))}
-          <Button asChild especular className="mt-2">
-            <a
-              href="#agendar"
-              onClick={() => {
-                setAberto(false)
-                pushEvento('clique_agendar', { local: 'menu-mobile' })
-              }}
-            >
-              Agendar avaliação
-            </a>
-          </Button>
+          <BotaoWhatsapp
+            numero={whatsapp}
+            mensagem={mensagemWhatsapp}
+            local="menu-mobile"
+            especular
+            className="mt-2"
+          >
+            Agendar consulta tricológica
+          </BotaoWhatsapp>
         </nav>
       )}
     </header>

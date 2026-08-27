@@ -6,6 +6,7 @@ import { postgresAdapter } from '@payloadcms/db-postgres'
 import { cloudStoragePlugin } from '@payloadcms/plugin-cloud-storage'
 import { seoPlugin } from '@payloadcms/plugin-seo'
 import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
+import { pt } from '@payloadcms/translations/languages/pt'
 
 import { Users } from './collections/Users'
 import { Media } from './collections/Media'
@@ -27,6 +28,11 @@ const urlSite = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 export default buildConfig({
   // O painel responde em /admin.
   routes: { admin: '/admin' },
+
+  // A moldura do painel em portugues: botoes, mensagens e menu. Os rotulos das
+  // colecoes ja vinham escritos em portugues, entao isso completa o resto.
+  // O `pt` vem do proprio `@payloadcms/translations`, sem instalar nada.
+  i18n: { fallbackLanguage: 'pt', supportedLanguages: { pt } },
 
   admin: {
     user: Users.slug,
