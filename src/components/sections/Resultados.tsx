@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
-import { CalendarDays, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react'
+import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
 import { A11y, EffectCoverflow, Keyboard, Navigation, Pagination } from 'swiper/modules'
 import { Swiper, SwiperSlide } from 'swiper/react'
 // O CSS do Swiper e importado no `globals.css`, e nao aqui. Motivo no
@@ -53,7 +53,6 @@ function Comparador({ resultado, ativo }: { resultado: Resultado; ativo: boolean
 
   const antes = midia(resultado.antes)
   const depois = midia(resultado.depois)
-  const tratamento = typeof resultado.tratamento === 'object' ? resultado.tratamento : null
 
   // Caso ainda em andamento: a segunda foto e do meio do tratamento, e nao do
   // fim. A mesma afirmacao aparece em quatro lugares, e eles mudam juntos: a
@@ -176,22 +175,19 @@ function Comparador({ resultado, ativo }: { resultado: Resultado; ativo: boolean
 
           <p className="mt-2 text-base text-porcelana">{resultado.titulo}</p>
 
-          {(resultado.meses || tratamento) && (
-            <div className="mt-3 flex flex-col items-center gap-1.5">
-              {resultado.meses && (
-                <span className="flex items-center gap-2 text-sm text-porcelana">
-                  <CalendarDays aria-hidden className="h-4 w-4 text-caramelo-claro" />
-                  {resultado.meses} {resultado.meses === 1 ? 'mês' : 'meses'} de tratamento
-                </span>
-              )}
-              {tratamento && (
-                <span className="flex items-center gap-2 text-sm text-porcelana">
-                  <Sparkles aria-hidden className="h-4 w-4 text-caramelo-claro" />
-                  {tratamento.titulo}
-                </span>
-              )}
-            </div>
-          )}
+          {/* O painel mostrava tambem o nome do tratamento vinculado, com um
+              icone de brilho. Saiu a pedido do cliente. O campo `tratamento`
+              continua na colecao: ele serve para organizar a biblioteca no
+              painel, so nao aparece mais no cartao.
+
+              A guarda e ternaria, e nao `&&`: com `meses` em zero o `&&`
+              imprimiria um "0" solto dentro do painel. */}
+          {resultado.meses ? (
+            <p className="mt-3 flex items-center justify-center gap-2 text-sm text-porcelana">
+              <CalendarDays aria-hidden className="h-4 w-4 text-caramelo-claro" />
+              {resultado.meses} {resultado.meses === 1 ? 'mês' : 'meses'} de tratamento
+            </p>
+          ) : null}
         </figcaption>
       </div>
     </figure>
