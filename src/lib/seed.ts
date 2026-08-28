@@ -27,10 +27,12 @@ import { MENSAGEM_WHATSAPP_PADRAO } from '@/lib/utils'
  */
 
 /**
- * Os dez servicos prestados pela clinica, transcritos do site da propria Leia.
- * O `resumo` e o texto dela, literal. O `titulo` perde o prefixo "Tratamento
- * para", que e redundante dentro da secao de tratamentos e nao caberia na
- * pilula do hero, e ganha o acento que faltava em "Estimulo".
+ * Os servicos prestados pela clinica, transcritos do site da propria Leia. O
+ * `resumo` e o texto dela, literal, com uma excecao marcada no proprio item:
+ * "Alopecia e calvicie", que entrou no lugar de "Microagulhamento capilar" e tem
+ * texto escrito aqui. O `titulo` perde o prefixo "Tratamento para", que e
+ * redundante dentro da secao de tratamentos e nao caberia na pilula do hero, e
+ * ganha o acento que faltava em "Estimulo".
  *
  * A ordem leva diagnostico antes de tratamento e deixa os servicos de beleza no
  * fim, que e a jornada que o texto dela descreve.
@@ -116,33 +118,60 @@ const tratamentos = [
     ],
     ordem: 5,
   },
+  /*
+    Entrou no lugar de "Microagulhamento capilar", a pedido do cliente. O titulo
+    antigo era o nome do procedimento, e ninguem procura procedimento no Google:
+    procura a queixa. Este e o unico item cujo `resumo` nao sai literal do site
+    dela, porque o texto foi escrito para responder a busca.
+
+    O `imagem` fica de fora, aqui e nos outros: midia entra pelo painel. No banco
+    este tratamento aponta para `calvo.mp4`.
+  */
   {
-    titulo: 'Microagulhamento capilar',
-    slug: 'microagulhamento-capilar',
+    titulo: 'Alopecia e calvície',
+    slug: 'alopecia-calvicie',
     resumo:
-      'Promove a circulação sanguínea e a produção de colágeno, o que ajuda a combater a queda de cabelo e a estimular o crescimento de novos fios.',
+      'A calvície, que antes parecia inevitável, hoje pode ser acompanhada e tratada com estratégia. O ponto não é esperar a falha aumentar, mas avaliar o estágio atual e agir com intensidade proporcional ao caso.',
     descricao:
-      'Trabalha a pele do couro cabeludo, que é o terreno onde o folículo está.',
+      'É a queixa que mais chega tarde, porque a pessoa espera a falha aumentar antes de procurar ajuda.',
     indicacoes: [
-      { texto: 'Aumento da circulação no couro cabeludo' },
-      { texto: 'Estímulo à produção de colágeno' },
-      { texto: 'Apoio no combate à queda' },
+      { texto: 'Entradas recuando e coroa abrindo' },
+      { texto: 'Risca que alarga ao longo dos meses' },
+      { texto: 'Histórico de calvície na família' },
     ],
     ordem: 6,
   },
+  // Entrou no lugar de "Ionizacao capilar". Mesmo motivo do item anterior: o
+  // titulo antigo era o nome do aparelho, e quem sente coceira e descamacao
+  // procura por coceira e descamacao. No banco aponta para `couro-cabeludo.mp4`.
   {
-    titulo: 'Ionização capilar',
-    slug: 'ionizacao-capilar',
+    titulo: 'Caspa, coceira e descamação',
+    slug: 'caspa-coceira-descamacao',
     resumo:
-      'Além de favorecer a penetração de substâncias nutritivas, também estimula o couro cabeludo promovendo o aumento do metabolismo e melhora da atividade celular.',
-    descricao:
-      'Faz o ativo chegar onde precisa, em vez de ficar na superfície.',
+      'Coceira que não passa, casquinha branca no ombro, couro cabeludo vermelho ou oleoso demais. Antes de tratar a queda é o couro que precisa voltar ao normal, porque fio novo não se sustenta em terreno inflamado.',
+    descricao: 'Controlar inflamação, oleosidade e fungo vem antes de tratar a queda.',
     indicacoes: [
-      { texto: 'Melhor penetração dos ativos nutritivos' },
-      { texto: 'Aumento do metabolismo do couro cabeludo' },
-      { texto: 'Melhora da atividade celular' },
+      { texto: 'Coceira, ardência e vermelhidão' },
+      { texto: 'Caspa e descamação com oleosidade' },
+      { texto: 'Fungos e obstrução no couro cabeludo' },
     ],
     ordem: 7,
+  },
+  // Quinta entrada, criada do zero. Fecha a lista com a falha localizada, que e
+  // queixa distinta da queda difusa do item 01. No banco aponta para
+  // `calvo-nuca.mp4`.
+  {
+    titulo: 'Falhas e alopecia areata',
+    slug: 'falhas-alopecia-areata',
+    resumo:
+      'Falha redonda que aparece de um mês para o outro, no couro cabeludo, na barba ou na sobrancelha. Assusta pela velocidade, e é por isso mesmo que pede leitura no tricoscópio antes de qualquer palpite.',
+    descricao: 'A leitura no tricoscópio separa o que é areata do que é tração, cicatriz ou fungo.',
+    indicacoes: [
+      { texto: 'Falhas arredondadas de contorno nítido' },
+      { texto: 'Perda rápida, em questão de semanas' },
+      { texto: 'Falhas na barba e na sobrancelha' },
+    ],
+    ordem: 8,
   },
   {
     titulo: 'Massagem capilar',
@@ -156,7 +185,7 @@ const tratamentos = [
       { texto: 'Saúde do couro cabeludo' },
       { texto: 'Maior absorção dos produtos capilares' },
     ],
-    ordem: 8,
+    ordem: 9,
   },
   {
     titulo: 'Embelezamento capilar',
@@ -170,7 +199,7 @@ const tratamentos = [
       { texto: 'Reparação de fios ressecados' },
       { texto: 'Brilho, maciez e vitalidade' },
     ],
-    ordem: 9,
+    ordem: 10,
   },
   {
     titulo: 'Corte terapêutico',
@@ -184,7 +213,7 @@ const tratamentos = [
       { texto: 'Preserva comprimento, corte e volume' },
       { texto: 'Complemento ao tratamento em andamento' },
     ],
-    ordem: 10,
+    ordem: 11,
   },
 ]
 
@@ -326,6 +355,12 @@ const slugsTratamentosAntigos = [
   'afinamento-dos-fios',
   'caspa-dermatite',
   'recuo-linha-frontal',
+  // Virou "Alopecia e calvicie". No banco o documento foi atualizado no lugar,
+  // preservando o id, entao esta linha so vale para instalacao que ainda tenha o
+  // slug antigo. Onde a troca ja passou, ela e um no-op.
+  'microagulhamento-capilar',
+  // Virou "Caspa, coceira e descamacao", tambem atualizada no lugar.
+  'ionizacao-capilar',
 ]
 
 /**
