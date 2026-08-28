@@ -5,6 +5,7 @@ export const Resultados: CollectionConfig = {
   admin: { useAsTitle: 'titulo', group: 'Conteudo' },
   labels: { singular: 'Resultado', plural: 'Resultados' },
   access: { read: () => true },
+  defaultSort: 'ordem',
   fields: [
     { name: 'titulo', type: 'text', required: true },
     { name: 'antes', type: 'upload', relationTo: 'media', required: true },
@@ -39,6 +40,14 @@ export const Resultados: CollectionConfig = {
         description: 'Marque quando o caso ainda está em andamento e a segunda foto não é o resultado final.',
       },
     },
+    /*
+      Ordem no carrossel, da esquerda para a direita. Antes a secao saia por
+      `-createdAt`, entao a unica forma de reordenar era recadastrar o caso.
+
+      Os valores vao de dez em dez de proposito: encaixar um resultado novo entre
+      dois existentes e escolher um numero no meio, sem renumerar a lista toda.
+    */
+    { name: 'ordem', type: 'number', defaultValue: 0, admin: { position: 'sidebar' } },
     { name: 'publicado', type: 'checkbox', defaultValue: true, admin: { position: 'sidebar' } },
   ],
 }

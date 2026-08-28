@@ -34,8 +34,10 @@ import { MENSAGEM_WHATSAPP_PADRAO } from '@/lib/utils'
  * redundante dentro da secao de tratamentos e nao caberia na pilula do hero, e
  * ganha o acento que faltava em "Estimulo".
  *
- * A ordem leva diagnostico antes de tratamento e deixa os servicos de beleza no
- * fim, que e a jornada que o texto dela descreve.
+ * A ordem dos cinco que estao no ar segue a queixa, do geral para o localizado:
+ * queda, afinamento, calvicie, couro cabeludo e falha. Os que sobraram no array
+ * e nao existem mais no banco mantem a ordem antiga, de diagnostico antes de
+ * tratamento e beleza no fim.
  *
  * O campo `descricao` nao e renderizado em lugar nenhum do site hoje. Fica com
  * uma frase so, sem inventar conteudo clinico.
@@ -104,17 +106,24 @@ const tratamentos = [
     ],
     ordem: 4,
   },
+  // Entrou no lugar de "Estimulo de crescimento", que era o nome do protocolo e
+  // nao da queixa. Mantem o video `estimulo-de-crescimento.mp4` no banco.
+  //
+  // Nao se chama "afinamento e falhas", que era a sugestao original, porque
+  // "falhas" ja titula o item de ordem 8 e os dois cartoes ficariam disputando a
+  // mesma palavra na mesma secao. Aqui a queixa e o fio que afina no corpo todo,
+  // la e a falha localizada.
   {
-    titulo: 'Estímulo de crescimento',
-    slug: 'estimulo-de-crescimento',
+    titulo: 'Afinamento e perda de volume',
+    slug: 'afinamento-perda-de-volume',
     resumo:
-      'Tratamentos que fortalecem os fios, equilibram o couro cabeludo e estimulam o crescimento saudável.',
+      'O rabo de cavalo que já foi grosso e hoje fecha em duas voltas. O fio nasce mais fino a cada ciclo e o comprimento estaciona, sem nunca ter havido aquela queda dramática que faria procurar ajuda antes.',
     descricao:
-      'Depois de tratar a causa, o passo seguinte é dar condição para o fio nascer e se manter.',
+      'Afinamento progressivo, sem queda visível. É o que mais passa despercebido, porque não há tufo no ralo.',
     indicacoes: [
-      { texto: 'Fortalecimento dos fios existentes' },
-      { texto: 'Equilíbrio do couro cabeludo' },
-      { texto: 'Estímulo ao crescimento saudável' },
+      { texto: 'Rabo de cavalo mais fino do que já foi' },
+      { texto: 'Couro cabeludo aparecendo sob a luz' },
+      { texto: 'Comprimento que não avança' },
     ],
     ordem: 5,
   },
@@ -223,7 +232,7 @@ const perguntas = [
   {
     pergunta: 'A consulta e o exame tricológico são gratuitos?',
     resposta:
-      'Não. A consulta é um atendimento clínico: inclui a tricoscopia, a leitura do couro cabeludo e dos fios e termina com um diagnóstico e uma conduta na mão. Você sai sabendo o que está acontecendo mesmo que decida não seguir com tratamento nenhum. É justamente por ser cobrada que ela pode terminar em "não há indicação para o seu caso", em vez de virar vitrine de protocolo.',
+      'Não. A consulta é um atendimento clínico: inclui a tricoscopia, a leitura do couro cabeludo e dos fios e termina com uma conduta na mão. Você sai sabendo o que está acontecendo com o seu cabelo mesmo que decida não seguir com tratamento nenhum. É justamente por ser cobrada que ela pode terminar em "não há indicação para o seu caso", em vez de virar vitrine de protocolo.',
     ordem: 1,
   },
   {
@@ -363,6 +372,8 @@ const slugsTratamentosAntigos = [
   'microagulhamento-capilar',
   // Virou "Caspa, coceira e descamacao", tambem atualizada no lugar.
   'ionizacao-capilar',
+  // Virou "Afinamento e perda de volume", tambem atualizada no lugar.
+  'estimulo-de-crescimento',
 ]
 
 /**
@@ -443,7 +454,10 @@ export const popularConteudo = async (payload: Payload) => {
     data: {
       nome: 'Léia Expert',
       chamada:
-        'Tricologia clínica para homens e mulheres. Todo protocolo começa por uma tricoscopia, porque o tratamento certo depende do diagnóstico certo.',
+        // Dizia "depende do diagnostico certo". Diagnostico e ato privativo de
+        // medico e a Leia e tricologista, entao a frase afirmava o que a clinica
+        // nao pode oferecer. Nao reintroduza a palavra aqui.
+        'Tricologia clínica para homens e mulheres. Todo protocolo começa por uma tricoscopia, porque o tratamento certo depende da leitura certa.',
       sobreRotulo: 'Minha história',
       // Texto da propria Leia, transcrito do site dela. A abertura fica no
       // resumo e o corpo no `sobre`, que e curto de proposito: ele ocupa metade

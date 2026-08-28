@@ -83,7 +83,10 @@ function FileteCanto({ lado, className }: { lado: 'esquerda' | 'direita'; classN
 export function Hero({ nome, chamada, tratamentos, painel, intervalo }: Props) {
   const texto =
     chamada ||
-    `Na ${nome}, cada protocolo começa por um exame de tricoscopia. O tratamento certo depende do diagnóstico certo.`
+    // Reserva usada so quando a `chamada` do painel esta vazia. Nao afirma
+    // diagnostico de proposito: e ato privativo de medico, e a Leia e
+    // tricologista. Mesma redacao da chamada gravada no banco.
+    `Na ${nome}, cada protocolo começa por um exame de tricoscopia. O tratamento certo depende da leitura certa.`
 
   /*
     O video do painel aponta direto para a CDN do Cloudinary, com `f_auto,q_auto`.

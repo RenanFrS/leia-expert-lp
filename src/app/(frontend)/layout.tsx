@@ -44,7 +44,9 @@ export async function generateMetadata(): Promise<Metadata> {
   const titulo = seo?.titulo || 'Tricologia clinica e tratamento capilar | Léia Expert'
   const descricao =
     seo?.descricao ||
-    'Clinica de tricologia com tricoscopia digital, diagnostico do couro cabeludo e protocolos para queda capilar e alopecia.'
+    // Reserva, usada so quando a descricao do painel esta vazia. Sem a palavra
+    // diagnostico, pelo mesmo motivo do resto do site.
+    'Clínica de tricologia com tricoscopia digital, leitura do couro cabeludo e protocolos para queda capilar e alopecia.'
   const imagem = (seo?.imagemCompartilhamento as { url?: string } | undefined)?.url
 
   return {

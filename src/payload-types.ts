@@ -221,6 +221,7 @@ export interface Resultado {
    * Marque quando o caso ainda está em andamento e a segunda foto não é o resultado final.
    */
   emTratamento?: boolean | null;
+  ordem?: number | null;
   publicado?: boolean | null;
   updatedAt: string;
   createdAt: string;
@@ -464,6 +465,7 @@ export interface ResultadosSelect<T extends boolean = true> {
   meses?: T;
   tratamento?: T;
   emTratamento?: T;
+  ordem?: T;
   publicado?: T;
   updatedAt?: T;
   createdAt?: T;

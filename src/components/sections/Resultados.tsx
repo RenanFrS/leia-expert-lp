@@ -266,7 +266,7 @@ export function Resultados({ resultados }: { resultados: Resultado[] }) {
           </h2>
           <p className="mt-4 max-w-lg text-tinta-suave">
             Fotos de pacientes reais, publicadas com autorização. O tempo de resposta varia conforme
-            o diagnóstico e a adesão ao protocolo.
+            a causa da queda e a adesão ao protocolo.
           </p>
         </Revelar>
 

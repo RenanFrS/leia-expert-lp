@@ -5,18 +5,23 @@ import { urlDeEntrega } from '@/lib/cloudinary-url'
 import { midia } from '@/lib/utils'
 import type { Clinica } from '@/payload-types'
 
+/*
+  A terceira etapa se chamava "Diagnostico e protocolo". Diagnostico e ato
+  privativo de medico, e a Leia e tricologista: a etapa continua a mesma, o que
+  muda e o que o site afirma sobre ela. Nao volte a usar a palavra aqui.
+*/
 const etapas = [
   {
     titulo: 'Leitura do couro cabeludo',
-    texto: 'A camera amplia a regiao ate 200 vezes e mostra o que o olho nao alcanca.',
+    texto: 'A câmera amplia a região até 200 vezes e mostra o que o olho não alcança.',
   },
   {
     titulo: 'Contagem de densidade',
-    texto: 'Medimos quantos fios existem por centimetro quadrado e a espessura de cada um.',
+    texto: 'Medimos quantos fios existem por centímetro quadrado e a espessura de cada um.',
   },
   {
-    titulo: 'Diagnostico e protocolo',
-    texto: 'Com o exame em maos, definimos o tratamento e o tempo esperado de resposta.',
+    titulo: 'Conclusão e protocolo',
+    texto: 'Com o exame em mãos, definimos o tratamento e o tempo esperado de resposta.',
   },
 ]
 
@@ -54,8 +59,8 @@ export function Tricoscopia({ video }: { video?: Clinica['videoTricoscopia'] }) 
           <p className="text-eyebrow font-mono uppercase text-caramelo-claro">O exame</p>
           <h2 className="mt-4 font-display text-display-lg">Tricoscopia digital</h2>
           <p className="mt-5 max-w-md text-porcelana/70">
-            E o exame que separa suposicao de diagnostico. Ele mostra a condicao real do folculo antes
-            de qualquer indicacao de tratamento.
+            É o exame que separa suposição de evidência. Ele mostra a condição real do folículo
+            antes de qualquer indicação de tratamento.
           </p>
           {/* Este e o caminho que sobrou ate o formulario, depois que os CTAs de
               "Agendar consulta tricologica" passaram a abrir o WhatsApp. Era um

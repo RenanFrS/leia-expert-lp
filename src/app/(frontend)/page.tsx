@@ -34,7 +34,10 @@ export default async function Home() {
       collection: 'resultados',
       limit: 24,
       depth: 1,
-      sort: '-createdAt',
+      // A ordem e a do painel, e nao a data de cadastro: a secao agrupa os casos
+      // femininos a esquerda e os masculinos a direita, e isso precisa sobreviver
+      // a um recadastro.
+      sort: 'ordem',
       where: { publicado: { equals: true } },
     }),
     payload.find({ collection: 'depoimentos', limit: 6, depth: 1, where: { publicado: { equals: true } } }),
