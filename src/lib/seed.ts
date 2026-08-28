@@ -164,12 +164,14 @@ const tratamentos = [
     titulo: 'Falhas e alopecia areata',
     slug: 'falhas-alopecia-areata',
     resumo:
-      'Falha redonda que aparece de um mês para o outro, no couro cabeludo, na barba ou na sobrancelha. Assusta pela velocidade, e é por isso mesmo que pede leitura no tricoscópio antes de qualquer palpite.',
+      'Falha redonda que aparece de um mês para o outro, numa região do couro cabeludo que até então estava normal. Assusta pela velocidade, e é por isso mesmo que pede leitura no tricoscópio antes de qualquer palpite.',
     descricao: 'A leitura no tricoscópio separa o que é areata do que é tração, cicatriz ou fungo.',
     indicacoes: [
       { texto: 'Falhas arredondadas de contorno nítido' },
       { texto: 'Perda rápida, em questão de semanas' },
-      { texto: 'Falhas na barba e na sobrancelha' },
+      // A clinica so atende cabelo da cabeca. Esta linha descrevia falha em
+      // barba e sobrancelha, que ela nao trata.
+      { texto: 'Falha lisa, sem dor, coceira ou descamação' },
     ],
     ordem: 8,
   },
