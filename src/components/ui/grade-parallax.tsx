@@ -6,10 +6,10 @@ import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion
 import { cn } from '@/lib/utils'
 
 /** Curso de cada coluna, em porcentagem da altura da grade. Indice = coluna. */
-const CURSOS = [0.06, -0.1, 0.04]
+const CURSOS = [0.06, -0.1]
 
 /** Degrau de partida de cada coluna, que e o desencontro vertical da referencia. */
-const DEGRAUS = ['lg:mt-0', 'lg:mt-14', 'lg:mt-6']
+const DEGRAUS = ['lg:mt-0', 'lg:mt-14']
 
 /**
  * Quantas colunas este arquivo sabe mover. Sai do proprio `CURSOS`, que e a
@@ -24,7 +24,7 @@ const DEGRAUS = ['lg:mt-0', 'lg:mt-14', 'lg:mt-6']
  */
 const COLUNAS = CURSOS.length
 
-/** Acima daqui a grade vira tres colunas e o parallax liga. */
+/** Acima daqui o parallax liga. Abaixo, a grade fica parada. */
 const CONSULTA_DESKTOP = '(min-width: 1024px)'
 
 /**
@@ -84,36 +84,31 @@ export function GradeParallax({ colunas }: { colunas: React.ReactNode[] }) {
 
   const ativo = desktop && !menosMovimento
 
-  // Os tres `useTransform` sao criados sempre, e nao dentro de um map sobre os
+  // Os dois `useTransform` sao criados sempre, e nao dentro de um map sobre os
   // filhos: `COLUNAS` e constante do modulo, entao a contagem de hooks nunca
   // muda, mas deixar isso implicito num map convidaria a quebrar a regra depois.
   const y0 = useTransform(progresso, [0, 1], [`${CURSOS[0] * 100}%`, `${-CURSOS[0] * 100}%`])
   const y1 = useTransform(progresso, [0, 1], [`${CURSOS[1] * 100}%`, `${-CURSOS[1] * 100}%`])
-  const y2 = useTransform(progresso, [0, 1], [`${CURSOS[2] * 100}%`, `${-CURSOS[2] * 100}%`])
-  const deslocamentos = [y0, y1, y2]
+  const deslocamentos = [y0, y1]
 
   return (
     <div
       ref={ref}
       /*
-        **O celular nao usa as colunas do DOM, e isso resolve um problema real.**
-        Tres colunas nao dividem por dois: numa grade de duas, a terceira cairia
-        sozinha na segunda linha, com metade da tela vazia ao lado dela por toda
-        a altura daquela coluna.
+        Duas colunas em qualquer tela, e cada coluna e uma caixa de verdade.
 
-        Com `columns-2` aqui e `contents` em cada coluna, o wrapper some da caixa
-        de layout e as `figure` viram filhas diretas deste container, que
-        **rebalanceia sozinho** em duas colunas. Um DOM so, uma requisicao por
-        foto: montar uma copia para telefone e outra para desktop dobraria isso.
-
-        No `lg` o wrapper volta a ser coluna de verdade e recebe o deslocamento.
+        **Isso ja foi mais complicado.** Com tres colunas no `lg` e duas no
+        celular, o container usava `columns-2` e cada coluna virava `contents`
+        para sumir do layout, porque tres nao dividem por dois e a terceira
+        cairia sozinha numa segunda linha, com metade da tela vazia ao lado. Com
+        duas colunas o motivo acabou: elas dividem por duas em toda largura.
       */
-      className="columns-2 gap-x-3 md:gap-x-4 lg:grid lg:grid-cols-3 lg:gap-5"
+      className="grid grid-cols-2 gap-3 md:gap-4 lg:gap-5"
     >
       {colunas.map((coluna, indice) => (
         <motion.div
           key={indice}
-          className={cn('contents lg:flex lg:flex-col', DEGRAUS[indice])}
+          className={cn('flex flex-col gap-3 md:gap-4 lg:gap-5', DEGRAUS[indice])}
           style={
             ativo && deslocamentos[indice]
               ? { y: deslocamentos[indice], willChange: 'transform' }

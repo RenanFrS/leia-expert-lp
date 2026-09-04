@@ -1,6 +1,9 @@
 import { BotaoWhatsapp } from '@/components/BotaoWhatsapp'
 import { Revelar } from '@/components/Revelar'
-import { GaleriaParallax } from '@/components/ui/galeria-parallax'
+import Image from 'next/image'
+
+import { GaleriaParallax, type CartaoDaGrade } from '@/components/ui/galeria-parallax'
+import { midia } from '@/lib/utils'
 import type { Galeria } from '@/payload-types'
 
 /**
@@ -27,7 +30,45 @@ export function AClinica({
   whatsapp: string
   mensagemWhatsapp?: string | null
 }) {
-  if (!fotos.length) return null
+  /*
+    A grade nao sabe montar cartao: ela recebe o conteudo pronto e a razao de
+    altura. Aqui cada cartao e uma foto sozinha, na propria proporcao.
+
+    **Video e descartado na entrada.** A colecao aponta para a Media, que aceita
+    os dois tipos, e o otimizador do Next responde 400, "The requested resource
+    isn't a valid image", para um `.mp4`: sem esse filtro uma foto trocada por
+    video deixaria um buraco na grade sem erro nenhum na tela.
+
+    **Nao ha `enquadramento` aqui, e isso e proposital.** O ponto de foco existe
+    para imagem em `object-cover`, onde a caixa recorta a foto de novo. Aqui ela
+    entra inteira, entao um `object-position` seria letra morta.
+  */
+  const cartoes: CartaoDaGrade[] = []
+
+  for (const item of fotos) {
+    const arquivo = midia(item.foto)
+    if (!arquivo?.url || !arquivo.mimeType?.startsWith('image/')) continue
+
+    const largura = arquivo.width || 800
+    const altura = arquivo.height || 1000
+
+    cartoes.push({
+      id: item.id,
+      razao: altura / largura,
+      conteudo: (
+        <Image
+          src={arquivo.url}
+          alt={arquivo.alt || ''}
+          width={largura}
+          height={altura}
+          sizes="(max-width: 1024px) 50vw, 460px"
+          className="h-auto w-full"
+        />
+      ),
+    })
+  }
+
+  if (!cartoes.length) return null
 
   return (
     <section id="a-clinica" className="py-24 md:py-32">
@@ -45,7 +86,7 @@ export function AClinica({
           </p>
         </Revelar>
 
-        <GaleriaParallax itens={fotos} className="mt-14" />
+        <GaleriaParallax itens={cartoes} className="mt-14" />
 
         {/* Ultimo CTA da pagina. O `especular` fica so aqui entre os dois botoes
             novos: cada instancia abre um contexto WebGL e o navegador derruba os

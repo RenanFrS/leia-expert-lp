@@ -1,11 +1,10 @@
-import Image from 'next/image'
+import type { ReactNode } from 'react'
 
 import { GradeParallax } from '@/components/ui/grade-parallax'
-import { cn, midia } from '@/lib/utils'
-import type { Galeria } from '@/payload-types'
+import { cn } from '@/lib/utils'
 
 /**
- * Grade de fotos em colunas que correm em velocidades diferentes, na forma do
+ * Grade de cartoes em colunas que correm em velocidades diferentes, na forma do
  * **skiper30 do skiper-ui**, o Oliver parallax, escolhido pelo cliente.
  *
  * Livre para uso pessoal e comercial, com **atribuicao ao Skiper UI** pedida
@@ -20,33 +19,47 @@ import type { Galeria } from '@/payload-types'
  * aqui**, como `children`. Assim as fotos continuam saindo do servidor e para o
  * navegador vai so o wrapper que anima.
  *
- * Quatro decisoes que sustentam a grade:
+ * **Ele nao sabe o que ha dentro do cartao, de proposito.** Quem chama entrega o
+ * conteudo pronto e a razao de altura dele. E isso que deixa a mesma grade
+ * servir dois conteudos bem diferentes sem duplicar regra de layout: o par de
+ * antes e depois da secao de resultados e a foto solta da secao A clinica. O que
+ * continua sendo dele e o empacotamento, a casca da `figure` e o movimento.
  *
- * - **Sao tres colunas no `lg`, e duas no celular.** Tres nao divide por dois,
- *   entao a solucao do layout do telefone e o `display: contents`, explicado no
- *   bloco da grade mais abaixo.
- * - **A distribuicao equilibra a altura, e nao e rodizio.** Cada foto vai para a
- *   coluna mais curta no momento, medindo pela propria proporcao. Como o custo e
- *   `altura / largura` e todas as colunas tem a mesma largura, a conta sai sem
- *   saber largura em pixel nenhuma. Rodizio puro parece equivalente e nao e:
- *   medido com fotos de razao misturada, ele deixava o pe das colunas variando
- *   quase 300px.
+ * Tres decisoes que sustentam a grade:
+ *
+ * - **Sao duas colunas em qualquer tela.** Ja foram tres no `lg` e duas no
+ *   celular, o que exigia um remendo de `display: contents` porque tres nao
+ *   dividem por dois. Com duas, a grade e a mesma em toda largura e o remendo
+ *   saiu.
+ * - **A distribuicao equilibra a altura, e nao e rodizio.** Cada cartao vai para
+ *   a coluna mais curta no momento, medindo pela `razao` que ele declara. Como o
+ *   custo e altura sobre largura e todas as colunas tem a mesma largura, a conta
+ *   sai sem saber largura em pixel nenhuma. Rodizio puro parece equivalente e
+ *   nao e: medido com fotos de razao misturada, ele deixava o pe das colunas
+ *   variando quase 300px.
  *
  *   **A varredura preserva a ordem do painel**, o que custa um pouco de
- *   equilibrio: ordenar da mais alta para a mais baixa fecharia quase todo o
+ *   equilibrio: ordenar do mais alto para o mais baixo fecharia quase todo o
  *   degrau, mas jogaria fora o campo `ordem`, que e o unico controle da clinica.
- * - **Nao ha `enquadramento` aqui, e isso e proposital.** O ponto de foco existe
- *   para imagem que usa `object-cover`, onde a caixa recorta a foto de novo. Na
- *   grade a foto entra inteira, na propria proporcao, entao nao ha recorte para
- *   o foco resolver e um `object-position` ali seria letra morta.
- * - **Video e descartado na entrada.** A colecao aponta para a Media, que aceita
- *   os dois, e o otimizador do Next responde 400, "The requested resource isn't
- *   a valid image", para um `.mp4`. Sem esse filtro uma foto trocada por video
- *   deixaria um buraco na grade sem erro nenhum na tela.
+ * - **Quem filtra video e quem monta o cartao**, e nao este arquivo. A Media
+ *   aceita os dois tipos e o otimizador do Next responde 400, "The requested
+ *   resource isn't a valid image", para um `.mp4`. Sem esse cuidado la, uma foto
+ *   trocada por video deixaria um buraco na grade sem erro nenhum na tela.
  */
 
+export type CartaoDaGrade = {
+  id: string | number
+  /**
+   * Altura do cartao dividida pela largura dele. E o unico dado que o
+   * empacotamento precisa, e e por isso que ele nao depende de saber se o cartao
+   * tem uma foto ou duas.
+   */
+  razao: number
+  conteudo: ReactNode
+}
+
 /**
- * Em quantas colunas a distribuicao divide as fotos.
+ * Em quantas colunas a distribuicao divide os cartoes.
  *
  * **Precisa casar com o `CURSOS` do `grade-parallax.tsx`**, que e quem move cada
  * coluna. A constante e declarada duas vezes de proposito: aquele arquivo e
@@ -54,24 +67,25 @@ import type { Galeria } from '@/payload-types'
  * fronteira RSC como referencia de cliente em vez de numero, o que ja quebrou a
  * distribuicao em silencio. Mexeu numa lista, confira a outra.
  */
-const COLUNAS = 3
+const COLUNAS = 2
 
-export function GaleriaParallax({ itens, className }: { itens: Galeria[]; className?: string }) {
-  // So imagem. O motivo esta no bloco do topo.
-  const fotos = itens
-    .map((item) => ({ id: item.id, arquivo: midia(item.foto) }))
-    .filter((item) => item.arquivo?.url && item.arquivo.mimeType?.startsWith('image/'))
-
-  if (!fotos.length) return null
+export function GaleriaParallax({
+  itens,
+  className,
+}: {
+  itens: CartaoDaGrade[]
+  className?: string
+}) {
+  if (!itens.length) return null
 
   // Empacota na coluna mais curta, mantendo a ordem do painel na varredura.
   const alturas = Array.from({ length: COLUNAS }, () => 0)
-  const colunas: (typeof fotos)[] = Array.from({ length: COLUNAS }, () => [])
+  const colunas: CartaoDaGrade[][] = Array.from({ length: COLUNAS }, () => [])
 
-  for (const foto of fotos) {
+  for (const item of itens) {
     const menor = alturas.indexOf(Math.min(...alturas))
-    colunas[menor].push(foto)
-    alturas[menor] += (foto.arquivo!.height || 1000) / (foto.arquivo!.width || 800)
+    colunas[menor].push(item)
+    alturas[menor] += item.razao
   }
 
   return (
@@ -80,31 +94,19 @@ export function GaleriaParallax({ itens, className }: { itens: Galeria[]; classN
     <div className={cn('overflow-clip', className)}>
       <GradeParallax
         colunas={colunas.map((coluna) =>
-          coluna.map(({ id, arquivo }) => (
+          coluna.map(({ id, conteudo }) => (
             <figure
               key={id}
               /*
-                O espacamento vem de `mb` na propria figure, e nao de `gap` na
-                coluna: sob `display: contents` no celular a coluna nao forma
-                caixa, entao `gap` nao existiria ali. O `break-inside-avoid`
-                impede a foto de ser cortada ao meio entre as duas colunas de
-                CSS.
+                O espacamento voltou para o `gap` da coluna. Ele ja foi `mb` aqui,
+                de quando a coluna virava `display: contents` no celular e nao
+                formava caixa: sem caixa nao ha `gap`. Com a coluna sendo caixa em
+                toda largura, o `gap` volta a valer e some a margem sobrando no
+                ultimo cartao.
               */
-              className="mb-3 break-inside-avoid overflow-hidden rounded-lg bg-areia md:mb-4 lg:mb-5"
+              className="overflow-hidden rounded-lg bg-areia"
             >
-              <Image
-                src={arquivo!.url!}
-                alt={arquivo!.alt || ''}
-                // As medidas saem do proprio arquivo, entao cada foto guarda a
-                // proporcao que tem. E dai que vem o desencontro de altura que
-                // faz a grade parecer montada a mao.
-                width={arquivo!.width || 800}
-                height={arquivo!.height || 1000}
-                // Com tres colunas em 1376px de container e dois vaos de 20px,
-                // cada coluna fica com 445px.
-                sizes="(max-width: 1024px) 50vw, 460px"
-                className="h-auto w-full"
-              />
+              {conteudo}
             </figure>
           )),
         )}

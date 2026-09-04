@@ -63,8 +63,9 @@ export default async function Home() {
   const whatsapp = clinica?.whatsapp || process.env.NEXT_PUBLIC_WHATSAPP || ''
   const unidades = clinica?.unidades || []
 
-  const galeriaResultados = galeria.docs.filter((foto) => foto.categoria === 'resultados')
-  const galeriaClinica = galeria.docs.filter((foto) => foto.categoria === 'clinica')
+  // A galeria e so das fotos da clinica desde que a grade de antes e depois
+  // passou a ler a colecao `resultados`, a mesma do carrossel.
+  const galeriaClinica = galeria.docs
 
   // Dados estruturados: ajudam o Google a entender que e uma clinica e a montar
   // o resultado rico do FAQ.
@@ -134,7 +135,9 @@ export default async function Home() {
           mensagemWhatsapp={clinica?.mensagemWhatsapp}
         />
         <Resultados resultados={resultados.docs} />
-        <GaleriaResultados fotos={galeriaResultados} />
+        {/* Recebe o mesmo array do carrossel logo acima: sao os mesmos casos,
+            em duas leituras. Nao ha consulta nova por causa disso. */}
+        <GaleriaResultados resultados={resultados.docs} />
         <Depoimentos depoimentos={depoimentos.docs} video={clinica?.videoDepoimentos} />
         <Sobre
           rotulo={clinica?.sobreRotulo}

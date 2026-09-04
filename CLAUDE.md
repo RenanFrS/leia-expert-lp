@@ -839,12 +839,23 @@ foto e do meio do tratamento, e nao do fim.
 mora, so o que o site afirma sobre ele. Foi o que permitiu ligar isso sem invalidar resultado ja
 cadastrado.
 
-A afirmacao aparece em **quatro lugares**, e eles precisam andar juntos, senao o cartao diz duas coisas:
+A afirmacao aparece em **seis lugares**, e eles precisam andar juntos, senao o cartao diz duas coisas.
+Quatro no comparador:
 
 - a pilula da direita, que le "Em tratamento" no lugar de "Depois"
 - o texto alternativo de reserva da segunda foto, "durante o tratamento" no lugar de "depois do tratamento"
 - o `aria-label` do slider, "Comparar antes e durante"
 - o `aria-valuetext`, "X% da foto em tratamento"
+
+E dois na grade estatica logo abaixo, que mostra os mesmos casos:
+
+- a pilula da metade de baixo do par
+- o texto alternativo de reserva daquela mesma foto
+
+**Cuidado com o `alt` da Media, que vence o texto de reserva.** Nos dois lugares o fallback so entra
+quando o arquivo nao tem `alt` proprio, e ele quase sempre tem. Se um caso for marcado como em
+tratamento e o `alt` da foto ja disser "depois do tratamento", **a pilula e o texto alternativo passam a
+se contradizer**. Marcou o checkbox? Revise o `alt` daquele arquivo na Media.
 
 **A pilula em tratamento precisa ser opaca.** As duas normais usam `bg-porcelana/90`, e `text-caramelo`
 sobre esse fundo translucido, com foto escura por baixo, da **3.70** e reprova. Em `bg-caramelo` cheio
@@ -879,14 +890,49 @@ fronteira RSC como referencia de cliente em vez de numero: `Array.from({ length:
 array vazio e a distribuicao quebrava com "Cannot read properties of undefined (reading 'push')".
 Mexeu numa lista, confira a outra.
 
-Ele alimenta **duas secoes**, as duas saindo da colecao `galeria`, separadas pelo campo `categoria`:
+**A grade nao sabe o que ha dentro do cartao, e isso e o que a deixa servir duas secoes bem
+diferentes.** Quem chama entrega o conteudo pronto e a `razao` de altura dele, que e o unico numero que
+o empacotamento precisa. O que continua sendo da grade e a distribuicao, a casca da `figure` e o
+movimento.
 
-- **`GaleriaResultados`**, categoria `resultados`, logo abaixo do comparador. **Sem titulo visivel e sem
-  ancora, a pedido do cliente**: ela le como continuacao da secao Resultados, que ja tem titulo e
-  explicacao logo acima. Ela existe porque o comparador exige interacao, e quem nao arrasta a divisa ve
-  so a foto de antes e vai embora achando que nao ha resultado.
-- **`AClinica`**, categoria `clinica`, no fim da pagina. Essa **tem** titulo e CTA, porque abre assunto
-  novo e e o ultimo bloco antes do rodape.
+- **`GaleriaResultados`**, logo abaixo do comparador, **le a colecao `resultados`**, a mesma do
+  carrossel: cada cartao e o par antes e depois com as duas fotos visiveis de uma vez, **lado a lado no
+  `lg` e empilhado no celular**, no formato dos posts que a clinica ja publica. Ela existe porque o
+  comparador exige arrastar a divisa, e quem nao arrasta ve so a foto de antes e vai embora achando
+  que nao ha resultado. **Sem titulo visivel e sem ancora, a pedido do
+  cliente**: ela le como continuacao da secao Resultados, que ja tem titulo e explicacao logo acima.
+
+  **Nao ha consulta nova por causa dela**: recebe o mesmo array que o carrossel. Os mesmos casos
+  aparecem duas vezes na pagina, em duas leituras, e isso e proposital.
+
+  **As duas fotos do par usam a proporcao da foto de `antes`**, por `aspectRatio` no container com
+  `object-cover` e `enquadramento`. E o que faz as duas metades terem a mesma altura, sem o que um antes
+  em retrato com um depois em paisagem daria um par torto e a comparacao perderia a forca, que e a unica
+  coisa que o cartao existe para fazer. Casos diferentes seguem com alturas diferentes, e e dai que vem o
+  desencontro entre as colunas.
+
+  **O fio entre as duas metades vai em `after`, e nao em `border`.** Com `box-sizing: border-box`, que e
+  o padrao do Tailwind, 1px de borda come 1px da caixa: medido, a metade de baixo saia com 570px contra
+  571px da de cima. O pseudo elemento desenha por cima sem ocupar espaco, e muda de eixo junto com o
+  cartao: horizontal no celular, vertical no `lg`.
+
+  **A `razao` do empacotamento e a do desktop, e ela serve para os dois tamanhos de tela.** O cartao
+  muda de forma por breakpoint: empilhado vale `2 x (altura / largura)`, lado a lado vale
+  `(altura / largura) / 2`. Sao quatro vezes de diferenca, o que a primeira leitura sugere invalidar a
+  conta em metade dos casos.
+
+  Nao invalida, e o motivo e simples: **o fator de 4 e o mesmo para todo cartao**, seja qual for a foto.
+  Como ele e uniforme, a ordem entre as colunas nao muda, e a mais alta no desktop e a mais alta no
+  celular na mesma proporcao. Uma conta so equilibra os dois. Se um dia o cartao mudar de forma de um
+  jeito que **nao** seja uniforme, essa garantia cai e ai sim serao duas contas.
+- **`AClinica`**, no fim da pagina, le a colecao `galeria`, hoje so de fotos da clinica. Cada cartao e
+  uma foto sozinha, na propria proporcao. Essa **tem** titulo e CTA, porque abre assunto novo e e o
+  ultimo bloco antes do rodape.
+
+**A colecao `galeria` ja teve um campo `categoria`**, que separava as duas. Ele saiu quando a grade de
+antes e depois passou a ler `resultados`: com um destino so, a categoria virava pergunta sem resposta no
+painel. Os 14 registros que existiam na categoria antiga, posts prontos de Instagram, foram apagados a
+pedido do cliente; os arquivos seguem na Media.
 
 **O `h2` em `sr-only` da GaleriaResultados nao contradiz o "sem titulo".** Uma faixa so de imagens sem
 nome nenhum some do outline da pagina e chega ao leitor de tela como um monte de foto solta depois do
@@ -894,28 +940,28 @@ carrossel.
 
 Sete coisas que sustentam a grade:
 
-- **Uma foto por registro, na proporcao que ela tiver.** No antes e depois, o que entra e o **post ja
-  montado** com as duas fotos lado a lado. Campos separados de antes e depois forcariam cartao de
-  proporcao fixa e matariam o desencontro de altura, que e o desenho.
+- **O cartao muda conforme a secao.** Na grade de antes e depois ele e o par montado a partir dos
+  campos `antes` e `depois` de um caso; em A clinica e uma foto sozinha, na proporcao que ela tiver.
+  A grade so precisa saber a `razao` de altura de cada um.
 - **A distribuicao equilibra altura, e nao e rodizio.** Cada foto vai para a coluna mais curta,
   medindo por `altura / largura`. Rodizio parece equivalente e nao e: medido com 12 fotos de razao bem
   misturada, o pe das colunas variava quase 300px. **A varredura preserva a ordem do painel**, o que
   custa um pouco de equilibrio: ordenar da mais alta para a mais baixa fecharia quase todo o degrau,
   mas jogaria fora o campo `ordem`, que e o unico controle da clinica. Com foto de post, toda na mesma
   proporcao, o empate e exato de qualquer jeito.
-- **Sao tres colunas no `lg` e duas no celular, com um DOM so.** Tres nao divide por dois, entao numa
-  grade de duas colunas a terceira cairia sozinha na segunda linha, com metade da tela vazia ao lado
-  por toda a altura dela. A saida e `columns-2` no container e **`display: contents` em cada coluna**:
-  abaixo do `lg` o wrapper some da caixa de layout, as figures viram filhas diretas do container
-  multi-coluna e o navegador **rebalanceia sozinho**. No `lg` o wrapper volta a ser coluna e recebe o
-  deslocamento.
+- **Sao duas colunas em qualquer largura**, entao a grade e a mesma no celular e no desktop e o
+  espacamento volta a ser `gap` na coluna.
 
-  Duas saidas erradas, para nao serem tentadas de novo: montar um DOM para telefone e outro para
-  desktop dobra a requisicao de imagem, e usar tres colunas tambem no celular deixa cada foto com
-  ~108px em 390px de tela, ou seja ~54px por metade do antes e depois.
+  **Isso ja foi mais complicado, e vale saber por que nao e mais.** Com tres colunas no `lg` e duas no
+  celular, tres nao dividia por dois: numa grade de duas, a terceira coluna caia sozinha na segunda
+  linha, com metade da tela vazia ao lado por toda a altura dela. A saida era `columns-2` no container
+  com **`display: contents` em cada coluna**, para as figures virarem filhas diretas de um container
+  multi-coluna que rebalanceia sozinho. Com duas colunas o motivo acabou e o remendo saiu, junto com o
+  `break-inside-avoid` das figures, que so servia as colunas de CSS.
 
-  Como o `gap` de flex nao existe sob `display: contents`, o espacamento vem de `mb` na propria figure,
-  e cada uma leva `break-inside-avoid` para nao ser cortada entre as colunas de CSS.
+  Se um dia voltar a ser um numero impar de colunas, o problema volta com ele, e a saida acima e a que
+  funcionou. Duas que **nao** funcionam: montar um DOM para telefone e outro para desktop dobra a
+  requisicao de imagem, e usar tres colunas tambem no celular deixa cada foto com ~108px em 390px.
 - **Uma medicao de rolagem para a grade inteira, nunca uma por coluna.** Era um `useScroll` por coluna,
   e era dai que vinha o engasgo que o cliente reclamou. Medido, o diagnostico obvio estava errado: nao
   era taxa de quadros, que ja era 60fps com zero quedas nos dois casos, nem atraso, que era zero
@@ -948,9 +994,9 @@ Sete coisas que sustentam a grade:
 `object-cover`, onde a caixa recorta de novo. Na grade a foto entra inteira, na propria proporcao, entao
 nao ha recorte para o foco resolver e um `object-position` ali seria letra morta.
 
-As duas secoes **somem inteiras enquanto nao houver foto publicada** na categoria. E o que permite subir
-o codigo antes do conteudo: elas entram no ar sozinhas quando a clinica cadastrar a primeira foto, sem
-deploy novo.
+As duas secoes **somem inteiras enquanto nao houver conteudo publicado**, a de resultados sem caso
+cadastrado e a da clinica sem foto. E o que permite subir o codigo antes do conteudo: elas entram no ar
+sozinhas quando a clinica cadastrar, sem deploy novo.
 
 ### Design
 

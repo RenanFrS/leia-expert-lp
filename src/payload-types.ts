@@ -237,14 +237,13 @@ export interface Resultado {
 export interface Galeria {
   id: number;
   /**
-   * Só organiza a lista aqui do painel. Não aparece no site. Exemplo: Caso 12, seis meses.
+   * Só organiza a lista aqui do painel. Não aparece no site. Exemplo: Recepção, vista da entrada.
    */
   titulo: string;
   /**
-   * Uma imagem só. No antes e depois, suba o post já montado com as duas fotos lado a lado.
+   * Uma imagem só, na proporção que ela tiver. Aparece na seção A clínica.
    */
   foto: number | Media;
-  categoria: 'resultados' | 'clinica';
   ordem?: number | null;
   publicado?: boolean | null;
   updatedAt: string;
@@ -535,7 +534,6 @@ export interface ResultadosSelect<T extends boolean = true> {
 export interface GaleriaSelect<T extends boolean = true> {
   titulo?: T;
   foto?: T;
-  categoria?: T;
   ordem?: T;
   publicado?: T;
   updatedAt?: T;
