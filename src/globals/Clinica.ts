@@ -124,6 +124,23 @@ export const Clinica: GlobalConfig = {
               label: 'Credencial',
               admin: { description: 'A linha sob o nome. Exemplo: Tricologista clínica.' },
             },
+            /*
+              Formacao e especializacao, uma por linha. Existe porque a
+              `credencial` e uma linha so, e o time de trafego pediu para
+              valorizar a apresentacao da profissional: e a lista de formacao que
+              sustenta autoridade numa pagina de clinica.
+            */
+            {
+              name: 'credenciais',
+              type: 'array',
+              label: 'Formação e especializações',
+              labels: { singular: 'Item', plural: 'Itens' },
+              fields: [{ name: 'texto', type: 'text', required: true }],
+              admin: {
+                description:
+                  'Aparecem em lista na seção Sobre. Uma por linha, curtas. Sem itens, a lista não aparece.',
+              },
+            },
           ],
         },
         {
@@ -154,7 +171,7 @@ export const Clinica: GlobalConfig = {
               label: 'Foto do agendamento',
               admin: {
                 description:
-                  'Fica ao lado do formulário, em pé. O cartão de contato cobre a parte de baixo, então evite rosto na borda inferior.',
+                  'Ocupa a metade direita da seção de contato, sangrando até a borda da tela. Fica em pé no celular e alta no desktop.',
               },
             },
             {

@@ -8,9 +8,11 @@ import { Sobre } from '@/components/sections/Sobre'
 import { Tratamentos } from '@/components/sections/Tratamentos'
 import { Tricoscopia } from '@/components/sections/Tricoscopia'
 import { Resultados } from '@/components/sections/Resultados'
+import { GaleriaResultados } from '@/components/sections/GaleriaResultados'
 import { Depoimentos } from '@/components/sections/Depoimentos'
 import { Duvidas } from '@/components/sections/Duvidas'
 import { Agendamento } from '@/components/sections/Agendamento'
+import { AClinica } from '@/components/sections/AClinica'
 import { Footer } from '@/components/sections/Footer'
 import { WhatsappFlutuante } from '@/components/sections/WhatsappFlutuante'
 
@@ -21,31 +23,48 @@ export const revalidate = 300
 export default async function Home() {
   const payload = await getPayload({ config })
 
-  const [clinica, rastreamento, tratamentos, resultados, depoimentos, perguntas] = await Promise.all([
-    payload.findGlobal({ slug: 'clinica', depth: 1 }),
-    payload.findGlobal({ slug: 'rastreamento', depth: 0 }),
-    // Limite acima do numero de servicos de proposito: com 10 cadastrados e
-    // limite 8, dois sumiriam da pagina sem erro nenhum.
-    payload.find({ collection: 'tratamentos', limit: 12, depth: 1, sort: 'ordem' }),
-    // Mesmo cuidado do limite dos tratamentos, logo acima: com 9 cadastrados e
-    // limite 6, tres sumiriam da pagina sem erro nenhum. Quem escolhe o que
-    // aparece e o checkbox `publicado` do painel, nao um numero no codigo.
-    payload.find({
-      collection: 'resultados',
-      limit: 24,
-      depth: 1,
-      // A ordem e a do painel, e nao a data de cadastro: a secao agrupa os casos
-      // femininos a esquerda e os masculinos a direita, e isso precisa sobreviver
-      // a um recadastro.
-      sort: 'ordem',
-      where: { publicado: { equals: true } },
-    }),
-    payload.find({ collection: 'depoimentos', limit: 6, depth: 1, where: { publicado: { equals: true } } }),
-    payload.find({ collection: 'faq', limit: 12, depth: 0, sort: 'ordem' }),
-  ])
+  // O `rastreamento` saiu daqui quando o formulario saiu: a home nao consome
+  // mais nenhum campo dele. Quem le a global agora e so o layout, que monta o
+  // `Analytics`. Manter a consulta seria uma ida ao banco por revalidacao sem
+  // ninguem usando o resultado.
+  const [clinica, tratamentos, resultados, depoimentos, perguntas, galeria] =
+    await Promise.all([
+      payload.findGlobal({ slug: 'clinica', depth: 1 }),
+      // Limite acima do numero de servicos de proposito: com 10 cadastrados e
+      // limite 8, dois sumiriam da pagina sem erro nenhum.
+      payload.find({ collection: 'tratamentos', limit: 12, depth: 1, sort: 'ordem' }),
+      // Mesmo cuidado do limite dos tratamentos, logo acima: com 9 cadastrados e
+      // limite 6, tres sumiriam da pagina sem erro nenhum. Quem escolhe o que
+      // aparece e o checkbox `publicado` do painel, nao um numero no codigo.
+      payload.find({
+        collection: 'resultados',
+        limit: 24,
+        depth: 1,
+        // A ordem e a do painel, e nao a data de cadastro: a secao agrupa os casos
+        // femininos a esquerda e os masculinos a direita, e isso precisa sobreviver
+        // a um recadastro.
+        sort: 'ordem',
+        where: { publicado: { equals: true } },
+      }),
+      payload.find({ collection: 'depoimentos', limit: 6, depth: 1, where: { publicado: { equals: true } } }),
+      payload.find({ collection: 'faq', limit: 12, depth: 0, sort: 'ordem' }),
+      // Uma consulta so para as duas grades, separada por categoria logo abaixo.
+      // Duas chamadas contra a mesma colecao pagariam duas viagens ao banco para
+      // devolver o mesmo conjunto pequeno de fotos.
+      payload.find({
+        collection: 'galeria',
+        limit: 48,
+        depth: 1,
+        sort: 'ordem',
+        where: { publicado: { equals: true } },
+      }),
+    ])
 
   const whatsapp = clinica?.whatsapp || process.env.NEXT_PUBLIC_WHATSAPP || ''
   const unidades = clinica?.unidades || []
+
+  const galeriaResultados = galeria.docs.filter((foto) => foto.categoria === 'resultados')
+  const galeriaClinica = galeria.docs.filter((foto) => foto.categoria === 'clinica')
 
   // Dados estruturados: ajudam o Google a entender que e uma clinica e a montar
   // o resultado rico do FAQ.
@@ -109,8 +128,13 @@ export default async function Home() {
         />
         <Metricas metricas={clinica?.metricas || []} />
         <Tratamentos tratamentos={tratamentos.docs} />
-        <Tricoscopia video={clinica?.videoTricoscopia} />
+        <Tricoscopia
+          video={clinica?.videoTricoscopia}
+          whatsapp={whatsapp}
+          mensagemWhatsapp={clinica?.mensagemWhatsapp}
+        />
         <Resultados resultados={resultados.docs} />
+        <GaleriaResultados fotos={galeriaResultados} />
         <Depoimentos depoimentos={depoimentos.docs} video={clinica?.videoDepoimentos} />
         <Sobre
           rotulo={clinica?.sobreRotulo}
@@ -120,16 +144,24 @@ export default async function Home() {
           retrato={clinica?.retrato}
           nomeProfissional={clinica?.nomeProfissional}
           credencial={clinica?.credencial}
+          credenciais={clinica?.credenciais}
+          whatsapp={whatsapp}
+          mensagemWhatsapp={clinica?.mensagemWhatsapp}
         />
         <Duvidas perguntas={perguntas.docs} />
+        {/* Os IDs de rastreamento sairam daqui: a conversao passou do envio do
+            formulario para o clique de WhatsApp, e quem publica o rotulo do Ads
+            agora e o `Analytics.tsx`, pelo window. */}
         <Agendamento
-          googleAdsId={rastreamento?.googleAdsId}
-          googleAdsLabel={rastreamento?.googleAdsLabelLead}
           whatsapp={whatsapp}
           mensagemWhatsapp={clinica?.mensagemWhatsapp}
           email={clinica?.email}
-          unidade={unidades[0]}
           foto={clinica?.fotoAgendamento}
+        />
+        <AClinica
+          fotos={galeriaClinica}
+          whatsapp={whatsapp}
+          mensagemWhatsapp={clinica?.mensagemWhatsapp}
         />
       </main>
 

@@ -9,6 +9,8 @@ export type ConfigRastreamento = {
   ga4Id?: string | null
   metaPixelId?: string | null
   googleAdsId?: string | null
+  /** Rotulo da conversao do Ads. Vai para o window, o porque esta abaixo. */
+  googleAdsLabel?: string | null
   consentimento?: boolean | null
 }
 
@@ -36,8 +38,24 @@ gtag('js', new Date());
 `
 
 export function Analytics({ config }: { config: ConfigRastreamento }) {
-  const { gtmId, ga4Id, metaPixelId, googleAdsId, consentimento } = config
+  const { gtmId, ga4Id, metaPixelId, googleAdsId, googleAdsLabel, consentimento } = config
   const [decidido, setDecidido] = useState(true)
+
+  /*
+    Publica a conversao do Ads no window, para o clique de WhatsApp poder
+    dispara-la de qualquer secao.
+
+    Ela nao vai por prop porque o `BotaoWhatsapp` aparece no header, na
+    tricoscopia, no sobre, no agendamento, no fechamento e no rodape: levar dois
+    campos de rastreamento por prop ate cada um deles atravessaria a pagina
+    inteira para servir a um botao. Este arquivo ja e o dono da superficie de
+    medicao no window, onde ficam `dataLayer`, `gtag` e `fbq`.
+
+    Roda no efeito de montagem, que acontece muito antes de qualquer clique.
+  */
+  useEffect(() => {
+    window.leiaAds = { id: googleAdsId, label: googleAdsLabel }
+  }, [googleAdsId, googleAdsLabel])
 
   useEffect(() => {
     if (!consentimento) return

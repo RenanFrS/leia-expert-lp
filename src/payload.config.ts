@@ -13,8 +13,10 @@ import { Media } from './collections/Media'
 import { Tratamentos } from './collections/Tratamentos'
 import { Depoimentos } from './collections/Depoimentos'
 import { Resultados } from './collections/Resultados'
+import { Galeria } from './collections/Galeria'
 import { Faq } from './collections/Faq'
 import { Leads } from './collections/Leads'
+import { Contatos } from './collections/Contatos'
 import { Clinica } from './globals/Clinica'
 import { Rastreamento } from './globals/Rastreamento'
 import { Seo } from './globals/Seo'
@@ -42,7 +44,7 @@ export default buildConfig({
     components: {},
   },
 
-  collections: [Tratamentos, Resultados, Depoimentos, Faq, Leads, Media, Users],
+  collections: [Tratamentos, Resultados, Galeria, Depoimentos, Faq, Leads, Contatos, Media, Users],
   globals: [Clinica, Seo, Rastreamento],
 
   secret: process.env.PAYLOAD_SECRET || '',

@@ -49,31 +49,33 @@ src/
   app/
     (frontend)/        layout, globals.css e a home publica
     (payload)/         painel em /admin e API REST e GraphQL do Payload
-    api/leads/         rota publica que recebe o formulario
+    api/registrar-contato/  grava o clique de WhatsApp com a UTM
     api/dev/           seed, gerar-tipos, gerar-importmap e subir-midia, so em dev
     sitemap.ts robots.ts
-  collections/         Tratamentos, Resultados, Depoimentos, Faq, Leads, Media, Users
+  collections/         Tratamentos, Resultados, Galeria, Depoimentos, Faq, Leads, Contatos,
+                       Media, Users
   globals/             Clinica, Seo, Rastreamento, todos no grupo Configuracoes do painel
   components/
     sections/          Header, Hero, Metricas, Tratamentos, Tricoscopia,
-                       Resultados, Depoimentos, Sobre, Duvidas, Agendamento,
-                       Footer, WhatsappFlutuante
+                       Resultados, GaleriaResultados, Depoimentos, Sobre,
+                       Duvidas, Agendamento, AClinica, Footer,
+                       WhatsappFlutuante
     ui/                componentes shadcn mais os primitivos da landing:
                        eyebrow, titulo-secao, lista-verificada, cartao-vidro,
                        animated-content, camada-especular, camada-parallax,
-                       carrossel-tratamentos, midia-rotativa, video-fundo
-    BotaoWhatsapp.tsx  unico caminho para abrir o WhatsApp
-    BotaoAgendar.tsx   CTA que rola ate o formulario, com o evento junto
+                       carrossel-tratamentos, galeria-parallax, grade-parallax,
+                       midia-rotativa, video-fundo
+    BotaoWhatsapp.tsx  casca padrao do CTA de WhatsApp
     Logotipo.tsx       assinatura da marca, com reserva em texto
     Analytics.tsx      GTM, GA4, Pixel, Ads e banner de consentimento
     SmoothScroll.tsx   Lenis
     Revelar.tsx        reveal on scroll com IntersectionObserver
     painel/            componentes do admin do Payload, nao do site
   lib/
-    analytics.ts       camada unica de eventos e leitura de UTM
+    analytics.ts       camada unica de eventos, conversao e leitura de UTM
     acesso.ts          regra de papel usada no access control
-    aviso-lead.ts      email de lead novo
-    motivos.ts         lista canonica dos motivos de contato
+    aviso-lead.ts      email de lead novo, da epoca do formulario
+    motivos.ts         lista canonica dos motivos, usada so pela colecao Leads
     seed.ts            conteudo inicial em portugues, textos originais
     cloudinary-adapter.ts
     cloudinary-url.ts  convencao de public_id e de URL da CDN, sem SDK
@@ -92,8 +94,9 @@ medicao ou rastreamento tem que manter isso verdadeiro:
   `Configuracoes > Rastreamento e ads`. Nunca hardcoded. As variaveis de ambiente valem apenas como
   valor padrao quando o campo do painel esta vazio.
 - Todo evento passa pelo `dataLayer`, para que a agencia crie tag e gatilho no GTM sem tocar no codigo.
-- Os parametros UTM sao gravados junto de cada lead, o que permite cruzar o que o painel de anuncios
-  reporta com o que a clinica realmente recebeu.
+- Os parametros UTM sao gravados junto de **cada clique que abre o WhatsApp**, na colecao `contatos`,
+  o que permite cruzar o que o painel de anuncios reporta com o que a clinica realmente recebeu. Isso
+  era feito por lead do formulario, ate ele sair do site.
 - Velocidade, SEO on page, UX e acessibilidade sao entrega nossa e ficam documentadas no README, para que
   nenhuma queda de resultado possa ser atribuida ao site.
 
@@ -104,37 +107,79 @@ medicao ou rastreamento tem que manter isso verdadeiro:
 `src/lib/analytics.ts` e a unica porta de entrada de evento. Nao chame `gtag` nem `fbq` direto em
 componente. Eventos tipados em `EventoNome`:
 
-`clique_whatsapp`, `clique_agendar`, `inicio_formulario`, `envio_formulario`, `erro_formulario`,
-`ver_tratamento`, `abrir_faq`.
+`clique_whatsapp`, `ver_tratamento`, `abrir_faq`.
 
-O `clique_agendar` cobre o CTA que rola para o formulario. Em secao que e server component, use o
-`components/BotaoAgendar.tsx`, que existe para o evento sair de la sem mandar a secao inteira para o
-cliente. Antes esse clique saia como `clique_whatsapp`,
-o que inflava o numero de conversas abertas sem nenhuma conversa ter sido aberta. Nao volte a juntar os
-dois: a agencia otimiza campanha em cima desse dado.
+**Quatro eventos sairam dessa lista quando o formulario saiu do site**: `clique_agendar`,
+`inicio_formulario`, `envio_formulario` e `erro_formulario`. Nenhum deles tem mais onde disparar, e
+evento tipado sem emissor e o mesmo buraco que o `ver_tratamento` ja teve, com a agencia lendo no
+relatorio um evento que a pagina nunca produz. **Nao reintroduza nenhum sem que exista de novo um lugar
+que dispare.**
 
-**Hoje quem dispara `clique_agendar` e so o botao da Tricoscopia**, com `local="tricoscopia"`. Os CTAs
-que diziam "Agendar avaliacao", no header e no menu do celular, passaram a abrir o WhatsApp com o texto
-"Agendar consulta tricologica", entao saem como `clique_whatsapp` com os locais `header` e
-`menu-mobile`. **Isso nao contradiz o paragrafo acima**: a regra e que o evento siga o comportamento, e
-esses botoes passaram a abrir conversa de verdade. Se um deles voltar a rolar para o formulario, o
-evento volta junto.
+#### A conversao mudou de lugar
+
+**O clique no WhatsApp virou a conversao do site.** Antes ela saia do envio do formulario; sem
+formulario, sem essa troca a conta de anuncios ficaria sem sinal nenhum para otimizar.
+
+Quem faz isso e o `registrarContatoWhatsapp`, e **ele e a porta unica**, nao o `BotaoWhatsapp`. Ele faz
+tres coisas de uma vez, e as tres andam juntas:
+
+1. empurra `clique_whatsapp` no dataLayer, para a agencia montar tag e gatilho no GTM sem tocar em codigo
+2. dispara `generate_lead` no GA4, `Lead` no Meta e a conversao do Google Ads, quando o ID e o rotulo
+   estao preenchidos no painel
+3. grava o clique com a UTM da visita, o que substitui a origem que antes ia em cada lead
+
+**Clique nao e conversa aberta.** O numero daqui e maior que o de pessoas que realmente escreveram para
+a clinica, e a agencia precisa saber disso ao comparar com o painel de anuncios.
+
+**O rotulo do Ads chega pelo `window`, e nao por prop.** O `Analytics.tsx` publica
+`window.leiaAds = { id, label }` no efeito de montagem. Levar dois campos de rastreamento por prop ate
+cada `BotaoWhatsapp` atravessaria a pagina inteira para servir a um botao, e aquele arquivo ja e o dono
+da superficie de medicao no window, onde ja vivem `dataLayer`, `gtag` e `fbq`.
+
+#### Os dois chamadores
+
+Abrir o WhatsApp e normalmente pelo `components/BotaoWhatsapp.tsx`, que monta o link e chama o
+`registrarContatoWhatsapp`. Nao monte `wa.me` na mao em componente.
+
+**A excecao e o `WhatsappFlutuante`**, que tem casca propria de Lottie e nao e um `Button`. Ele monta o
+link na mao, mas **chama a mesma funcao**. Isso ja quase deu errado: ele chamava `pushEvento` cru, e
+quando o clique virou conversao ele passaria a contar no dataLayer e **nao** disparar conversao no Ads,
+justo sendo a maior porta de entrada do celular.
+
+O rodape ja quebrou essa regra de outro jeito: tinha um `<a>` com o `whatsappLink` montado direto, entao
+abria conversa sem aparecer em relatorio nenhum. Hoje passa pelo componente, com `local="footer"`.
+
+#### Mapa dos CTAs
+
+| Origem | Evento e `local` |
+| --- | --- |
+| Header e menu do celular | `clique_whatsapp`, `header` e `menu-mobile` |
+| Tricoscopia | `clique_whatsapp`, `tricoscopia` |
+| Contato, CTA principal | `clique_whatsapp`, `card-agendamento` |
+| Contato, numero grande | `clique_whatsapp`, `contato-numero` |
+| Sobre | `clique_whatsapp`, `sobre` |
+| Fechamento, secao A clinica | `clique_whatsapp`, `fechamento` |
+| Rodape | `clique_whatsapp`, `footer` |
+| Botao flutuante | `clique_whatsapp`, `botao-flutuante` |
 
 **O `local="hero"` nao existe mais.** O CTA de dentro do painel foi removido a pedido do cliente. Vale
 saber o efeito colateral, porque ele nao e obvio: o CTA do header e `hidden xl:inline-flex`, entao
 **abaixo de 1280px nao sobra nenhum botao de agendar visivel acima da dobra**, so o do menu recolhido e
 o WhatsApp flutuante. Se a agencia estranhar a queda de `clique_whatsapp`, e daqui.
 
-Abrir o WhatsApp e sempre pelo `components/BotaoWhatsapp.tsx`, que monta o link e dispara o evento com o
-local de origem. Nao monte `wa.me` na mao em componente.
+#### O que a agencia precisa saber
 
-O rodape ja quebrou essa regra: ele tinha um `<a>` com o `whatsappLink` montado direto, entao abria
-conversa sem aparecer em relatorio nenhum. Hoje passa pelo componente, com `local="footer"`, e as
-classes so tiram a casca de botao para ele ler como os links vizinhos.
+Nao e codigo, mas sem isso a medicao quebra em silencio:
 
-O envio bem sucedido passa por `registrarLead`, que empurra `envio_formulario` no dataLayer e ainda
-dispara `generate_lead` no GA4, `Lead` no Meta e a conversao do Google Ads quando o ID e o rotulo estao
-preenchidos no painel.
+| Antes | Agora |
+| --- | --- |
+| `envio_formulario` marcava conversao | `clique_whatsapp` marca conversao |
+| `clique_agendar` | nao existe mais |
+| `inicio_formulario`, `erro_formulario` | nao existem mais |
+| UTM no lead do formulario | UTM na colecao `contatos`, por clique |
+
+O rotulo de conversao continua no mesmo campo do painel, entao a tag existente segue valendo: ela so
+passa a disparar em outro momento.
 
 ### Consentimento
 
@@ -142,32 +187,54 @@ Consent Mode v2 inicia com `ad_storage`, `ad_user_data`, `ad_personalization` e 
 negados, liberando so apos o aceite no banner. A decisao fica em `localStorage`, na chave
 `leia-consentimento`. O banner pode ser desligado no painel pelo campo `consentimento`.
 
-### Leads
+### Contatos e leads
 
-`POST /api/leads` valida com Zod, aplica limite de 5 envios por IP a cada 10 minutos e grava na colecao.
-Essa rota e a unica porta de entrada de lead. Ela usa a Local API com `overrideAccess: true`, entao a
-colecao pode manter `create: () => false`, o que fecha REST e GraphQL contra quem tente gravar pulando a
-validacao e o limite. Se um dia mudar a forma de gravar, mantenha as duas pontas coerentes.
+**O formulario foi removido do site**, a pedido do cliente, que pediu foco total no WhatsApp. O que
+ficou no lugar dele:
 
-Leitura, edicao e exclusao exigem papel de administrador, pelo helper `ehAdmin` em `src/lib/acesso.ts`.
-A colecao Users tambem e gateada, e o campo `papel` so aceita alteracao vinda de administrador, senao um
-editor se promoveria e a trava dos leads nao valeria nada. O primeiro usuario nasce administrador de
-proposito, porque e criado sem ninguem logado.
+`POST /api/registrar-contato` grava, na colecao `contatos`, cada clique que abre o WhatsApp: data, o
+`local` do clique, a pagina e os parametros UTM da visita. **E isso que mantem de pe a regra de medicao**
+depois que o lead deixou de existir.
 
-Cada lead novo dispara um aviso por email, pelo `afterChange` da colecao, que chama `avisarLeadNovo` em
-`src/lib/aviso-lead.ts`. O destinatario sai do painel, no campo `emailAvisoLead` da global Clinica, com o
-email publico da clinica como reserva. O transporte e SMTP, configurado por `SMTP_HOST` e companhia. Sem
-`SMTP_HOST` o Payload usa o adaptador que so escreve no log, entao o site sobe e o formulario grava
-igual. A funcao engole a propria falha de proposito, porque o lead ja esta gravado quando ela roda e
-perder o cadastro por causa de um SMTP fora do ar seria o pior desfecho possivel.
+Tres coisas dessa rota nao sao opcionais:
 
-Os motivos de contato vivem em `src/lib/motivos.ts`, usados pela colecao e pelo email. O esquema Zod da
-rota e o select do formulario ainda repetem a lista, entao mexer em um pede conferir os tres.
+- **O nome dela nao pode ser o slug da colecao, e isso custou uma investigacao.** O REST do Payload
+  responde em `/api/<colecao>`, por um catch all em `(payload)/api/[...slug]`. Segmento estatico ganha
+  de catch all no Next, entao um arquivo em `app/api/contatos/route.ts` **sombreia** o endpoint da
+  colecao: como ele so exporta POST, todo GET, PATCH e DELETE dela passa a responder **405**, e o painel
+  perde as mutacoes daquela colecao.
 
-**O envio so libera com a autorizacao marcada.** O checkbox e controlado por estado e o botao fica
-`disabled` enquanto ele estiver vazio. Nao volte a resolver isso com o `required` do HTML: o formulario
-usa `noValidate`, porque trata o proprio erro, entao a validacao nativa nunca roda e o `required` ali nao
-segura nada. Foi assim que a trava ficou meses sem funcionar.
+  Medido: com a rota chamada `contatos`, `GET /api/contatos` devolvia 405, enquanto `/api/galeria`
+  devolvia 200 e `/api/leads` devolvia 403, que e o certo para colecao fechada. **A rota antiga do
+  formulario tinha esse mesmo defeito**, em `/api/leads`, e ninguem notou porque lead quase nunca era
+  editado pelo painel. Rota nossa que converse com uma colecao precisa de nome proprio.
+- **O envio vai por `sendBeacon`, nao por `fetch` comum.** O clique navega para o WhatsApp logo em
+  seguida, e requisicao normal e cancelada quando a pagina sai.
+- **Ela nunca devolve erro util, e responde 204 sempre.** Quem chama e um beacon: nao ha ninguem do
+  outro lado para reagir. Limite estourado, corpo invalido ou falha de banco terminam igual, sem
+  gravar. Impedir a pessoa de abrir a conversa por causa de um log seria o pior desfecho.
+
+O limite por IP e de 20 a cada 10 minutos, mais alto que o do formulario porque log de clique e
+naturalmente mais frequente: a mesma pessoa pode abrir pelo header, desistir e abrir pelo rodape.
+
+**A colecao guarda volume, nao pessoas.** Ali aparece quantos contatos cada campanha gerou, e nao quem
+sao: nome e telefone so existem dentro da conversa do WhatsApp. Nao ha dado pessoal, o IP serve so ao
+limite e nao e gravado, entao isso nao depende do banner de consentimento. **E uma linha por clique**,
+entao ela cresce rapido e vale combinar uma limpeza periodica com a clinica.
+
+#### A colecao Leads continua de pe
+
+Ela guarda os cadastros que entraram enquanto o formulario existia e **parou de crescer**. A rota
+`/api/leads` foi apagada, entao `/api/leads` hoje e o REST do Payload, que responde 403 pelo
+`create: () => false`. O `aviso-lead.ts` e o `motivos.ts` continuam porque a colecao usa os dois.
+
+Leitura, edicao e exclusao das duas colecoes exigem papel de administrador, pelo helper `ehAdmin` em
+`src/lib/acesso.ts`. A colecao Users tambem e gateada, e o campo `papel` so aceita alteracao vinda de
+administrador, senao um editor se promoveria e a trava nao valeria nada. O primeiro usuario nasce
+administrador de proposito, porque e criado sem ninguem logado.
+
+O aviso por email do `afterChange` continua ligado na colecao Leads. Como nada cria lead novo, ele nao
+dispara mais na pratica, mas segue valendo se alguem cadastrar um pela mao no painel.
 
 ### Midia
 
@@ -357,19 +424,49 @@ saiu a pedido do cliente.
 Texto sobre foto nao tem contraste garantido, porque quem escolhe a imagem e a clinica. Por isso a
 chamada fica sobre um veu, um gradiente de `tinta` subindo do pe do painel, com o texto em `porcelana`.
 
-**A altura do veu e fixa, `h-[22rem]`, e nao uma fracao do painel.** Enquanto era `h-2/3` ele
-acompanhava a altura do painel, mas a chamada fica ancorada no **pe** dele: no celular, com painel
-curto, ela subia para a parte fraca do gradiente. Medido naquele estado, contra uma foto de jaleco
-branco, o fundo atras do texto era `rgb(244,243,243)` e o contraste caia para **1.11**, ou seja texto
-branco sobre branco.
+**A chamada abre pela dor, e nao pela especialidade.** Ela dizia "Tricologia clinica para homens e
+mulheres. Todo protocolo comeca por uma tricoscopia...", que so conversa com quem ja conhece o termo.
+Hoje abre em "Queda de cabelo, calvicie e alopecia tem causa", a pedido do time de trafego: quem chega
+pelo anuncio busca a queixa, nao a especialidade. As duas travas de sempre continuam valendo ali, sem
+a palavra diagnostico e sem promessa de gratuidade.
 
-Com a altura fixa a chamada cai por volta de tinta/72 em qualquer largura. Medido depois da correcao,
-escondendo o texto por folha injetada para sobrar so o fundo composto: `rgb(102,92,87)` no celular e
-`rgb(102,92,88)` no desktop, os dois dando **6.49** na porcelana cheia e **5.26** no `porcelana/85` da
-linha das estrelas.
+Ela tambem **cresceu de `text-base sm:text-lg` para `text-lg sm:text-2xl`**, com a coluna abrindo de
+`max-w-md` para `max-w-xl`. No tamanho antigo ela lia como legenda de foto, e nao como a promessa da
+pagina.
 
-Contra aquele pixel de jaleco branco o piso de 4.5 pede **tinta/60**. Mexeu no veu ou moveu a chamada?
-Refaca a conta contra o pixel mais claro, nao contra a media.
+**A altura do veu e fixa, `h-[28rem]` e `lg:h-[30rem]`, e nao uma fracao do painel.** Enquanto era
+`h-2/3` ele acompanhava a altura do painel, mas a chamada fica ancorada no **pe** dele: no celular, com
+painel curto, ela subia para a parte fraca do gradiente. Medido naquele estado, contra uma foto de
+jaleco branco, o fundo atras do texto era `rgb(244,243,243)` e o contraste caia para **1.11**, ou seja
+texto branco sobre branco.
+
+**O veu subiu de 22rem junto com a fonte, e essa dependencia e a coisa mais importante desta secao.** A
+chamada e ancorada no pe do painel, entao texto maior empurra o **topo** do bloco para cima, para a
+parte fraca do gradiente. E o mesmo defeito de antes por outro caminho. Com o texto novo e o veu de
+22rem, o topo caia a 65% do gradiente, onde o alfa e ~`tinta/49`.
+
+Medido no navegador depois da correcao, escondendo o texto por folha injetada para sobrar so o fundo
+composto, contra o pixel mais claro da faixa e nao contra a media dela:
+
+| Largura | Fundo composto | porcelana | porcelana/85 |
+| --- | --- | --- | --- |
+| 390 | `rgb(103,94,88)` | 6.33 | 5.12 |
+| 768 | `rgb(95,85,81)` | 7.23 | 5.80 |
+| 1024 | `rgb(101,91,87)` | 6.59 | 5.30 |
+| 1440 | `rgb(101,91,86)` | 6.60 | 5.31 |
+| 1920 | `rgb(102,91,87)` | 6.56 | 5.28 |
+
+**Os 28rem do celular sao piso, nao folga.** Com 24rem o topo do texto subia para 52% do gradiente e a
+linha das estrelas, em `porcelana/85`, dava **4.47**, logo abaixo do piso de 4.5. Em 28rem ele volta
+para 44,6% e a linha vai a 5.12.
+
+**Quem reprova primeiro e sempre a linha das estrelas, nunca o texto cheio**, e **o celular e o pior
+caso**, porque o painel ali e curto e o mesmo bloco ocupa uma fracao maior dele. Mexeu no veu, no
+tamanho da fonte ou no comprimento do texto? Refaca a medida em 390 primeiro, contra o pixel mais claro.
+
+**Cuidado ao medir: o banner de consentimento nasce por cima do pe do painel**, exatamente onde a
+chamada fica, e a chapa branca dele falseia a leitura para contraste 1.00. Antes de amostrar, grave
+`leia-consentimento` no `localStorage`.
 
 Duas coisas sustentam a montagem:
 
@@ -524,75 +621,116 @@ A secao do exame tem video de fundo, pelo mesmo `components/ui/video-fundo.tsx` 
 arquivo sai do painel, no campo `videoTricoscopia` da global Clinica, aba **Exame**. Sem arquivo a
 secao volta ao fundo escuro chapado, que era o comportamento antigo.
 
+**O arquivo mudou, e com ele a conta.** O video antigo parecia salao de beleza e o time de trafego
+pediu ambiente clinico. Entrou o `novobackground-tricologia.mp4`, que mostra a tela da tricoscopia
+durante o exame.
+
 Tres coisas medidas, nao estimadas:
 
-- **O veu e `tinta/80`.** O pixel mais claro do arquivo e `rgb(197,194,202)`, onde porcelana sem veu
-  daria 1.76 de contraste. Sob 80% a porcelana da 9.9, o `porcelana/65` do texto das etapas da 5.3 e o
-  `caramelo-claro` do eyebrow e dos numeros da 5.2. **Em 70% os dois ultimos caem para 4.35 e 4.05**,
-  abaixo do piso. Trocou o arquivo, refaca a conta contra o pixel mais claro do novo.
+- **O veu e `tinta/85`, e subiu de 80 por causa da troca.** O video antigo era escuro, com pixel mais
+  claro em `rgb(197,194,202)`. O novo e claro: o pixel mais claro e **branco puro** e entre **40% e
+  53% de cada quadro** passa de 0.75 de luminancia, medido amostrando quadro a quadro pela CDN.
+
+  Contra branco puro, sob 85%, o fundo composto e `rgb(77,66,60)` e da **9.72** em porcelana, **5.74**
+  no `porcelana/70` do paragrafo de apoio, **5.21** no `porcelana/65` das etapas e **5.13** no
+  `caramelo-claro` do eyebrow e dos numeros.
+
+  **Em 80% o caramelo-claro cai para 4.31 e reprova.** Ele e o mais apertado dos quatro, entao **e ele
+  que manda no veu**, nao o titulo, que sobra em qualquer valor.
+
+  O preco e que o video aparece pouco: arquivo claro atras de secao escura pede veu pesado. E o custo
+  de manter a secao escura, e foi escolha, nao descuido.
 - **A transformacao e mais agressiva que a do hero**, `f_auto,q_auto:eco,w_1600` em vez de
-  `f_auto,q_auto`. Sao 4,9 MB contra 7,4 MB no mesmo arquivo. Vale porque o video vive atras de um veu
-  de 80% e a perda nao chega a aparecer. No hero nao valeria, porque la o video e o assunto.
+  `f_auto,q_auto`. Vale porque o video vive atras de um veu de 85% e a perda nao chega a aparecer. No
+  hero nao valeria, porque la o video e o assunto.
 - **A URL aponta direto para a CDN**, pelo `urlDeEntrega`, e nao para a rota do Payload. Mesmo motivo do
   hero: aquela rota nao transforma, nao responde a `Range` e passa os bytes pelo servidor do Next.
+
+**Como medir isso sem ffmpeg**, que e o caso desta maquina: puxe quadros parados da propria CDN, com
+`so_0`, `so_1` e por diante na URL de video do Cloudinary, e rode `sharp().stats()` ou uma varredura de
+pixel em cada um. O `sharp` ja e dependencia direta do projeto. **Varra pixel a pixel e guarde o mais
+claro**: a media do quadro nao serve, porque o risco de contraste mora no pixel isolado, tipo o jaleco
+ou o reflexo da lampada.
+
+**O CTA de destaque abre o WhatsApp.** Ao lado dele ja houve um link discreto ate o formulario, que
+existia so para o evento `clique_agendar` continuar tendo um emissor. **O formulario saiu do site**,
+entao o link nao tem mais destino e o evento saiu de `EventoNome`. Nao recoloque um sem que exista
+formulario de novo.
 
 A secao precisa de `relative isolate`, senao a camada em `-z-10` cai atras do fundo de um ancestral e o
 video some. O `bg-tinta` continua como reserva.
 
-### Sobre e formulario
+### Sobre e contato
 
 As duas secoes seguem a forma de blocos do shadcnblocks escolhidos pelo cliente, o `about14` e o
 `contact34`. Os dois sao Pro e o codigo nao e publico, entao o que existe aqui e reconstrucao com os
 primitivos do projeto, nao codigo copiado.
 
 O Sobre fala em primeira pessoa e o conteudo inteiro vem da aba **Sobre** da global Clinica. O campo
-`sobre` e so dessa secao. Quem alimenta a descricao do `MedicalClinic` nos dados estruturados e a
-`chamada`, que continua institucional.
+`sobre` e so dessa secao.
 
-No Agendamento o cartao branco sobre a foto usa o `CartaoVidro` com `tom="claro"`. O botao dentro dele
-abre o WhatsApp pelo `BotaoWhatsapp`, com `local="card-agendamento"`, e por isso sai como
-`clique_whatsapp`. O numero que aparece no cartao e texto puro de proposito, sem link, para nao existir
-um segundo caminho de WhatsApp fora do componente que grava o evento.
+**Quem alimenta a descricao do `MedicalClinic` nos dados estruturados e a `chamada`.** Ela era
+institucional e hoje abre pela dor, pelo pedido do time de trafego. Continua servindo como descricao,
+porque descreve o que a clinica faz e nao e slogan nem primeira pessoa, mas **saiba que mexer na
+chamada do hero mexe no dado estruturado junto**. Se um dia as duas precisarem divergir, o caminho e um
+campo proprio, nao reescrever uma delas no lugar da outra.
 
-O `Label` nao fixa cor. Ela vem da secao, porque o formulario cai sobre cacau, onde o `text-neutro` que
-estava preso no primitivo dava 1.2 de contraste e sumia. Se um dia o formulario voltar para fundo claro,
-troque a cor no `<form>`, nao no primitivo.
+**O Sobre foi remontado a pedido do time**, que pediu para valorizar a apresentacao da profissional:
 
-O formulario e de campo alto: `h-14` e `rounded-xl` nos campos e no select, `min-h-36` na area de texto.
-Os quatro campos curtos ficam em duas colunas a partir do `sm`, e voltam a empilhar abaixo disso, onde a
-coluna e estreita demais. O rotulo e frase normal, nao versalete em mono: ao lado de campo desse tamanho
-a etiqueta miuda sumia.
+- **O rotulo virou eyebrow acima do titulo.** Ele ficava enterrado na primeira coluna da grade, e era o
+  unico lugar do site onde o eyebrow nao abria a secao.
+- **O resumo virou paragrafo de abertura**, sob o titulo. Em cinza pequeno na coluna estreita ele lia
+  como nota de rodape, quando e a frase que apresenta a Leia.
+- **A assinatura virou cartao sobre areia**, com retrato de 64px, nome, credencial e a lista de
+  formacao. Antes eram um retrato de 44px e duas linhas soltas. Sobre areia o acento e o
+  `cacau-escuro` em texto pequeno, pela regra da paleta.
+- **Campo novo `credenciais`**, array de texto na aba Sobre. A `credencial` e uma linha so, e lista de
+  formacao e o que sustenta autoridade numa pagina de clinica. Sem itens a lista nao aparece, e o
+  cartao fica curto: com ele vazio sobra espaco embaixo, entao vale preencher.
+- **A foto larga ganhou `CamadaParallax preencher`**, o mesmo tratamento da foto do cartao de
+  tratamento. Sem dependencia nova.
+- **Entrou `BotaoWhatsapp` com `local="sobre"`.** A secao terminava sem saida nenhuma.
 
-**`Input`, `Textarea`, `Label` e `Checkbox` sao usados so por esta secao**, entao mexer neles nao respinga
-em outro lugar do site. Se um segundo formulario aparecer, essa liberdade acaba.
+#### A secao de contato
 
-O select leva `appearance-none` e uma seta desenhada, porque a nativa muda de desenho em cada sistema e
-destoava do resto. O icone precisa de `pointer-events-none`, senao ele come o clique que deveria abrir a
-lista.
+**Aqui havia um formulario, e ele foi removido**, a pedido do cliente, que pediu foco total no WhatsApp.
+O que saiu junto esta na secao Contatos e leads e no Rastreamento; o resumo e que a conversao do Ads e a
+gravacao de UTM mudaram de lugar, nao sumiram.
 
-O botao de envio e pilula, com icone a esquerda, e ao lado dele fica a linha que explica o que acontece
-depois. Em coluna estreita essa linha desce para baixo do botao, pelo `flex-wrap`, e continua legivel.
+A forma segue o bloco escolhido pelo cliente: coluna de texto a esquerda e a foto sangrando ate a borda
+da janela a direita, empilhando com a foto por ultimo no celular. O conteudo e eyebrow, titulo, um
+paragrafo curto, o CTA com a seta e, mais abaixo, telefone e e mail grandes.
 
-O fundo da secao e o video `public/backgrounds/background-agendamento.mp4`, uma textura abstrata de
-10 segundos na propria paleta da marca, entregue pelo `components/ui/video-fundo.tsx`. Ele entra mudo,
-comeca sozinho, roda em loop e pausa sob `prefers-reduced-motion`, porque `autoplay` so vale no
-carregamento e respeitar quem pede menos movimento exige pausar depois, pela referencia. E a mesma
-solucao do `midia-rotativa.tsx`.
+**Esta e a segunda secao sem `container`, junto com o hero**, e o motivo e a foto encostar na borda.
+Nenhum truque de margem negativa resolve isso de dentro de uma coluna de grade, porque porcentagem em
+margem resolve contra a celula e nao contra o container.
 
-Tres coisas ali nao sao escolha de gosto:
+**O recuo da coluna de texto e calculado a mao e reproduz a calha do `container`:**
+`lg:pl-[max(1.25rem,calc((100vw-1376px)/2))]`. O container e 1440px com 2rem de respiro a partir do
+`2xl`, o que da 1376px uteis, entao a calha e `(100vw - 1376px) / 2` com piso de 1.25rem. Medido contra
+o titulo do Sobre: **32px em 1440, 272px em 1920 e 20px em 1280, alinhado nos tres**. Mexeu no
+`container.padding` ou no `screens` do tailwind.config? Refaca aqui, senao esta secao sai desalinhada do
+resto da pagina.
 
-- **A secao precisa de `relative isolate`.** Sem contexto de empilhamento proprio, a camada do video em
-  `-z-10` cai atras do fundo de um ancestral e o video simplesmente nao aparece.
-- **O `bg-cacau` da secao continua.** Ele e a reserva enquanto o arquivo carrega e se ele falhar.
-- **O veu e `cacau/85` por conta feita, nao por estimativa.** O pixel mais claro que o arquivo produz e
-  `rgb(178,159,146)`, onde porcelana sozinha daria 2.5 de contraste. Sob o veu de 85% porcelana da 5.6 e
-  o `porcelana/85` do texto corrido da 4.6, os dois acima do piso. Afrouxar para 70% dobra a presenca do
-  video e derruba o texto corrido para perto de 4.0, abaixo do piso. **Se trocar o arquivo, refaca a
-  conta contra o pixel mais claro do novo video, nao contra a media dele.**
+**O numero grande e link de WhatsApp, e isso mudou de regra.** Antes o numero era texto puro de
+proposito, para nao existir um segundo caminho de conversa fora do componente que grava o evento.
+Passando por dentro do `BotaoWhatsapp`, com `local="contato-numero"`, o motivo daquela regra nao se
+aplica: o clique entra no relatorio como qualquer outro.
 
-A secao expoe pouco fundo, porque o painel da foto e o cartao de contato cobrem a esquerda. A maior
-area livre fica atras do texto do formulario, que e justamente onde o veu precisa ser forte, entao o
-video ali e atmosfera e nao protagonista. Isso foi medido e decidido com o cliente, nao e descuido.
+**O tamanho do numero vai num `span` interno, e nao na `className` do botao.** O `Button` nasce com
+`text-sm` na base, e o `tailwind-merge` nao reconhece `text-display-md` como do mesmo grupo de
+`font-size`, porque e chave custom do `tailwind.config.ts`: as duas classes sobrevivem e o `text-sm`
+vence pela ordem da folha. Medido, o numero saia miudo ao lado do e mail. Num descendente nao ha empate.
+**Vale para qualquer classe de fonte custom aplicada sobre o `Button`.**
+
+**O video de fundo saiu junto com o formulario.** A secao era `bg-cacau` com o
+`public/backgrounds/background-agendamento.mp4` sob veu de `cacau/85`, calculado contra o pixel mais
+claro do arquivo, `rgb(178,159,146)`. Hoje ela e porcelana lisa e quem traz cor e a foto. O arquivo
+continua em `public/`, so nao e usado em lugar nenhum: se voltar a ser, a conta do veu precisa ser
+refeita, porque o texto agora e escuro sobre claro e o risco inverte de lado.
+
+**Os primitivos `Input`, `Textarea`, `Label` e `Checkbox` foram apagados**, porque so esta secao usava.
+Se um formulario voltar ao site, eles voltam do zero.
 
 ### Comparador antes e depois
 
@@ -720,6 +858,100 @@ caso terminou quando ele nao terminou, num site de clinica.
 entao conteudo novo entra no ar sem deploy. Um caso em tratamento criado antes de a Vercel receber a
 pilula sai rotulado de "Depois". Crie ele despublicado e ligue depois do deploy.
 
+### Grades parallax, na forma do skiper30
+
+`src/components/ui/galeria-parallax.tsx` e a reconstrucao do **skiper30 do skiper-ui**, o Oliver
+parallax, escolhido pelo cliente. Livre para uso pessoal e comercial, com **atribuicao ao Skiper UI**
+pedida pela licenca da versao gratuita, e ela esta no comentario do componente.
+
+**Nao entrou dependencia nova.** O componente publicado traz framer-motion e instancia Lenis proprio.
+Aqui o framer-motion ja estava no projeto e ninguem cria um segundo Lenis, porque o `SmoothScroll.tsx`
+mantem a instancia global e duas brigariam pela rolagem.
+
+**Sao dois arquivos, e a divisao importa.** O `galeria-parallax.tsx` e server component e monta as
+colunas; o `grade-parallax.tsx` e `'use client'` e so move o que recebe, ja renderizado, como
+`children`. Assim as fotos continuam saindo do servidor. O preco e que a marcacao das figures aparece
+duas vezes na resposta, no HTML e no payload RSC: medido, **20 KB em 467 KB, 4.4%**, e comprime bem.
+
+**Nao importe valor de um arquivo para o outro.** A contagem de colunas e declarada nos dois de
+proposito. Importar `COLUNAS` do modulo `'use client'` para o server component faz o valor atravessar a
+fronteira RSC como referencia de cliente em vez de numero: `Array.from({ length: COLUNAS })` virava
+array vazio e a distribuicao quebrava com "Cannot read properties of undefined (reading 'push')".
+Mexeu numa lista, confira a outra.
+
+Ele alimenta **duas secoes**, as duas saindo da colecao `galeria`, separadas pelo campo `categoria`:
+
+- **`GaleriaResultados`**, categoria `resultados`, logo abaixo do comparador. **Sem titulo visivel e sem
+  ancora, a pedido do cliente**: ela le como continuacao da secao Resultados, que ja tem titulo e
+  explicacao logo acima. Ela existe porque o comparador exige interacao, e quem nao arrasta a divisa ve
+  so a foto de antes e vai embora achando que nao ha resultado.
+- **`AClinica`**, categoria `clinica`, no fim da pagina. Essa **tem** titulo e CTA, porque abre assunto
+  novo e e o ultimo bloco antes do rodape.
+
+**O `h2` em `sr-only` da GaleriaResultados nao contradiz o "sem titulo".** Uma faixa so de imagens sem
+nome nenhum some do outline da pagina e chega ao leitor de tela como um monte de foto solta depois do
+carrossel.
+
+Sete coisas que sustentam a grade:
+
+- **Uma foto por registro, na proporcao que ela tiver.** No antes e depois, o que entra e o **post ja
+  montado** com as duas fotos lado a lado. Campos separados de antes e depois forcariam cartao de
+  proporcao fixa e matariam o desencontro de altura, que e o desenho.
+- **A distribuicao equilibra altura, e nao e rodizio.** Cada foto vai para a coluna mais curta,
+  medindo por `altura / largura`. Rodizio parece equivalente e nao e: medido com 12 fotos de razao bem
+  misturada, o pe das colunas variava quase 300px. **A varredura preserva a ordem do painel**, o que
+  custa um pouco de equilibrio: ordenar da mais alta para a mais baixa fecharia quase todo o degrau,
+  mas jogaria fora o campo `ordem`, que e o unico controle da clinica. Com foto de post, toda na mesma
+  proporcao, o empate e exato de qualquer jeito.
+- **Sao tres colunas no `lg` e duas no celular, com um DOM so.** Tres nao divide por dois, entao numa
+  grade de duas colunas a terceira cairia sozinha na segunda linha, com metade da tela vazia ao lado
+  por toda a altura dela. A saida e `columns-2` no container e **`display: contents` em cada coluna**:
+  abaixo do `lg` o wrapper some da caixa de layout, as figures viram filhas diretas do container
+  multi-coluna e o navegador **rebalanceia sozinho**. No `lg` o wrapper volta a ser coluna e recebe o
+  deslocamento.
+
+  Duas saidas erradas, para nao serem tentadas de novo: montar um DOM para telefone e outro para
+  desktop dobra a requisicao de imagem, e usar tres colunas tambem no celular deixa cada foto com
+  ~108px em 390px de tela, ou seja ~54px por metade do antes e depois.
+
+  Como o `gap` de flex nao existe sob `display: contents`, o espacamento vem de `mb` na propria figure,
+  e cada uma leva `break-inside-avoid` para nao ser cortada entre as colunas de CSS.
+- **Uma medicao de rolagem para a grade inteira, nunca uma por coluna.** Era um `useScroll` por coluna,
+  e era dai que vinha o engasgo que o cliente reclamou. Medido, o diagnostico obvio estava errado: nao
+  era taxa de quadros, que ja era 60fps com zero quedas nos dois casos, nem atraso, que era zero
+  quadros. Era **ruido de amostragem**, com cada coluna lendo a rolagem num momento ligeiramente
+  diferente do quadro, entao elas tremiam **umas em relacao as outras**, que e o que mais aparece numa
+  grade lado a lado.
+
+  O numero que mostra isso e o erro residual entre a rolagem e o transform aplicado: **3.31px antes,
+  0.01px depois**, contra 1.9px que a coluna anda por quadro. Antes o tremor era maior que o proprio
+  movimento.
+
+  **`useSpring` foi tentado e descartado**, e vale saber por que: ele derrubava o residuo para 1.28px,
+  mas so passava a acompanhar bem a rolagem **dez quadros atras**, 166ms, com a coluna nadando atras da
+  pagina. Trocava um defeito por outro pior. Resolvida a causa, nao havia o que suavizar.
+
+  **Como medir isso:** grave `scrollY` e o translateY real da coluna a cada quadro, durante uma rolagem
+  por evento de roda de verdade, e ajuste o transform contra a rolagem deslocada de k quadros. O k de
+  menor erro e a defasagem, e o erro naquele k e o tremor. Taxa de quadros sozinha **nao** enxerga esse
+  defeito.
+- **`will-change: transform` nas colunas**, e nenhum transform abaixo do `lg`. O corte do celular e por
+  `matchMedia` em JS, e nao so por classe, para a conta nem rodar la.
+- **O curso vai de 4% a 10% da altura da coluna, e e curto de proposito.** Como a secao tem respiro
+  vertical proprio, o deslocamento acontece dentro dele e nao abre fresta no topo nem no pe. Aumentar
+  o curso pede aumentar o respiro junto.
+- **Video e descartado na entrada.** A colecao aponta para a Media, que aceita os dois, e o otimizador
+  do Next responde 400, "The requested resource isn't a valid image", para um `.mp4`. Sem o filtro uma
+  foto trocada por video deixaria um buraco na grade sem erro nenhum na tela.
+
+**Nao ha `enquadramento` aqui, e isso e proposital.** O ponto de foco existe para imagem que usa
+`object-cover`, onde a caixa recorta de novo. Na grade a foto entra inteira, na propria proporcao, entao
+nao ha recorte para o foco resolver e um `object-position` ali seria letra morta.
+
+As duas secoes **somem inteiras enquanto nao houver foto publicada** na categoria. E o que permite subir
+o codigo antes do conteudo: elas entram no ar sozinhas quando a clinica cadastrar a primeira foto, sem
+deploy novo.
+
 ### Design
 
 Paleta de quatro cores fechada com o cliente, em marrom e bege. Use sempre os tokens de
@@ -727,7 +959,7 @@ Paleta de quatro cores fechada com o cliente, em marrom e bege. Use sempre os to
 
 | Token | Hex | Papel |
 | --- | --- | --- |
-| `porcelana` | `#FFFFFF` | fundo da pagina, cartoes e campos de formulario |
+| `porcelana` | `#FFFFFF` | fundo da pagina e dos cartoes |
 | `areia` | `#DDCCC2` | blocos que quebram o ritmo, como metricas e depoimentos |
 | `cacau` | `#775642` | cor principal, botao padrao e secao de agendamento |
 | `caramelo` | `#966B54` | detalhe, eyebrow e estrela, sobre fundo claro |
@@ -739,8 +971,11 @@ Paleta de quatro cores fechada com o cliente, em marrom e bege. Use sempre os to
 O container trava em **1440px**, com 2rem de respiro lateral a partir dessa largura, o que da 1376px de
 conteudo util.
 
-**O hero e a unica secao sem `container`.** O painel dele vai de borda a borda da janela, a pedido do
-cliente. O que fica **sobre** a foto, a chamada e o carrossel, tem um `container` proprio por dentro,
+**Duas secoes ficam fora do `container`: o hero e a de contato.** As duas por precisarem que a midia
+encoste na borda da janela. A de contato resolve o alinhamento do texto por um recuo calculado, descrito
+na secao Sobre e contato; o hero resolve por `container` interno, como segue.
+
+O painel do hero vai de borda a borda da janela, a pedido do cliente. O que fica **sobre** a foto, a chamada e o carrossel, tem um `container` proprio por dentro,
 entao continua alinhado com a coluna do resto da pagina em vez de encostar na borda: conferido em 1920,
 1440, 1280 e 1024, com a chamada caindo no mesmo pixel do conteudo das outras secoes. O titulo e o
 carrossel levam `px-5` proprio abaixo do `lg`, que e onde saem do posicionamento absoluto.
@@ -775,8 +1010,8 @@ Tres sistemas convivem, cada um com um papel:
 
 - `components/Revelar.tsx` continua nos titulos de secao. Nao depende de biblioteca e pinta na hora,
   entao e o unico que pode aparecer acima da dobra.
-- `components/ui/animated-content.tsx` e o AnimatedContent do React Bits, com gsap, usado em card e no
-  formulario. Ele nasce com `visibility: hidden` e so aparece quando o gsap roda, portanto **nunca use
+- `components/ui/animated-content.tsx` e o AnimatedContent do React Bits, com gsap, usado nos cards das
+  secoes. Ele nasce com `visibility: hidden` e so aparece quando o gsap roda, portanto **nunca use
   acima da dobra**: seguraria o LCP e deixaria a tela em branco em hidratacao lenta.
 - `components/ui/camada-parallax.tsx` e o parallax de rolagem, com framer-motion, na tecnica do
   skiper30. Hoje so a foto dentro do cartao de tratamento usa. Diferente dos outros dois, ele nao e
@@ -805,8 +1040,15 @@ Sem ele a camada fica no fluxo, que e o certo para texto.
 
 O brilho especular da borda vive em `components/ui/camada-especular.tsx` e liga pela prop `especular`
 do Button. **E opt-in por um motivo concreto:** cada instancia abre um contexto WebGL, e o navegador
-derruba os mais antigos passando de uns 16, com teto menor no celular. Hoje sao quatro CTAs com ele. Se
-sair espalhando pelos botoes, alguns simplesmente apagam sem aviso e sem erro no console.
+derruba os mais antigos passando de uns 16, com teto menor no celular. **Hoje sao quatro CTAs com ele**:
+os dois do header, o da tricoscopia e o do fechamento. Eram cinco: o quinto era o botao de envio do
+formulario, que saiu junto com ele. Se sair espalhando pelos botoes, alguns simplesmente apagam sem
+aviso e sem erro no console.
+
+Os CTAs que entraram com as melhorias do time de trafego seguiram criterios diferentes de proposito: o
+do fechamento leva `especular`, porque e o ultimo ponto de conversao da pagina, e os do Sobre e da secao
+de contato nao levam, porque a forma deles e de link e nao de botao cheio. Somar `especular` em todo
+botao novo e como o teto se estoura sem ninguem perceber.
 
 O brilho em CSS do botao, que varre o preenchimento, e independente e vale para todo botao. Os dois
 rodam juntos nos CTAs.
@@ -919,16 +1161,17 @@ e nao visita comercial. O valor nao aparece escrito, para nao brigar com a pergu
 tratamento?", que diz que a clinica nao trabalha com tabela fechada. Se alguem reescrever essa area,
 confira antes se nao voltou promessa de gratuidade em outro lugar.
 
-**O vocabulario e "consulta tricologica", nao "avaliacao".** Vale para o CTA, para o titulo da secao de
-agendamento, para o rotulo do motivo do formulario e para as respostas do FAQ.
+**O vocabulario e "consulta tricologica", nao "avaliacao".** Vale para o CTA, para o texto da secao de
+contato, para o rotulo do motivo na colecao Leads e para as respostas do FAQ.
 
 **Cuidado com o homonimo.** "Avaliacao" tambem significa review do Google, e nesse sentido ela fica:
 "Avaliacoes reais de pacientes no Google" no hero, "Avaliacoes verificadas no Google" nos depoimentos e
 a metrica "Avaliacoes no Google". Trocar por consulta ali vira erro de sentido.
 
-**O rotulo do motivo muda, o `valor` nao.** O `valor` vai gravado em cada lead e e o que o `z.enum` da
-rota valida, entao mexer nele invalida lead ja gravado e derruba envio. A lista esta duplicada em
-`src/lib/motivos.ts` e no proprio formulario, e as duas precisam andar juntas.
+**O rotulo do motivo muda, o `valor` nao.** O `valor` esta gravado em cada lead ja cadastrado, entao
+mexer nele invalida registro antigo. `src/lib/motivos.ts` e hoje a **unica** copia da lista: ela era
+repetida no `z.enum` da rota e no select do formulario, e as duas sumiram junto com ele. Quem consome
+sao a colecao Leads e o email de aviso.
 
 ## O CLI do Payload nao carrega o config
 

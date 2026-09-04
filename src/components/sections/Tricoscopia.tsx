@@ -1,5 +1,5 @@
 import { Revelar } from '@/components/Revelar'
-import { BotaoAgendar } from '@/components/BotaoAgendar'
+import { BotaoWhatsapp } from '@/components/BotaoWhatsapp'
 import { VideoFundo } from '@/components/ui/video-fundo'
 import { urlDeEntrega } from '@/lib/cloudinary-url'
 import { midia } from '@/lib/utils'
@@ -25,7 +25,15 @@ const etapas = [
   },
 ]
 
-export function Tricoscopia({ video }: { video?: Clinica['videoTricoscopia'] }) {
+export function Tricoscopia({
+  video,
+  whatsapp,
+  mensagemWhatsapp,
+}: {
+  video?: Clinica['videoTricoscopia']
+  whatsapp: string
+  mensagemWhatsapp?: string | null
+}) {
   const arquivo = midia(video)
 
   /*
@@ -47,13 +55,27 @@ export function Tricoscopia({ video }: { video?: Clinica['videoTricoscopia'] }) 
     // camada em `-z-10` cai atras do fundo de um ancestral e some. O `bg-tinta`
     // continua como reserva enquanto o arquivo carrega, e se nao houver arquivo.
     <section id="tricoscopia" className="relative isolate bg-tinta py-24 text-porcelana md:py-32">
-      {/* O veu vai em `tinta/80` por conta feita. O pixel mais claro do arquivo e
-          `rgb(197,194,202)`, onde porcelana sem veu daria 1.76 de contraste. Sob
-          80% a porcelana da 9.9, o `porcelana/65` do texto das etapas da 5.3 e o
-          caramelo-claro do eyebrow da 5.2. Em 70% os dois ultimos caem para 4.35
-          e 4.05, abaixo do piso. Trocou o arquivo? Refaca a conta contra o pixel
-          mais claro do novo, nao contra a media dele. */}
-      {fonte && <VideoFundo src={fonte} veu="bg-tinta/80" />}
+      {/*
+        **O veu subiu de `tinta/80` para `tinta/85` porque o arquivo mudou.** O
+        video antigo era escuro, com pixel mais claro em `rgb(197,194,202)`. O
+        novo e um ambiente clinico claro: o pixel mais claro e **branco puro** e
+        entre 40% e 53% de cada quadro passa de 0.75 de luminancia, medido
+        amostrando quadro a quadro pela CDN.
+
+        Contra branco puro, sob 85%, o fundo composto e `rgb(77,66,60)` e da
+        **9.72** em porcelana, **5.74** no `porcelana/70` do paragrafo de apoio,
+        **5.21** no `porcelana/65` das etapas e **5.13** no caramelo-claro do
+        eyebrow e dos numeros.
+
+        **Em 80% o caramelo-claro cai para 4.31 e reprova**, e ele e o mais
+        apertado dos quatro: e ele que manda no veu, nao o titulo. Trocou o
+        arquivo? Refaca a conta contra o pixel mais claro do novo, nao contra a
+        media dele.
+
+        O preco disso e que o video aparece pouco, porque um arquivo claro atras
+        de uma secao escura pede veu pesado. E o custo de manter a secao escura.
+      */}
+      {fonte && <VideoFundo src={fonte} veu="bg-tinta/85" />}
       <div className="container grid gap-14 md:grid-cols-[1fr_1.1fr] md:items-center">
         <Revelar>
           <p className="text-eyebrow font-mono uppercase text-caramelo-claro">O exame</p>
@@ -62,13 +84,23 @@ export function Tricoscopia({ video }: { video?: Clinica['videoTricoscopia'] }) 
             É o exame que separa suposição de evidência. Ele mostra a condição real do folículo
             antes de qualquer indicação de tratamento.
           </p>
-          {/* Este e o caminho que sobrou ate o formulario, depois que os CTAs de
-              "Agendar consulta tricologica" passaram a abrir o WhatsApp. Era um
-              `<a>` solto, sem evento nenhum: agora dispara `clique_agendar`, que
-              e o que distingue quem quer o formulario de quem quer conversa. */}
-          <BotaoAgendar local="tricoscopia" variant="destaque" especular className="mt-8">
+          {/*
+            Aqui ficava, ao lado deste botao, um link discreto ate o formulario,
+            que existia so para o evento `clique_agendar` continuar tendo um
+            emissor. **O formulario foi removido do site**, entao o link nao tem
+            mais destino e o evento saiu de `EventoNome`. Nao recoloque um sem
+            que exista formulario de novo.
+          */}
+          <BotaoWhatsapp
+            numero={whatsapp}
+            mensagem={mensagemWhatsapp}
+            local="tricoscopia"
+            variant="destaque"
+            especular
+            className="mt-8"
+          >
             Agendar tricoscopia
-          </BotaoAgendar>
+          </BotaoWhatsapp>
         </Revelar>
 
         <Revelar atraso={120}>

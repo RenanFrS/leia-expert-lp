@@ -102,6 +102,9 @@ export default async function FrontendLayout({ children }: { children: React.Rea
             ga4Id: rastreamento?.ga4Id || process.env.NEXT_PUBLIC_GA4_ID,
             metaPixelId: rastreamento?.metaPixelId || process.env.NEXT_PUBLIC_META_PIXEL_ID,
             googleAdsId: rastreamento?.googleAdsId,
+            // Vai junto porque a conversao do Ads passou a sair do clique de
+            // WhatsApp, e nao mais do envio do formulario, que nao existe mais.
+            googleAdsLabel: rastreamento?.googleAdsLabelLead,
             consentimento: rastreamento?.consentimento ?? true,
           }}
         />

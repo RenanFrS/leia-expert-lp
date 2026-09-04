@@ -39,7 +39,10 @@ export const Rastreamento: GlobalConfig = {
       name: 'googleAdsLabelLead',
       type: 'text',
       label: 'Rotulo de conversao do Google Ads',
-      admin: { description: 'Disparado quando o formulario e enviado com sucesso.' },
+      admin: {
+        description:
+          'Disparado quando alguém abre o WhatsApp por qualquer botão do site. Era o envio do formulário, que não existe mais.',
+      },
     },
     {
       name: 'consentimento',

@@ -1,356 +1,155 @@
-'use client'
-
-import { useState } from 'react'
 import Image from 'next/image'
-import { ArrowUpRight, CalendarCheck, ChevronDown, Loader2 } from 'lucide-react'
+import { CornerDownRight } from 'lucide-react'
+
 import { BotaoWhatsapp } from '@/components/BotaoWhatsapp'
-import { Button } from '@/components/ui/button'
-import { CartaoVidro } from '@/components/ui/cartao-vidro'
-import { VideoFundo } from '@/components/ui/video-fundo'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Revelar } from '@/components/Revelar'
-import { AnimatedContent } from '@/components/ui/animated-content'
-import { lerUtms, pushEvento, registrarLead } from '@/lib/analytics'
 import { enquadramento, formatarWhatsapp, midia } from '@/lib/utils'
 import type { Clinica } from '@/payload-types'
 
-const motivos = [
-  { valor: 'queda-capilar', rotulo: 'Queda capilar' },
-  { valor: 'alopecia', rotulo: 'Alopecia' },
-  { valor: 'caspa-dermatite', rotulo: 'Caspa e dermatite' },
-  { valor: 'tricoscopia', rotulo: 'Consulta e tricoscopia' },
-  { valor: 'outro', rotulo: 'Outro assunto' },
-]
-
-type Estado = 'parado' | 'enviando' | 'enviado' | 'erro'
-
-type Unidade = NonNullable<Clinica['unidades']>[number]
-
 type Props = {
-  googleAdsId?: string | null
-  googleAdsLabel?: string | null
   whatsapp: string
   mensagemWhatsapp?: string | null
   email?: string | null
-  unidade?: Unidade
   foto?: Clinica['fotoAgendamento']
 }
 
-/** Marca de campo obrigatorio. Fica escondida do leitor de tela porque o
- *  `required` do proprio campo ja anuncia isso, e repetir viraria ruido. */
-const Obrigatorio = () => (
-  <span aria-hidden className="text-caramelo-claro">
-    {' '}
-    *
-  </span>
-)
-
-const Rotulo = ({ children }: { children: React.ReactNode }) => (
-  <span className="text-eyebrow font-mono uppercase text-neutro">{children}</span>
-)
-
-export function Agendamento({
-  googleAdsId,
-  googleAdsLabel,
-  whatsapp,
-  mensagemWhatsapp,
-  email,
-  unidade,
-  foto,
-}: Props) {
-  const [estado, setEstado] = useState<Estado>('parado')
-  const [erro, setErro] = useState<string | null>(null)
-  const [tocado, setTocado] = useState(false)
-  const [autorizado, setAutorizado] = useState(false)
-
+/**
+ * Fechamento por WhatsApp. **Aqui havia um formulario, e ele foi removido a
+ * pedido do cliente**, que pediu foco total na conversa.
+ *
+ * Vale saber o que saiu junto, porque nada disso e obvio olhando o arquivo:
+ *
+ * - a rota `POST /api/leads`, os primitivos `Input`, `Textarea`, `Label` e
+ *   `Checkbox`, que so esta secao usava, e o `BotaoAgendar`
+ * - os eventos `inicio_formulario`, `envio_formulario`, `erro_formulario` e
+ *   `clique_agendar`, que ficaram sem emissor
+ * - **a conversao do Google Ads**, que disparava no envio. Ela passou para o
+ *   clique de WhatsApp, dentro do `registrarContatoWhatsapp`
+ * - **a gravacao de UTM por lead**, que virou a colecao `contatos`, gravada no
+ *   mesmo clique
+ *
+ * A colecao `Leads` continua de pe, com os cadastros que ja entraram. Ela parou
+ * de crescer.
+ *
+ * A forma segue o bloco que o cliente escolheu: coluna de texto a esquerda e a
+ * foto sangrando ate a borda da janela a direita, empilhando com a foto por
+ * ultimo no celular.
+ *
+ * **Esta e a segunda secao do site sem `container`**, junto com o hero, e por um
+ * motivo concreto: a foto precisa encostar na borda da janela. Nenhum truque de
+ * margem negativa resolve isso de dentro de uma coluna de grade, porque
+ * porcentagem em margem resolve contra a celula e nao contra o container. O
+ * recuo da coluna de texto e calculado a mao, e a conta esta la embaixo.
+ *
+ * Ela e server component: sem formulario nao sobrou estado nenhum.
+ */
+export function Agendamento({ whatsapp, mensagemWhatsapp, email, foto }: Props) {
   const imagem = midia(foto)
 
-  const aoInteragir = () => {
-    if (tocado) return
-    setTocado(true)
-    pushEvento('inicio_formulario')
-  }
-
-  const enviar = async (evento: React.FormEvent<HTMLFormElement>) => {
-    evento.preventDefault()
-    setEstado('enviando')
-    setErro(null)
-
-    const dados = new FormData(evento.currentTarget)
-    const corpo = {
-      nome: String(dados.get('nome') || ''),
-      email: String(dados.get('email') || ''),
-      whatsapp: String(dados.get('whatsapp') || ''),
-      motivo: String(dados.get('motivo') || ''),
-      mensagem: String(dados.get('mensagem') || ''),
-      origem: lerUtms(),
-    }
-
-    try {
-      const resposta = await fetch('/api/leads', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(corpo),
-      })
-
-      if (!resposta.ok) {
-        const detalhe = await resposta.json().catch(() => null)
-        throw new Error(detalhe?.erro || 'Nao foi possivel enviar agora.')
-      }
-
-      registrarLead({
-        motivo: corpo.motivo,
-        googleAdsId: googleAdsId || undefined,
-        googleAdsLabel: googleAdsLabel || undefined,
-      })
-      setEstado('enviado')
-    } catch (falha) {
-      const mensagem = falha instanceof Error ? falha.message : 'Nao foi possivel enviar agora.'
-      setErro(mensagem)
-      setEstado('erro')
-      pushEvento('erro_formulario', { mensagem })
-    }
-  }
-
   return (
-    // O `isolate` sustenta o video de fundo: sem contexto de empilhamento proprio,
-    // a camada em `-z-10` cai atras do fundo de um ancestral e some. O `bg-cacau`
-    // continua valendo como reserva enquanto o arquivo carrega.
-    <section id="agendar" className="relative isolate bg-cacau py-24 text-porcelana md:py-32">
-      {/* O veu vai em `cacau/85` por conta: sobre o pixel mais claro do arquivo,
-          porcelana da 5,6 de contraste e porcelana/85 da 4,6, que e o piso do
-          texto corrido. Afrouxar o veu comeca a apagar o corpo do texto no quadro
-          claro do video. */}
-      <VideoFundo src="/backgrounds/background-agendamento.mp4" />
+    // O `overflow-x-clip` segura a foto, que passa da coluna ate a borda da
+    // janela. `clip` e nao `hidden` de proposito, para nao criar container de
+    // rolagem novo, o mesmo criterio do hero e dos tratamentos.
+    <section id="agendar" className="overflow-x-clip">
+      <div className="grid lg:grid-cols-2 lg:items-stretch">
+        {/*
+          **O recuo reproduz a calha do `container`, e a conta nao e chute.** O
+          container do projeto e `max-width: 1440px` com `padding: 2rem` a partir
+          do `2xl`, e `1.25rem` abaixo disso, o que da 1376px de conteudo util.
+          Entao a calha esquerda e `(100vw - 1376px) / 2`, com piso de 1.25rem
+          para as larguras em que a pagina ainda nao chegou ao maximo.
 
-      <div className="container grid gap-12 lg:grid-cols-5 lg:items-stretch lg:gap-14">
-        <div className="relative lg:col-span-3">
-          <figure className="relative aspect-[3/5] overflow-hidden rounded-lg bg-cacau-escuro sm:aspect-[4/3] lg:aspect-auto lg:h-full lg:min-h-[620px]">
-            {imagem?.url && (
-              <Image
-                src={imagem.url}
-                alt={imagem.alt || 'Atendimento na clínica'}
-                fill
-                sizes="(max-width: 1024px) 100vw, 60vw"
-                className="object-cover"
-                style={enquadramento(imagem)}
-              />
-            )}
-          </figure>
+          Confere em 1920 (272px), em 1440 (32px) e em 1280 (20px). Mexeu no
+          `container.padding` ou no `screens` do tailwind.config? Refaca aqui,
+          senao o titulo desta secao sai desalinhado do resto da pagina.
+        */}
+        <div className="px-5 py-24 md:py-28 lg:py-32 lg:pl-[max(1.25rem,calc((100vw-1376px)/2))] lg:pr-14 lg:flex lg:flex-col lg:justify-center">
+          <Revelar>
+            {/* Nao esta no bloco de referencia, mas abre todas as outras secoes
+                do site. Sem ele esta seria a unica sem eyebrow. */}
+            <p className="text-eyebrow font-mono uppercase text-caramelo">Contato</p>
 
-          <CartaoVidro tom="claro" className="absolute inset-x-4 bottom-4 md:inset-x-8 md:bottom-8">
-            <dl className="grid grid-cols-2 gap-5 sm:grid-cols-3">
-              {email && (
-                <div className="col-span-2 sm:col-span-1">
-                  <dt>
-                    <Rotulo>E mail</Rotulo>
-                  </dt>
-                  <dd className="mt-1.5 break-words text-sm">
-                    <a href={`mailto:${email}`} className="transition-colors hover:text-cacau">
-                      {email}
-                    </a>
-                  </dd>
-                </div>
-              )}
+            <h2 className="mt-4 max-w-xl font-display text-display-lg text-tinta">
+              Vamos conversar
+              <br />
+              sobre o seu cabelo.
+            </h2>
 
-              <div>
-                <dt>
-                  <Rotulo>WhatsApp</Rotulo>
-                </dt>
-                {/* Texto puro de proposito: abrir conversa e sempre pelo botao
-                    abaixo, que e quem grava o evento. */}
-                <dd className="mt-1.5 text-sm">{formatarWhatsapp(whatsapp)}</dd>
-              </div>
+            <p className="mt-6 max-w-md text-tinta-suave">
+              Me chame no WhatsApp e combinamos o melhor dia para a sua consulta tricológica. A
+              equipe responde em horário comercial.
+            </p>
 
-              {unidade?.endereco && (
-                <div className="col-span-2 sm:col-span-1">
-                  <dt>
-                    <Rotulo>Endereço</Rotulo>
-                  </dt>
-                  <dd className="mt-1.5 whitespace-pre-line text-sm">{unidade.endereco}</dd>
-                </div>
-              )}
-            </dl>
+            {/* O CTA principal. A seta segue a forma do bloco escolhido, no
+                lugar da casca cheia de botao, para o telefone logo abaixo poder
+                ser o elemento pesado da coluna. */}
+            <BotaoWhatsapp
+              numero={whatsapp}
+              mensagem={mensagemWhatsapp}
+              local="card-agendamento"
+              variant="ghost"
+              className="mt-8 h-auto gap-2 p-0 text-sm font-medium text-tinta hover:translate-y-0 hover:bg-transparent hover:text-cacau hover:shadow-none"
+            >
+              <CornerDownRight aria-hidden className="h-4 w-4" />
+              Falar no WhatsApp
+            </BotaoWhatsapp>
+          </Revelar>
 
-            <div className="mt-5 border-t border-tinta/10 pt-5">
-              <BotaoWhatsapp
-                numero={whatsapp}
-                mensagem={mensagemWhatsapp}
-                local="card-agendamento"
-                className="w-full"
+          <Revelar atraso={120} className="mt-16 lg:mt-24">
+            {/*
+              **O numero grande e link de WhatsApp, e isso mudou de regra.** Ele
+              era texto puro para nao existir um segundo caminho de conversa fora
+              do componente que grava o evento. Passando por dentro do
+              `BotaoWhatsapp`, com `local` proprio, o motivo daquela regra nao se
+              aplica: o clique entra no relatorio como qualquer outro.
+            */}
+            <BotaoWhatsapp
+              numero={whatsapp}
+              mensagem={mensagemWhatsapp}
+              local="contato-numero"
+              variant="ghost"
+              className="block h-auto justify-start whitespace-normal p-0 text-left font-normal text-tinta hover:translate-y-0 hover:bg-transparent hover:text-cacau hover:shadow-none"
+            >
+              {/*
+                **O tamanho vai num `span` interno, e nao na `className` do
+                botao.** O `Button` nasce com `text-sm` na base, e o
+                `tailwind-merge` nao reconhece `text-display-md` como do mesmo
+                grupo de `font-size`, porque e chave custom do
+                `tailwind.config.ts`: as duas classes sobrevivem e o `text-sm`
+                vence pela ordem da folha. Medido, o numero saia miudo ao lado do
+                e mail. Num descendente nao ha empate.
+              */}
+              <span className="font-display text-display-md leading-tight">
+                {formatarWhatsapp(whatsapp)}
+              </span>
+            </BotaoWhatsapp>
+
+            {email && (
+              <a
+                href={`mailto:${email}`}
+                className="mt-1 block break-words font-display text-display-md leading-tight text-tinta transition-colors hover:text-cacau"
               >
-                Agendar consulta
-                <ArrowUpRight className="h-4 w-4" />
-              </BotaoWhatsapp>
-            </div>
-          </CartaoVidro>
+                {email}
+              </a>
+            )}
+          </Revelar>
         </div>
 
-        <div className="lg:col-span-2 lg:flex lg:flex-col lg:justify-center">
-          {estado === 'enviado' ? (
-            <div>
-              <h2 className="font-display text-display-md">Recebemos seu contato</h2>
-              <p className="mt-4 text-porcelana/85">
-                A equipe responde pelo WhatsApp em horário comercial para confirmar o melhor dia da sua
-                consulta.
-              </p>
-            </div>
-          ) : (
-            <>
-              <Revelar>
-                {/* Sobre o cacau so tom claro alcanca contraste, entao o eyebrow perde o caramelo. */}
-                <p className="text-eyebrow font-mono uppercase text-porcelana">Agendamento</p>
-                <h2 className="mt-4 font-display text-display-lg">Comece pela consulta</h2>
-                <p className="mt-4 text-porcelana/85">
-                  Preencha os campos e a equipe entra em contato para encontrar o melhor horário. Sem
-                  compromisso de fechar tratamento.
-                </p>
-              </Revelar>
-
-              <AnimatedContent delay={0.1} distance={60} scale={0.96}>
-                {/* A cor dos rotulos vem daqui. O Label nao fixa cor porque o
-                    formulario cai sobre cacau, onde o cinza sumia. */}
-                <form
-                  onSubmit={enviar}
-                  onFocus={aoInteragir}
-                  noValidate
-                  className="mt-8 space-y-5 text-porcelana/80"
-                >
-                  {/* Duas colunas nos campos curtos. Abaixo do `sm` a coluna e
-                      estreita demais e eles voltam a empilhar. */}
-                  <div className="grid gap-5 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="nome">
-                        Nome completo
-                        <Obrigatorio />
-                      </Label>
-                      <Input id="nome" name="nome" required autoComplete="name" placeholder="Como podemos te chamar" />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="email">E mail</Label>
-                      <Input id="email" name="email" type="email" autoComplete="email" placeholder="voce@email.com" />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="whatsapp">
-                        WhatsApp
-                        <Obrigatorio />
-                      </Label>
-                      <Input
-                        id="whatsapp"
-                        name="whatsapp"
-                        required
-                        inputMode="tel"
-                        autoComplete="tel"
-                        placeholder="(11) 90000-0000"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="motivo">
-                        Sobre o que quer falar
-                        <Obrigatorio />
-                      </Label>
-                      {/* `appearance-none` mais a seta desenhada: a seta nativa
-                          muda de desenho em cada sistema e destoava do resto do
-                          formulario. O `pointer-events-none` no icone mantem o
-                          clique chegando no select. */}
-                      <div className="relative">
-                        <select
-                          id="motivo"
-                          name="motivo"
-                          required
-                          defaultValue=""
-                          className="flex h-14 w-full appearance-none rounded-xl border border-tinta/15 bg-porcelana px-5 pr-12 text-base text-tinta focus-visible:border-cacau focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cacau/20"
-                        >
-                          <option value="" disabled>
-                            Selecione
-                          </option>
-                          {motivos.map((motivo) => (
-                            <option key={motivo.valor} value={motivo.valor}>
-                              {motivo.rotulo}
-                            </option>
-                          ))}
-                        </select>
-                        <ChevronDown
-                          aria-hidden
-                          className="pointer-events-none absolute right-5 top-1/2 h-5 w-5 -translate-y-1/2 text-neutro"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="mensagem">Conte um pouco do seu caso</Label>
-                    <Textarea
-                      id="mensagem"
-                      name="mensagem"
-                      rows={5}
-                      placeholder="Descrição do seu caso ou dúvidas sobre o tratamento"
-                    />
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    {/* Marcado, o cacau padrao sumiria contra a secao, entao aqui ele inverte. */}
-                    <Checkbox
-                      id="autorizacao"
-                      checked={autorizado}
-                      onCheckedChange={(valor) => setAutorizado(valor === true)}
-                      className="mt-0.5 h-5 w-5 border-porcelana/55 data-[state=checked]:border-porcelana data-[state=checked]:bg-porcelana data-[state=checked]:text-cacau-escuro"
-                    />
-                    <Label id="rotulo-autorizacao" htmlFor="autorizacao" className="text-porcelana/85">
-                      Autorizo o contato pelo WhatsApp e o uso dos meus dados para agendamento.
-                    </Label>
-                  </div>
-
-                  {erro && (
-                    <p
-                      role="alert"
-                      className="rounded-xl bg-porcelana px-4 py-3 text-sm font-medium text-cacau-escuro"
-                    >
-                      {erro}
-                    </p>
-                  )}
-
-                  {/* O botao so libera com a autorizacao marcada. O
-                      aria-describedby aponta para o rotulo dela, senao o botao
-                      desabilitado nao explica o proprio motivo. */}
-                  <div className="flex flex-wrap items-center gap-x-6 gap-y-4 pt-1">
-                    <Button
-                      type="submit"
-                      variant="destaque"
-                      size="lg"
-                      especular
-                      disabled={!autorizado || estado === 'enviando'}
-                      aria-describedby="rotulo-autorizacao"
-                      className="w-full rounded-full sm:w-auto"
-                    >
-                      {estado === 'enviando' ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin" /> Enviando
-                        </>
-                      ) : (
-                        <>
-                          <CalendarCheck className="h-5 w-5" />
-                          Enviar e agendar
-                        </>
-                      )}
-                    </Button>
-
-                    <p className="max-w-xs text-sm text-porcelana/70">
-                      Retornamos pelo WhatsApp em horário comercial.
-                    </p>
-                  </div>
-
-                </form>
-              </AnimatedContent>
-            </>
+        {/* A foto sangra ate a borda da janela no `lg`, e fica por ultimo na
+            pilha do celular, que e a ordem do proprio DOM. Usa `object-cover`,
+            entao leva o ponto de foco pelo `enquadramento`. */}
+        <figure className="relative min-h-[26rem] bg-areia sm:min-h-[32rem] lg:min-h-[44rem]">
+          {imagem?.url && (
+            <Image
+              src={imagem.url}
+              alt={imagem.alt || 'Atendimento na clínica'}
+              fill
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="object-cover"
+              style={enquadramento(imagem)}
+            />
           )}
-        </div>
+        </figure>
       </div>
     </section>
   )

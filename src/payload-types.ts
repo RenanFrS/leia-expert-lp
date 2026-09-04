@@ -69,9 +69,11 @@ export interface Config {
   collections: {
     tratamentos: Tratamento;
     resultados: Resultado;
+    galeria: Galeria;
     depoimentos: Depoimento;
     faq: Faq;
     leads: Lead;
+    contatos: Contato;
     media: Media;
     users: User;
     'payload-kv': PayloadKv;
@@ -83,9 +85,11 @@ export interface Config {
   collectionsSelect: {
     tratamentos: TratamentosSelect<false> | TratamentosSelect<true>;
     resultados: ResultadosSelect<false> | ResultadosSelect<true>;
+    galeria: GaleriaSelect<false> | GaleriaSelect<true>;
     depoimentos: DepoimentosSelect<false> | DepoimentosSelect<true>;
     faq: FaqSelect<false> | FaqSelect<true>;
     leads: LeadsSelect<false> | LeadsSelect<true>;
+    contatos: ContatosSelect<false> | ContatosSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -228,6 +232,26 @@ export interface Resultado {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "galeria".
+ */
+export interface Galeria {
+  id: number;
+  /**
+   * Só organiza a lista aqui do painel. Não aparece no site. Exemplo: Caso 12, seis meses.
+   */
+  titulo: string;
+  /**
+   * Uma imagem só. No antes e depois, suba o post já montado com as duas fotos lado a lado.
+   */
+  foto: number | Media;
+  categoria: 'resultados' | 'clinica';
+  ordem?: number | null;
+  publicado?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "depoimentos".
  */
 export interface Depoimento {
@@ -304,6 +328,32 @@ export interface Lead {
   createdAt: string;
 }
 /**
+ * Cada clique que abriu o WhatsApp, com a campanha de origem. Preenchido pelo site, não pela mão.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "contatos".
+ */
+export interface Contato {
+  id: number;
+  /**
+   * header, tricoscopia, sobre, fechamento, footer, botao-flutuante...
+   */
+  local: string;
+  /**
+   * Preenchido automaticamente pelos parametros UTM.
+   */
+  origem?: {
+    utm_source?: string | null;
+    utm_medium?: string | null;
+    utm_campaign?: string | null;
+    utm_content?: string | null;
+    utm_term?: string | null;
+    pagina?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
@@ -366,6 +416,10 @@ export interface PayloadLockedDocument {
         value: number | Resultado;
       } | null)
     | ({
+        relationTo: 'galeria';
+        value: number | Galeria;
+      } | null)
+    | ({
         relationTo: 'depoimentos';
         value: number | Depoimento;
       } | null)
@@ -376,6 +430,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'leads';
         value: number | Lead;
+      } | null)
+    | ({
+        relationTo: 'contatos';
+        value: number | Contato;
       } | null)
     | ({
         relationTo: 'media';
@@ -472,6 +530,19 @@ export interface ResultadosSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "galeria_select".
+ */
+export interface GaleriaSelect<T extends boolean = true> {
+  titulo?: T;
+  foto?: T;
+  categoria?: T;
+  ordem?: T;
+  publicado?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "depoimentos_select".
  */
 export interface DepoimentosSelect<T extends boolean = true> {
@@ -525,6 +596,25 @@ export interface LeadsSelect<T extends boolean = true> {
         pagina?: T;
       };
   status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "contatos_select".
+ */
+export interface ContatosSelect<T extends boolean = true> {
+  local?: T;
+  origem?:
+    | T
+    | {
+        utm_source?: T;
+        utm_medium?: T;
+        utm_campaign?: T;
+        utm_content?: T;
+        utm_term?: T;
+        pagina?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
 }
@@ -676,6 +766,15 @@ export interface Clinica {
    */
   credencial?: string | null;
   /**
+   * Aparecem em lista na seção Sobre. Uma por linha, curtas. Sem itens, a lista não aparece.
+   */
+  credenciais?:
+    | {
+        texto: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
    * Somente números, com DDI e DDD. Exemplo: 5511999999999
    */
   whatsapp: string;
@@ -690,7 +789,7 @@ export interface Clinica {
    */
   instagram?: string | null;
   /**
-   * Fica ao lado do formulário, em pé. O cartão de contato cobre a parte de baixo, então evite rosto na borda inferior.
+   * Ocupa a metade direita da seção de contato, sangrando até a borda da tela. Fica em pé no celular e alta no desktop.
    */
   fotoAgendamento?: (number | null) | Media;
   unidades?:
@@ -770,7 +869,7 @@ export interface Rastreamento {
    */
   googleAdsId?: string | null;
   /**
-   * Disparado quando o formulario e enviado com sucesso.
+   * Disparado quando alguém abre o WhatsApp por qualquer botão do site. Era o envio do formulário, que não existe mais.
    */
   googleAdsLabelLead?: string | null;
   /**
@@ -804,6 +903,12 @@ export interface ClinicaSelect<T extends boolean = true> {
   retrato?: T;
   nomeProfissional?: T;
   credencial?: T;
+  credenciais?:
+    | T
+    | {
+        texto?: T;
+        id?: T;
+      };
   whatsapp?: T;
   mensagemWhatsapp?: T;
   email?: T;

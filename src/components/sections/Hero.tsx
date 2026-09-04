@@ -83,10 +83,15 @@ function FileteCanto({ lado, className }: { lado: 'esquerda' | 'direita'; classN
 export function Hero({ nome, chamada, tratamentos, painel, intervalo }: Props) {
   const texto =
     chamada ||
-    // Reserva usada so quando a `chamada` do painel esta vazia. Nao afirma
-    // diagnostico de proposito: e ato privativo de medico, e a Leia e
-    // tricologista. Mesma redacao da chamada gravada no banco.
-    `Na ${nome}, cada protocolo começa por um exame de tricoscopia. O tratamento certo depende da leitura certa.`
+    // Reserva usada so quando a `chamada` do painel esta vazia. Mesma redacao da
+    // chamada gravada no banco.
+    //
+    // Ela abre pela dor, e nao pelo nome da especialidade, a pedido do time de
+    // trafego: quem chega pelo anuncio busca "queda de cabelo" e "calvicie", nao
+    // "tricologia clinica". Duas travas continuam valendo aqui: nao afirma
+    // diagnostico, que e ato privativo de medico e a Leia e tricologista, e nao
+    // promete gratuidade, porque a consulta e cobrada.
+    'Queda de cabelo, calvície e alopecia têm causa. A tricoscopia mostra qual é a sua e define o tratamento certo para o seu caso. Homens e mulheres, com acompanhamento do começo ao fim.'
 
   /*
     O video do painel aponta direto para a CDN do Cloudinary, com `f_auto,q_auto`.
@@ -251,13 +256,34 @@ export function Hero({ nome, chamada, tratamentos, painel, intervalo }: Props) {
               fraca do gradiente. Medido naquele estado, o pixel mais claro atras
               do texto era `rgb(244,243,243)` e o contraste caia para **1.11**.
 
-              As paradas saem de conta, nao de gosto. Contra aquele pixel o piso
-              de 4.5 pede **tinta/60**. Trocou o veu ou moveu a chamada? Refaca
-              contra o pixel mais claro, nao contra a media.
+              **O veu cresceu de 22rem para 28/30rem porque a chamada cresceu.**
+              Ela e ancorada no pe do painel, entao fonte maior e texto mais longo
+              empurram o topo do bloco para a parte fraca do gradiente, que e o
+              mesmo defeito descrito acima por outro caminho.
+
+              Medido no navegador, escondendo o texto por folha injetada para
+              sobrar so o fundo composto, contra o pixel mais claro da faixa e nao
+              contra a media dela:
+
+                 390   rgb(103,94,88)   6.33 porcelana   5.12 porcelana/85
+                 768   rgb(95,85,81)    7.23             5.80
+                1024   rgb(101,91,87)   6.59             5.30
+                1440   rgb(101,91,86)   6.60             5.31
+                1920   rgb(102,91,87)   6.56             5.28
+
+              **Os 28rem do celular sao piso, nao folga.** Com 24rem ali o topo do
+              texto subia para 52% do gradiente e a linha das estrelas, em
+              `porcelana/85`, dava **4.47**, logo abaixo do piso de 4.5. Em 28rem
+              ele volta para 44,6% e a linha vai a 5.12. Quem reprova primeiro e
+              sempre a linha das estrelas, nunca o texto cheio.
+
+              **E o celular e o pior caso**, porque o painel ali e curto e o mesmo
+              bloco de texto ocupa uma fracao maior dele. Mexeu no veu, no tamanho
+              da fonte ou no tamanho do texto? Refaca a medida em 390 primeiro.
             */}
           <div
             aria-hidden
-            className="absolute inset-x-0 bottom-0 h-[22rem] bg-gradient-to-t from-tinta/90 via-tinta/70 to-transparent"
+            className="absolute inset-x-0 bottom-0 h-[28rem] bg-gradient-to-t from-tinta/90 via-tinta/70 to-transparent lg:h-[30rem]"
           />
 
           {/* Chamada e estrelas, dentro da imagem. O `container` de dentro e
@@ -265,8 +291,14 @@ export function Hero({ nome, chamada, tratamentos, painel, intervalo }: Props) {
                 painel nao esta mais dentro de um. */}
           <div className="absolute inset-x-0 bottom-6 lg:bottom-10">
             <div className="container">
-              <Revelar className="lg:max-w-md">
-                <p className="text-base text-porcelana sm:text-lg">{texto}</p>
+              {/* A coluna abriu de `max-w-md` para `max-w-xl` junto com a
+                  fonte. Em 448px o texto novo passava de seis linhas e a pilha
+                  encostava no carrossel, que e absoluto no mesmo pe do painel. */}
+              <Revelar className="lg:max-w-xl">
+                {/* Corpo maior a pedido do time de trafego: no tamanho antigo a
+                    frase lia como legenda de foto e nao como a promessa da
+                    pagina. Crescer aqui obriga a refazer o veu logo acima. */}
+                <p className="text-lg text-porcelana sm:text-2xl sm:leading-snug">{texto}</p>
 
                 <div className="mt-4 flex items-center gap-2">
                   <div className="flex" aria-hidden>

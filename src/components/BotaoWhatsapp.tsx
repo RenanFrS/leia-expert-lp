@@ -1,7 +1,7 @@
 'use client'
 
 import { Button, type ButtonProps } from '@/components/ui/button'
-import { pushEvento } from '@/lib/analytics'
+import { registrarContatoWhatsapp } from '@/lib/analytics'
 import { MENSAGEM_WHATSAPP_PADRAO, whatsappLink } from '@/lib/utils'
 
 type Props = {
@@ -23,8 +23,14 @@ type Props = {
 }
 
 /**
- * Unico caminho para abrir o WhatsApp. Centraliza a montagem do link e garante
- * que todo clique entre no dataLayer, sem componente nenhum chamar gtag direto.
+ * Caminho padrao para abrir o WhatsApp. Centraliza a montagem do link e o
+ * disparo do evento, sem componente nenhum chamar gtag direto.
+ *
+ * **Quem grava e o `registrarContatoWhatsapp`, nao este arquivo.** O clique de
+ * WhatsApp virou a conversao do site quando o formulario saiu, entao ele dispara
+ * Ads, GA4 e Meta e ainda grava a UTM no painel. O botao flutuante nao usa este
+ * componente, porque tem casca propria de Lottie, mas chama a mesma funcao: e
+ * ela, e nao este botao, a porta unica.
  */
 export function BotaoWhatsapp({
   numero,
@@ -44,7 +50,7 @@ export function BotaoWhatsapp({
         href={whatsappLink(numero, mensagem || MENSAGEM_WHATSAPP_PADRAO)}
         target="_blank"
         rel="noopener noreferrer"
-        onClick={() => pushEvento('clique_whatsapp', { local })}
+        onClick={() => registrarContatoWhatsapp(local)}
       >
         {children}
       </a>

@@ -1,0 +1,139 @@
+import Image from 'next/image'
+import { CornerDownRight } from 'lucide-react'
+
+import { BotaoWhatsapp } from '@/components/BotaoWhatsapp'
+import { Revelar } from '@/components/Revelar'
+import { enquadramento, formatarWhatsapp, midia } from '@/lib/utils'
+import type { Clinica } from '@/payload-types'
+
+type Props = {
+  whatsapp: string
+  mensagemWhatsapp?: string | null
+  email?: string | null
+  foto?: Clinica['fotoAgendamento']
+}
+
+/**
+ * Fechamento por WhatsApp, no lugar do formulario.
+ *
+ * **O formulario morreu aqui, e isso teve consequencia de medicao.** Ele era o
+ * unico ponto do site que disparava a conversao do Google Ads e o unico que
+ * gravava UTM por contato. As duas coisas passaram para o clique de WhatsApp,
+ * pelo `registrarContatoWhatsapp` em `src/lib/analytics.ts`. Se um dia o
+ * formulario voltar, os dois papeis precisam ser reatribuidos de proposito, e
+ * nao por acidente.
+ *
+ * A forma vem de um print escolhido pelo cliente: coluna de texto a esquerda e
+ * foto sangrando ate a borda a direita, empilhando com a foto por ultimo no
+ * celular. O layout e do print, a tipografia e a paleta sao do site, senao a
+ * secao leria como colada de outro lugar.
+ *
+ * **Ela e server component.** Sem formulario nao sobrou estado nenhum, e o que e
+ * interativo ja vem dos componentes de clique, que sao client por conta propria.
+ *
+ * Tres coisas que nao sao escolha de gosto:
+ *
+ * - **A secao nao usa `container`, e o recuo da esquerda e calculado.** A foto
+ *   precisa encostar na borda da janela, e nenhum truque de margem negativa
+ *   resolve isso de dentro de uma coluna de grade: porcentagem em margem resolve
+ *   contra a celula, e nao contra o container. O
+ *   `lg:pl-[max(1.25rem,calc((100vw-1376px)/2))]` reproduz a calha exata do
+ *   `container`, conferido em 1280, 1440 e 1920 contra o titulo do Sobre.
+ *   **Mexeu na largura do container ou no respiro dele? Refaca essa conta.**
+ * - **O telefone grande e link de WhatsApp, pelo `BotaoWhatsapp`.** Ele ja foi
+ *   texto puro, quando havia um cartao de contato aqui, justamente para nao
+ *   existir caminho de WhatsApp fora do componente que grava o evento. Por
+ *   dentro do componente esse motivo nao vale, e o numero e o segundo elemento
+ *   mais visivel da secao. As classes so tiram a casca de botao, como o rodape
+ *   ja faz nos links de contato.
+ * - **A ordem do DOM e conteudo e depois foto**, que ja e a ordem do celular.
+ *   Assim o `lg` nao precisa de `order`, e o leitor de tela nao encontra a foto
+ *   antes do texto que a explica.
+ */
+export function Agendamento({ whatsapp, mensagemWhatsapp, email, foto }: Props) {
+  const imagem = midia(foto)
+
+  return (
+    <section id="agendar" className="overflow-x-clip">
+      <div className="grid lg:grid-cols-2 lg:items-stretch">
+        <div className="px-5 py-24 md:py-32 lg:flex lg:flex-col lg:justify-center lg:py-40 lg:pl-[max(1.25rem,calc((100vw-1376px)/2))] lg:pr-12 xl:pr-20">
+          <Revelar>
+            {/* O print nao tem eyebrow, mas ele abre todas as outras secoes do
+                site, e sem ele esta seria a unica sem. */}
+            <p className="text-eyebrow font-mono uppercase text-caramelo">Contato</p>
+
+            {/* Duas linhas curtas, como no print. */}
+            <h2 className="mt-5 font-display text-display-lg text-tinta">
+              <span className="block">Comece por</span>
+              <span className="block">uma conversa.</span>
+            </h2>
+
+            <p className="mt-6 max-w-md text-tinta-suave">
+              Me chame no WhatsApp e combinamos o melhor horário para a sua consulta tricológica.
+              Respondemos em horário comercial.
+            </p>
+
+            {/* O "Get in touch" do print, com a seta de canto. E o CTA principal
+                da secao. */}
+            <BotaoWhatsapp
+              numero={whatsapp}
+              mensagem={mensagemWhatsapp}
+              local="contato"
+              variant="ghost"
+              className="mt-8 h-auto justify-start gap-2 p-0 text-sm font-medium text-tinta hover:translate-y-0 hover:bg-transparent hover:text-cacau hover:shadow-none"
+            >
+              <CornerDownRight aria-hidden className="h-4 w-4" />
+              Falar no WhatsApp
+            </BotaoWhatsapp>
+          </Revelar>
+
+          {/* O bloco de contato fica bem abaixo do texto, como no print, e nao
+              logo em seguida. */}
+          <Revelar atraso={120} className="mt-20 lg:mt-28">
+            <BotaoWhatsapp
+              numero={whatsapp}
+              mensagem={mensagemWhatsapp}
+              local="contato-numero"
+              variant="ghost"
+              className="block h-auto justify-start whitespace-normal p-0 text-left font-display text-display-md font-normal text-tinta hover:translate-y-0 hover:bg-transparent hover:text-cacau hover:shadow-none"
+            >
+              {formatarWhatsapp(whatsapp)}
+            </BotaoWhatsapp>
+
+            {email && (
+              <a
+                href={`mailto:${email}`}
+                className="mt-1 block break-words font-display text-display-md text-tinta transition-colors hover:text-cacau focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-caramelo focus-visible:ring-offset-2"
+              >
+                {email}
+              </a>
+            )}
+          </Revelar>
+        </div>
+
+        {/*
+          A foto sangra ate a borda da janela porque a secao inteira esta fora do
+          container. No celular ela vem por ultimo, empilhada.
+
+          **Ela e filha direta da grade, sem `AnimatedContent` em volta.** A
+          altura cheia depende do `items-stretch` chegar nela, e um wrapper de
+          animacao no meio vira o item esticado no lugar da figure. Alem disso o
+          `AnimatedContent` nasce `invisible`, o que deixaria metade da secao em
+          branco ate o gsap rodar. Quem anima aqui e o `Revelar` do texto.
+        */}
+        <figure className="relative min-h-[26rem] bg-areia sm:min-h-[32rem] lg:min-h-[40rem]">
+          {imagem?.url && (
+            <Image
+              src={imagem.url}
+              alt={imagem.alt || 'Atendimento na clínica'}
+              fill
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="object-cover"
+              style={enquadramento(imagem)}
+            />
+          )}
+        </figure>
+      </div>
+    </section>
+  )
+}
