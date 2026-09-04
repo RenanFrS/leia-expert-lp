@@ -905,11 +905,20 @@ movimento.
   **Nao ha consulta nova por causa dela**: recebe o mesmo array que o carrossel. Os mesmos casos
   aparecem duas vezes na pagina, em duas leituras, e isso e proposital.
 
-  **As duas fotos do par usam a proporcao da foto de `antes`**, por `aspectRatio` no container com
-  `object-cover` e `enquadramento`. E o que faz as duas metades terem a mesma altura, sem o que um antes
-  em retrato com um depois em paisagem daria um par torto e a comparacao perderia a forca, que e a unica
-  coisa que o cartao existe para fazer. Casos diferentes seguem com alturas diferentes, e e dai que vem o
-  desencontro entre as colunas.
+  **As duas metades sao fixas em `aspect-[4/5]`, a mesma proporcao do comparador**, com `object-cover` e
+  `enquadramento`. A proporcao ja veio da foto de `antes` de cada caso, o que dava cartoes de alturas
+  diferentes; o cliente pediu cartao padronizado. Usar o mesmo valor do comparador faz as duas secoes
+  mostrarem o mesmo recorte do mesmo caso, em vez de dois enquadramentos concorrentes.
+
+  **Padronizar significa recortar, e com isso o ponto de foco passou a mandar muito mais.** Medido nos
+  10 casos cadastrados: seis sao quase quadrados e mostram ~78% da largura, enquanto os dois mais altos,
+  alopecia areata e risca central feminina, mostram 64% e 70% da altura. Quem decide o que sobrevive e o
+  `focalPoint` do painel, entao **caso novo com enquadramento ruim se conserta la, e nao no codigo**.
+
+  Com todos os cartoes iguais o empacotamento vira alternancia simples entre as duas colunas. Ele
+  continua ali porque a **mesma grade serve o `AClinica`**, onde cada cartao e uma foto na propria
+  proporcao e o equilibrio volta a fazer trabalho de verdade. O desencontro entre as colunas passou a
+  vir so do degrau de partida e do parallax.
 
   **O fio entre as duas metades vai em `after`, e nao em `border`.** Com `box-sizing: border-box`, que e
   o padrao do Tailwind, 1px de borda come 1px da caixa: medido, a metade de baixo saia com 570px contra
@@ -917,9 +926,8 @@ movimento.
   cartao: horizontal no celular, vertical no `lg`.
 
   **A `razao` do empacotamento e a do desktop, e ela serve para os dois tamanhos de tela.** O cartao
-  muda de forma por breakpoint: empilhado vale `2 x (altura / largura)`, lado a lado vale
-  `(altura / largura) / 2`. Sao quatro vezes de diferenca, o que a primeira leitura sugere invalidar a
-  conta em metade dos casos.
+  muda de forma por breakpoint: empilhado vale `2 x (5 / 4)`, lado a lado vale `(5 / 4) / 2`. Sao quatro
+  vezes de diferenca, o que a primeira leitura sugere invalidar a conta em metade dos casos.
 
   Nao invalida, e o motivo e simples: **o fator de 4 e o mesmo para todo cartao**, seja qual for a foto.
   Como ele e uniforme, a ordem entre as colunas nao muda, e a mais alta no desktop e a mais alta no

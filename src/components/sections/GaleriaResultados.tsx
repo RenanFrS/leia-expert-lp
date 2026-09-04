@@ -28,26 +28,31 @@ import type { Resultado } from '@/payload-types'
 /**
  * Uma foto do par, na proporcao que o cartao inteiro segue.
  *
- * **A proporcao vem sempre da foto de `antes`**, para as duas metades ficarem com
- * a mesma altura. Sem isso, um antes em retrato com um depois em paisagem daria
- * um par torto e a comparacao perderia forca, que e a unica coisa que este
- * cartao existe para fazer.
+ * **A proporcao e fixa em 4/5, a mesma do comparador interativo logo acima.**
+ * Ela ja veio da foto de `antes` de cada caso, o que dava cartoes de alturas
+ * diferentes; o cliente pediu cartao padronizado. Como o comparador enquadra em
+ * `aspect-[4/5]`, usar o mesmo valor faz as duas secoes mostrarem o mesmo recorte
+ * do mesmo caso, em vez de dois enquadramentos concorrentes.
  *
- * Como o enquadramento e por `object-cover`, a foto **precisa** do
- * `enquadramento`: e a regra do ponto de foco do projeto, e sem ela o recorte
- * escolhido no painel e ignorado em silencio.
+ * **Padronizar significa recortar, e o ponto de foco passou a mandar muito
+ * mais.** Medido nos 10 casos cadastrados: seis sao quase quadrados e mostram
+ * ~78% da largura, enquanto os dois mais altos, alopecia areata e risca central
+ * feminina, mostram 64% e 70% da altura. Com `object-cover` quem decide o que
+ * sobrevive e o `focalPoint` do painel, entao **caso novo com enquadramento
+ * ruim se conserta la, e nao aqui**.
+ *
+ * Sem o `enquadramento` a foto ignora esse ponto de foco em silencio, que e a
+ * regra do projeto para toda imagem em `object-cover`.
  */
 function MetadeDoPar({
   foto,
   alt,
-  proporcao,
   rotulo,
   destaque,
   className,
 }: {
   foto: NonNullable<ReturnType<typeof midia>>
   alt: string
-  proporcao: string
   rotulo: string
   destaque?: boolean
   className?: string
@@ -57,14 +62,14 @@ function MetadeDoPar({
       **O fio separador vai em `after`, e nao em `border`.** Com `box-sizing:
       border-box`, que e o padrao do Tailwind, uma borda de 1px come 1px da caixa:
       medido, a metade de baixo saia com 570px contra 571px da de cima, e as duas
-      precisam bater exatamente, que e a razao de existir a proporcao unica. O
-      pseudo elemento desenha por cima, sem ocupar espaco.
+      precisam bater exatamente. O pseudo elemento desenha por cima, sem ocupar
+      espaco.
 
       **Ele muda de eixo junto com o cartao**: horizontal no topo da segunda
       metade quando o par esta empilhado, vertical na borda esquerda dela quando
       esta lado a lado.
     */
-    <div className={cn('relative lg:w-1/2', className)} style={{ aspectRatio: proporcao }}>
+    <div className={cn('relative aspect-[4/5] lg:w-1/2', className)}>
       <Image
         src={foto.url!}
         alt={alt}
@@ -120,47 +125,41 @@ export function GaleriaResultados({ resultados }: { resultados: Resultado[] }) {
     const emTratamento = Boolean(resultado.emTratamento)
     const momentoDepois = emTratamento ? 'durante o tratamento' : 'depois do tratamento'
 
-    const largura = antes!.width || 4
-    const altura = antes!.height || 5
-    const proporcao = `${largura} / ${altura}`
-
     cartoes.push({
       id: resultado.id,
-      // As duas metades tem a mesma altura, entao o cartao inteiro vale o dobro
-      // de uma delas. E o unico numero que o empacotamento precisa.
       /*
-        **A razao e a do desktop, e ela serve para os dois tamanhos de tela.**
+        **Todo cartao tem a mesma razao**, porque a proporcao de cada metade e
+        fixa em 4/5 desde que o cliente pediu cartao padronizado. Com as duas
+        metades lado a lado no `lg`, o cartao fica com metade da altura de uma
+        delas: `(5 / 4) / 2`.
 
-        O cartao muda de forma por breakpoint: empilhado ele vale
-        `2 x (altura / largura)`, lado a lado vale `(altura / largura) / 2`. Sao
-        quatro vezes de diferenca, o que parece invalidar a conta em metade dos
-        casos.
+        Com todas iguais o empacotamento vira alternancia simples entre as duas
+        colunas, e nao vale a pena simplifica-lo por isso: **a mesma grade serve o
+        `AClinica`**, onde cada cartao e uma foto na propria proporcao e o
+        equilibrio volta a fazer trabalho de verdade.
 
-        Nao invalida: **o fator de 4 e o mesmo para todo cartao**, seja qual for a
-        foto. Como ele e uniforme, a ordem entre as colunas nao muda, e a coluna
-        mais alta no desktop e a mais alta no celular na mesma proporcao. Uma
-        conta so equilibra os dois.
+        **A razao e a do desktop e serve para os dois tamanhos de tela.** No
+        celular o par empilha e o cartao passa a valer `2 x (5 / 4)`, quatro vezes
+        mais. Como o fator de 4 e o mesmo para todo cartao, a ordem entre as
+        colunas nao muda e uma conta so equilibra os dois.
       */
-      razao: altura / largura / 2,
+      razao: 5 / 4 / 2,
       conteudo: (
         // As duas fotos ficam coladas, dentro do mesmo cartao arredondado, com um
         // fio separando. Assim o par le como uma peca so, que e o efeito dos
         // posts prontos que a clinica ja publica.
-        // Empilhado no celular, lado a lado no `lg`. A proporcao de cada metade
-        // nao muda de valor: como `aspectRatio` e relativo a largura, a mesma
-        // proporcao serve nos dois casos, e a metade so fica com a metade da
-        // altura quando passa a ocupar metade da largura.
+        // Empilhado no celular, lado a lado no `lg`. O `aspect-[4/5]` de cada
+        // metade serve nos dois casos, porque a proporcao e relativa a largura: a
+        // metade so fica mais baixa quando passa a ocupar metade do cartao.
         <div className="flex flex-col lg:flex-row">
           <MetadeDoPar
             foto={antes!}
             alt={antes!.alt || `${resultado.titulo}, antes do tratamento`}
-            proporcao={proporcao}
             rotulo="Antes"
           />
           <MetadeDoPar
             foto={depois!}
             alt={depois!.alt || `${resultado.titulo}, ${momentoDepois}`}
-            proporcao={proporcao}
             rotulo={emTratamento ? 'Em tratamento' : 'Depois'}
             destaque={emTratamento}
             className="after:absolute after:inset-x-0 after:top-0 after:h-px after:bg-porcelana/40 after:content-[''] lg:after:inset-x-auto lg:after:inset-y-0 lg:after:left-0 lg:after:h-auto lg:after:w-px"
