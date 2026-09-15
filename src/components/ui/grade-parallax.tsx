@@ -50,7 +50,38 @@ const CONSULTA_DESKTOP = '(min-width: 1024px)'
  * lido por `matchMedia`, entao no telefone a mola nem roda. Ele comeca `false`
  * para o servidor e o cliente renderizarem igual.
  */
-export function GradeParallax({ colunas }: { colunas: React.ReactNode[] }) {
+/**
+ * Classes da grade conforme quantas colunas ela tem no celular. Escritas por
+ * extenso porque o Tailwind so gera o CSS da classe que encontra literal no
+ * fonte: montar por concatenacao faria a regra sumir.
+ *
+ * **Com uma coluna, a coluna do DOM vira `display: contents`.** O DOM segue com
+ * duas colunas, que e o que o `lg` precisa, e o empacotamento reparte os
+ * cartoes alternando entre elas. Empilhar as duas numa so mostraria os casos
+ * fora de ordem, 1, 3, 5, 7, 9, 2, 4, 6, 8. Sem caixa, os cartoes viram filhos
+ * diretos de um flex so, e o `order` que cada `figure` traz da galeria devolve a
+ * sequencia do painel. No `lg` a coluna volta a ser caixa e o `order` la dentro
+ * ja e crescente, entao nada muda ali.
+ */
+const LAYOUT = {
+  1: {
+    grade: 'flex flex-col gap-3 md:gap-4 lg:grid lg:grid-cols-2 lg:gap-5',
+    coluna: 'contents lg:flex lg:flex-col lg:gap-5',
+  },
+  2: {
+    grade: 'grid grid-cols-2 gap-3 md:gap-4 lg:gap-5',
+    coluna: 'flex flex-col gap-3 md:gap-4 lg:gap-5',
+  },
+} as const
+
+export function GradeParallax({
+  colunas,
+  colunasNoCelular = 2,
+}: {
+  colunas: React.ReactNode[]
+  /** Uma coluna abaixo do `lg`, para cartao largo. O `lg` e sempre duas. */
+  colunasNoCelular?: 1 | 2
+}) {
   const ref = useRef<HTMLDivElement>(null)
   const menosMovimento = useReducedMotion()
   const [desktop, setDesktop] = useState(false)
@@ -95,20 +126,19 @@ export function GradeParallax({ colunas }: { colunas: React.ReactNode[] }) {
     <div
       ref={ref}
       /*
-        Duas colunas em qualquer tela, e cada coluna e uma caixa de verdade.
+        Duas colunas no `lg`, e no celular a quantidade que a secao pedir. O
+        mapa `LAYOUT` explica o caso de uma coluna.
 
-        **Isso ja foi mais complicado.** Com tres colunas no `lg` e duas no
-        celular, o container usava `columns-2` e cada coluna virava `contents`
-        para sumir do layout, porque tres nao dividem por dois e a terceira
-        cairia sozinha numa segunda linha, com metade da tela vazia ao lado. Com
-        duas colunas o motivo acabou: elas dividem por duas em toda largura.
+        O parallax e desligado abaixo do `lg` por `matchMedia`, entao a coluna em
+        `display: contents` nunca recebe transform: elemento sem caixa nao teria
+        onde aplica-lo.
       */
-      className="grid grid-cols-2 gap-3 md:gap-4 lg:gap-5"
+      className={LAYOUT[colunasNoCelular].grade}
     >
       {colunas.map((coluna, indice) => (
         <motion.div
           key={indice}
-          className={cn('flex flex-col gap-3 md:gap-4 lg:gap-5', DEGRAUS[indice])}
+          className={cn(LAYOUT[colunasNoCelular].coluna, DEGRAUS[indice])}
           style={
             ativo && deslocamentos[indice]
               ? { y: deslocamentos[indice], willChange: 'transform' }

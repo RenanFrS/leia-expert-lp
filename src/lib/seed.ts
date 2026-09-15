@@ -454,16 +454,17 @@ export const popularConteudo = async (payload: Payload) => {
     data: {
       nome: 'Léia Expert',
       chamada:
-        // Abre pela dor, e nao pela especialidade, a pedido do time de trafego:
-        // quem chega pelo anuncio busca "queda de cabelo" e "calvicie", e a
-        // versao anterior abria em "Tricologia clinica", que so conversa com
-        // quem ja conhece o termo.
+        // Abre pelo problema, em pergunta, a pedido do cliente: quem chega pelo
+        // anuncio busca a queixa. A versao anterior abria em "Queda de cabelo,
+        // calvicie e alopecia tem causa", que nomeava as condicoes em tom
+        // clinico e escorregava para o metodo, e antes dela em "Tricologia
+        // clinica", que so conversa com quem ja conhece o termo.
         //
         // Duas travas continuam valendo. Dizia "depende do diagnostico certo":
         // diagnostico e ato privativo de medico e a Leia e tricologista, entao a
         // frase afirmava o que a clinica nao pode oferecer. Nao reintroduza a
         // palavra aqui, nem promessa de gratuidade, porque a consulta e cobrada.
-        'Queda de cabelo, calvície e alopecia têm causa. A tricoscopia mostra qual é a sua e define o tratamento certo para o seu caso. Homens e mulheres, com acompanhamento do começo ao fim.',
+        'Seu cabelo está caindo, afinando ou abrindo falhas? Descobrimos por que isso acontece e tratamos a causa, não só o sintoma.',
       sobreRotulo: 'Minha história',
       // Texto da propria Leia, transcrito do site dela. A abertura fica no
       // resumo e o corpo no `sobre`, que e curto de proposito: ele ocupa metade

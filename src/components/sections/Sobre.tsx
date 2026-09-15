@@ -27,9 +27,9 @@ type Props = {
  * primitivos do projeto a partir da referencia visual, nao codigo copiado.
  *
  * O conteudo inteiro vem da aba **Sobre** da global Clinica e fala em primeira
- * pessoa. O campo `sobre` e so desta secao: quem alimenta a descricao do
- * `MedicalClinic` nos dados estruturados e a `chamada`, que continua
- * institucional.
+ * pessoa. O campo `sobre` e so desta secao: a descricao do `MedicalClinic` nos
+ * dados estruturados sai da global Seo, e o `sobre` so entra la como ultima
+ * reserva, justamente por falar em primeira pessoa.
  *
  * **A secao foi remontada a pedido do time de trafego**, que pediu para
  * valorizar a apresentacao da profissional. O que mudou e por que:

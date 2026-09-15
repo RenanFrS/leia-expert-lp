@@ -27,9 +27,11 @@ export default async function Home() {
   // mais nenhum campo dele. Quem le a global agora e so o layout, que monta o
   // `Analytics`. Manter a consulta seria uma ida ao banco por revalidacao sem
   // ninguem usando o resultado.
-  const [clinica, tratamentos, resultados, depoimentos, perguntas, galeria] =
+  const [clinica, seo, tratamentos, resultados, depoimentos, perguntas, galeria] =
     await Promise.all([
       payload.findGlobal({ slug: 'clinica', depth: 1 }),
+      // So pela descricao, que alimenta o `MedicalClinic` dos dados estruturados.
+      payload.findGlobal({ slug: 'seo', depth: 0 }),
       // Limite acima do numero de servicos de proposito: com 10 cadastrados e
       // limite 8, dois sumiriam da pagina sem erro nenhum.
       payload.find({ collection: 'tratamentos', limit: 12, depth: 1, sort: 'ordem' }),
@@ -75,9 +77,15 @@ export default async function Home() {
       {
         '@type': 'MedicalClinic',
         name: clinica?.nome,
-        // A chamada e o texto institucional. O campo `sobre` passou a falar em
-        // primeira pessoa, o que soaria estranho no resultado de busca.
-        description: clinica?.chamada || clinica?.sobre,
+        /*
+          **A descricao vem da global Seo primeiro, e nao da chamada do hero.**
+          As duas eram o mesmo campo enquanto a chamada era institucional. Ela
+          passou a abrir em pergunta ao sintoma, que funciona no hero e le mal no
+          resultado de busca, entao as duas divergiram. A chamada e o `sobre` so
+          entram de reserva, e o `sobre` fica por ultimo porque fala em primeira
+          pessoa.
+        */
+        description: seo?.descricao || clinica?.chamada || clinica?.sobre,
         url: process.env.NEXT_PUBLIC_SITE_URL,
         medicalSpecialty: 'Dermatology',
         address: unidades.map((unidade) => ({

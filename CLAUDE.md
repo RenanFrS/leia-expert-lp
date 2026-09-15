@@ -29,6 +29,12 @@ pnpm exec tsc --noEmit  # checagem de tipos, obrigatoria antes de fechar tarefa
 Suba um `pnpm dev` por vez. Dois processos escrevem no mesmo `.next` e um apaga o chunk que o outro
 acabou de gravar, o que derruba o painel com `MODULE_NOT_FOUND` e 404 em todo `/_next/static`.
 
+**Porta ocupada nao quer dizer outro projeto.** O `pnpm dev` pula para a proxima porta livre sem
+avisar de quem e a ocupada. Ja aconteceu de um segundo dev desta pasta subir na 3002 com o primeiro na
+3001: bastaram uns 20 segundos juntos para a API inteira responder 500 com
+`Cannot find module './vendor-chunks/lodash...'`, enquanto a home seguia 200 pelo cache, o que esconde o
+estrago. Antes de subir, confira a pasta de cada `next-server` rodando, pelo `cwd` do processo.
+
 Nao rode `pnpm build` com o `pnpm dev` no ar. Os dois escrevem no mesmo `.next`, o build limpa o que o
 dev estava servindo e a pagina passa a carregar sem estilo e sem JS, com 404 em todo `/_next/static`. Se
 acontecer, pare o dev, apague o `.next` e suba de novo.
@@ -424,11 +430,17 @@ saiu a pedido do cliente.
 Texto sobre foto nao tem contraste garantido, porque quem escolhe a imagem e a clinica. Por isso a
 chamada fica sobre um veu, um gradiente de `tinta` subindo do pe do painel, com o texto em `porcelana`.
 
-**A chamada abre pela dor, e nao pela especialidade.** Ela dizia "Tricologia clinica para homens e
-mulheres. Todo protocolo comeca por uma tricoscopia...", que so conversa com quem ja conhece o termo.
-Hoje abre em "Queda de cabelo, calvicie e alopecia tem causa", a pedido do time de trafego: quem chega
-pelo anuncio busca a queixa, nao a especialidade. As duas travas de sempre continuam valendo ali, sem
-a palavra diagnostico e sem promessa de gratuidade.
+**A chamada abre pelo problema, em pergunta ao sintoma**: "Seu cabelo esta caindo, afinando ou abrindo
+falhas? Descobrimos por que isso acontece e tratamos a causa, nao so o sintoma." E a regra dos 3
+segundos do time de trafego: a pessoa precisa se reconhecer antes de decidir ficar.
+
+Ela ja teve duas versoes, e as duas erravam por motivos diferentes. "Tricologia clinica para homens e
+mulheres..." so conversava com quem ja conhece o termo. "Queda de cabelo, calvicie e alopecia tem
+causa..." nomeava as condicoes em tom clinico e escorregava para o metodo antes de falar do problema.
+
+**Tres travas continuam valendo em qualquer reescrita**: sem a palavra diagnostico, sem promessa de
+gratuidade e **sem promessa de cura**. O proprio FAQ admite perda antiga que ja nao responde, entao a
+frase descreve o que a clinica faz, e nao garante resultado.
 
 Ela tambem **cresceu de `text-base sm:text-lg` para `text-lg sm:text-2xl`**, com a coluna abrindo de
 `max-w-md` para `max-w-xl`. No tamanho antigo ela lia como legenda de foto, e nao como a promessa da
@@ -463,6 +475,16 @@ para 44,6% e a linha vai a 5.12.
 **Quem reprova primeiro e sempre a linha das estrelas, nunca o texto cheio**, e **o celular e o pior
 caso**, porque o painel ali e curto e o mesmo bloco ocupa uma fracao maior dele. Mexeu no veu, no
 tamanho da fonte ou no comprimento do texto? Refaca a medida em 390 primeiro, contra o pixel mais claro.
+
+**Com a frase em pergunta, o bloco encurtou e a conta melhorou por estrutura.** Sao ~125 caracteres
+contra 183, e o topo do texto desceu de 44 a 52% do gradiente para **36,5% no desktop e 38,4% no
+celular**, onde o veu vale perto de `tinta/75`: isso passa ate contra um quadro branco puro. Medido
+sobre o video atual do painel, **8.78 e 6.67** na linha das estrelas em 1440 e 390. Os numeros absolutos
+dependem da midia do momento, que e mais escura que a foto da tabela acima; a posicao no gradiente nao.
+
+**O indicador de desenvolvimento do Next falseia a medida em 1440.** Ele fica no canto inferior
+esquerdo, tem um "N" branco puro e encosta na borda do bloco da chamada: a leitura cai para 1.00. Esconda
+o `nextjs-portal` antes de amostrar, junto com a gravacao do `leia-consentimento`.
 
 **Cuidado ao medir: o banner de consentimento nasce por cima do pe do painel**, exatamente onde a
 chamada fica, e a chapa branca dele falseia a leitura para contraste 1.00. Antes de amostrar, grave
@@ -669,11 +691,12 @@ primitivos do projeto, nao codigo copiado.
 O Sobre fala em primeira pessoa e o conteudo inteiro vem da aba **Sobre** da global Clinica. O campo
 `sobre` e so dessa secao.
 
-**Quem alimenta a descricao do `MedicalClinic` nos dados estruturados e a `chamada`.** Ela era
-institucional e hoje abre pela dor, pelo pedido do time de trafego. Continua servindo como descricao,
-porque descreve o que a clinica faz e nao e slogan nem primeira pessoa, mas **saiba que mexer na
-chamada do hero mexe no dado estruturado junto**. Se um dia as duas precisarem divergir, o caminho e um
-campo proprio, nao reescrever uma delas no lugar da outra.
+**A descricao do `MedicalClinic` nos dados estruturados vem do campo `descricao` da global Seo**, com a
+`chamada` e o `sobre` so de reserva, nessa ordem. Ela ja foi a propria `chamada`, enquanto a chamada era
+institucional. Quando a chamada virou pergunta ao sintoma, que funciona no hero e le mal no resultado de
+busca, as duas divergiram e a descricao passou para o campo que ja existia para isso. O `sobre` fica por
+ultimo porque fala em primeira pessoa. **Se o `descricao` do Seo ficar vazio, a pergunta do hero volta a
+ir para o Google.**
 
 **O Sobre foi remontado a pedido do time**, que pediu para valorizar a apresentacao da profissional:
 
@@ -896,8 +919,8 @@ o empacotamento precisa. O que continua sendo da grade e a distribuicao, a casca
 movimento.
 
 - **`GaleriaResultados`**, logo abaixo do comparador, **le a colecao `resultados`**, a mesma do
-  carrossel: cada cartao e o par antes e depois com as duas fotos visiveis de uma vez, **lado a lado no
-  `lg` e empilhado no celular**, no formato dos posts que a clinica ja publica. Ela existe porque o
+  carrossel: cada cartao e o par antes e depois com as duas fotos visiveis de uma vez, **lado a lado em
+  qualquer tela**, no formato dos posts que a clinica ja publica. Ela existe porque o
   comparador exige arrastar a divisa, e quem nao arrasta ve so a foto de antes e vai embora achando
   que nao ha resultado. **Sem titulo visivel e sem ancora, a pedido do
   cliente**: ela le como continuacao da secao Resultados, que ja tem titulo e explicacao logo acima.
@@ -922,17 +945,23 @@ movimento.
 
   **O fio entre as duas metades vai em `after`, e nao em `border`.** Com `box-sizing: border-box`, que e
   o padrao do Tailwind, 1px de borda come 1px da caixa: medido, a metade de baixo saia com 570px contra
-  571px da de cima. O pseudo elemento desenha por cima sem ocupar espaco, e muda de eixo junto com o
-  cartao: horizontal no celular, vertical no `lg`.
+  571px da de cima. O pseudo elemento desenha por cima sem ocupar espaco, sempre vertical.
 
-  **A `razao` do empacotamento e a do desktop, e ela serve para os dois tamanhos de tela.** O cartao
-  muda de forma por breakpoint: empilhado vale `2 x (5 / 4)`, lado a lado vale `(5 / 4) / 2`. Sao quatro
-  vezes de diferenca, o que a primeira leitura sugere invalidar a conta em metade dos casos.
+  **No celular o par ja foi empilhado, e o cliente reprovou**: "geralmente as pessoas visualizam uma do
+  lado da outra". Lado a lado nas duas colunas de sempre deixaria cada foto com ~84px, pequena demais
+  para enxergar diferenca de densidade, entao **esta secao usa uma coluna so no celular**, pela prop
+  `colunasNoCelular={1}`. Medido em 390: cartao 350x219, foto 175x219. A secao A clinica nao passa a
+  prop e continua com duas.
 
-  Nao invalida, e o motivo e simples: **o fator de 4 e o mesmo para todo cartao**, seja qual for a foto.
-  Como ele e uniforme, a ordem entre as colunas nao muda, e a mais alta no desktop e a mais alta no
-  celular na mesma proporcao. Uma conta so equilibra os dois. Se um dia o cartao mudar de forma de um
-  jeito que **nao** seja uniforme, essa garantia cai e ai sim serao duas contas.
+  **Uma coluna no celular quebraria a ordem sem o `order`, e o sintoma nao e obvio.** O DOM continua com
+  duas colunas, que e o que o `lg` precisa, e o empacotamento reparte os casos alternando entre elas.
+  Empilhar as duas mostraria **1, 3, 5, 7, 9, 2, 4, 6, 8**, ignorando o campo `ordem`, que e como a
+  clinica agrupa casos femininos e masculinos. A saida, sem segundo DOM: no celular a coluna vira
+  `display: contents`, os cartoes viram filhos diretos de um flex so, e cada `figure` leva `order` com a
+  posicao original. No `lg` a coluna volta a ser caixa e o `order` ali dentro ja e crescente. Conferido
+  em 390, caso a caso contra `/api/resultados` ordenado por `ordem`: bate nos nove.
+
+  Com o cartao lado a lado em qualquer tela, a `razao` e `(5 / 4) / 2` sempre.
 - **`AClinica`**, no fim da pagina, le a colecao `galeria`, hoje so de fotos da clinica. Cada cartao e
   uma foto sozinha, na propria proporcao. Essa **tem** titulo e CTA, porque abre assunto novo e e o
   ultimo bloco antes do rodape.
@@ -957,8 +986,9 @@ Sete coisas que sustentam a grade:
   custa um pouco de equilibrio: ordenar da mais alta para a mais baixa fecharia quase todo o degrau,
   mas jogaria fora o campo `ordem`, que e o unico controle da clinica. Com foto de post, toda na mesma
   proporcao, o empate e exato de qualquer jeito.
-- **Sao duas colunas em qualquer largura**, entao a grade e a mesma no celular e no desktop e o
-  espacamento volta a ser `gap` na coluna.
+- **Sao duas colunas no `lg`, e no celular a quantidade que a secao pedir**, pela prop
+  `colunasNoCelular`, de padrao 2. As classes de cada caso ficam num mapa `LAYOUT` escrito por extenso no
+  `grade-parallax.tsx`, porque o Tailwind so gera classe literal. O espacamento e `gap` na coluna.
 
   **Isso ja foi mais complicado, e vale saber por que nao e mais.** Com tres colunas no `lg` e duas no
   celular, tres nao dividia por dois: numa grade de duas, a terceira coluna caia sozinha na segunda

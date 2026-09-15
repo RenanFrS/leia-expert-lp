@@ -65,18 +65,17 @@ function MetadeDoPar({
       precisam bater exatamente. O pseudo elemento desenha por cima, sem ocupar
       espaco.
 
-      **Ele muda de eixo junto com o cartao**: horizontal no topo da segunda
-      metade quando o par esta empilhado, vertical na borda esquerda dela quando
-      esta lado a lado.
+      Ele e sempre vertical, na borda esquerda da segunda metade, porque o par e
+      lado a lado em qualquer tela.
     */
-    <div className={cn('relative aspect-[4/5] lg:w-1/2', className)}>
+    <div className={cn('relative aspect-[4/5] w-1/2', className)}>
       <Image
         src={foto.url!}
         alt={alt}
         fill
         // Duas colunas em 1376px de container com um vao de 20px dao 678px de
-        // cartao, e a metade fica com 339px. No celular a metade ocupa a largura
-        // toda do cartao, que e uma das duas colunas da tela.
+        // cartao, e a metade fica com 339px. No celular a grade e uma coluna so,
+        // entao a metade fica com metade da tela, perto dos 50vw.
         sizes="(max-width: 1024px) 50vw, 340px"
         className="object-cover"
         style={enquadramento(foto)}
@@ -130,28 +129,25 @@ export function GaleriaResultados({ resultados }: { resultados: Resultado[] }) {
       /*
         **Todo cartao tem a mesma razao**, porque a proporcao de cada metade e
         fixa em 4/5 desde que o cliente pediu cartao padronizado. Com as duas
-        metades lado a lado no `lg`, o cartao fica com metade da altura de uma
-        delas: `(5 / 4) / 2`.
+        metades lado a lado, o cartao fica com metade da altura de uma delas:
+        `(5 / 4) / 2`, em qualquer tela.
 
         Com todas iguais o empacotamento vira alternancia simples entre as duas
         colunas, e nao vale a pena simplifica-lo por isso: **a mesma grade serve o
         `AClinica`**, onde cada cartao e uma foto na propria proporcao e o
         equilibrio volta a fazer trabalho de verdade.
-
-        **A razao e a do desktop e serve para os dois tamanhos de tela.** No
-        celular o par empilha e o cartao passa a valer `2 x (5 / 4)`, quatro vezes
-        mais. Como o fator de 4 e o mesmo para todo cartao, a ordem entre as
-        colunas nao muda e uma conta so equilibra os dois.
       */
       razao: 5 / 4 / 2,
       conteudo: (
         // As duas fotos ficam coladas, dentro do mesmo cartao arredondado, com um
         // fio separando. Assim o par le como uma peca so, que e o efeito dos
         // posts prontos que a clinica ja publica.
-        // Empilhado no celular, lado a lado no `lg`. O `aspect-[4/5]` de cada
-        // metade serve nos dois casos, porque a proporcao e relativa a largura: a
-        // metade so fica mais baixa quando passa a ocupar metade do cartao.
-        <div className="flex flex-col lg:flex-row">
+        //
+        // **Lado a lado em qualquer tela, a pedido do cliente.** No celular ja foi
+        // empilhado, antes em cima e depois embaixo, e ele reportou que ficou
+        // estranho: quem ve antes e depois espera uma foto do lado da outra. Para
+        // caber, a grade desta secao vira uma coluna so no celular.
+        <div className="flex">
           <MetadeDoPar
             foto={antes!}
             alt={antes!.alt || `${resultado.titulo}, antes do tratamento`}
@@ -162,7 +158,7 @@ export function GaleriaResultados({ resultados }: { resultados: Resultado[] }) {
             alt={depois!.alt || `${resultado.titulo}, ${momentoDepois}`}
             rotulo={emTratamento ? 'Em tratamento' : 'Depois'}
             destaque={emTratamento}
-            className="after:absolute after:inset-x-0 after:top-0 after:h-px after:bg-porcelana/40 after:content-[''] lg:after:inset-x-auto lg:after:inset-y-0 lg:after:left-0 lg:after:h-auto lg:after:w-px"
+            className="after:absolute after:inset-y-0 after:left-0 after:w-px after:bg-porcelana/40 after:content-['']"
           />
         </div>
       ),
@@ -180,7 +176,9 @@ export function GaleriaResultados({ resultados }: { resultados: Resultado[] }) {
           Antes e depois de cada caso
         </h2>
 
-        <GaleriaParallax itens={cartoes} />
+        {/* Uma coluna no celular: com duas, o par lado a lado deixaria cada foto
+            com ~84px, pequena demais para enxergar a diferenca de densidade. */}
+        <GaleriaParallax itens={cartoes} colunasNoCelular={1} />
       </div>
     </section>
   )

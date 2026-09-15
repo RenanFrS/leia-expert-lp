@@ -86,12 +86,14 @@ export function Hero({ nome, chamada, tratamentos, painel, intervalo }: Props) {
     // Reserva usada so quando a `chamada` do painel esta vazia. Mesma redacao da
     // chamada gravada no banco.
     //
-    // Ela abre pela dor, e nao pelo nome da especialidade, a pedido do time de
-    // trafego: quem chega pelo anuncio busca "queda de cabelo" e "calvicie", nao
-    // "tricologia clinica". Duas travas continuam valendo aqui: nao afirma
-    // diagnostico, que e ato privativo de medico e a Leia e tricologista, e nao
-    // promete gratuidade, porque a consulta e cobrada.
-    'Queda de cabelo, calvície e alopecia têm causa. A tricoscopia mostra qual é a sua e define o tratamento certo para o seu caso. Homens e mulheres, com acompanhamento do começo ao fim.'
+    // Ela abre pelo problema, em pergunta, para a pessoa se reconhecer no
+    // primeiro segundo: quem chega pelo anuncio busca a queixa, nao a
+    // especialidade. Tres travas continuam valendo aqui: nao afirma diagnostico,
+    // que e ato privativo de medico e a Leia e tricologista; nao promete
+    // gratuidade, porque a consulta e cobrada; e nao promete cura, porque o
+    // proprio FAQ admite perda antiga que ja nao responde. Ela descreve o que a
+    // clinica faz, nao garante resultado.
+    'Seu cabelo está caindo, afinando ou abrindo falhas? Descobrimos por que isso acontece e tratamos a causa, não só o sintoma.'
 
   /*
     O video do painel aponta direto para a CDN do Cloudinary, com `f_auto,q_auto`.

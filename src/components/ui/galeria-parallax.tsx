@@ -71,32 +71,43 @@ const COLUNAS = 2
 
 export function GaleriaParallax({
   itens,
+  colunasNoCelular = 2,
   className,
 }: {
   itens: CartaoDaGrade[]
+  /** Uma coluna abaixo do `lg`, para cartao largo como o par lado a lado. */
+  colunasNoCelular?: 1 | 2
   className?: string
 }) {
   if (!itens.length) return null
 
   // Empacota na coluna mais curta, mantendo a ordem do painel na varredura.
   const alturas = Array.from({ length: COLUNAS }, () => 0)
-  const colunas: CartaoDaGrade[][] = Array.from({ length: COLUNAS }, () => [])
+  // Cada cartao leva a posicao que tinha na lista. E ela que devolve a ordem do
+  // painel quando a grade vira uma coluna so no celular; o motivo esta no
+  // `LAYOUT` do `grade-parallax.tsx`.
+  const colunas: (CartaoDaGrade & { posicao: number })[][] = Array.from(
+    { length: COLUNAS },
+    () => [],
+  )
 
-  for (const item of itens) {
+  itens.forEach((item, posicao) => {
     const menor = alturas.indexOf(Math.min(...alturas))
-    colunas[menor].push(item)
+    colunas[menor].push({ ...item, posicao })
     alturas[menor] += item.razao
-  }
+  })
 
   return (
     // `clip` e nao `hidden` de proposito, para nao criar container de rolagem
     // novo. Mesmo criterio do hero e da secao de tratamentos.
     <div className={cn('overflow-clip', className)}>
       <GradeParallax
+        colunasNoCelular={colunasNoCelular}
         colunas={colunas.map((coluna) =>
-          coluna.map(({ id, conteudo }) => (
+          coluna.map(({ id, conteudo, posicao }) => (
             <figure
               key={id}
+              style={{ order: posicao }}
               /*
                 O espacamento voltou para o `gap` da coluna. Ele ja foi `mb` aqui,
                 de quando a coluna virava `display: contents` no celular e nao
