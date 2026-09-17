@@ -248,61 +248,57 @@ export function Hero({ nome, chamada, tratamentos, painel, intervalo }: Props) {
           />
 
           {/*
-              Veu de baixo para cima. Sobre foto qualquer, texto solto nao tem
-              contraste garantido, e e ele que mantem a chamada em porcelana
-              legivel seja qual for a imagem que a clinica subir.
+              Chamada e estrelas, dentro da imagem, com o veu atras. O
+              `container` de dentro e que traz o texto de volta para a coluna da
+              pagina, agora que o painel nao esta mais dentro de um.
+          */}
+          <div className="absolute inset-x-0 bottom-0 pb-6 lg:pb-10">
+            {/*
+                Veu de baixo para cima. Sobre foto qualquer, texto solto nao tem
+                contraste garantido, e e ele que mantem a chamada em porcelana
+                legivel seja qual for a imagem que a clinica subir.
 
-              **A altura e fixa, e nao `h-2/3` do painel.** Em proporcao o veu
-              acompanhava a altura do painel enquanto a chamada fica ancorada no
-              pe dele: no celular, com painel curto, a chamada subia para a parte
-              fraca do gradiente. Medido naquele estado, o pixel mais claro atras
-              do texto era `rgb(244,243,243)` e o contraste caia para **1.11**.
+                **O veu mede o bloco de texto, e nao o painel.** Ele e filho do
+                mesmo bloco da chamada e sobe 10rem acima dela: do pe ate o topo
+                do texto o alfa vai de 90% a 75%, e so nesses 10rem de cima ele
+                esmaece ate sumir. Assim o topo da chamada cai sempre em
+                `tinta/75`, qualquer que seja o tamanho da fonte ou do texto.
 
-              **O veu cresceu de 22rem para 28/30rem porque a chamada cresceu.**
-              Ela e ancorada no pe do painel, entao fonte maior e texto mais longo
-              empurram o topo do bloco para a parte fraca do gradiente, que e o
-              mesmo defeito descrito acima por outro caminho.
+                Ja houve tres veus de altura presa ao painel aqui, e os tres
+                quebraram pelo mesmo motivo: a chamada e ancorada no pe do
+                painel, entao texto maior empurra o topo dela para a parte fraca
+                do gradiente. Com `h-2/3` do painel, no celular, o contraste
+                chegou a **1.11**; com 22rem e a fonte antiga o topo caia em
+                ~`tinta/49`; e com 30rem a serifa grande deixaria o topo perto de
+                `tinta/28`.
 
-              Medido no navegador, escondendo o texto por folha injetada para
-              sobrar so o fundo composto, contra o pixel mais claro da faixa e nao
-              contra a media dela:
-
-                 390   rgb(103,94,88)   6.33 porcelana   5.12 porcelana/85
-                 768   rgb(95,85,81)    7.23             5.80
-                1024   rgb(101,91,87)   6.59             5.30
-                1440   rgb(101,91,86)   6.60             5.31
-                1920   rgb(102,91,87)   6.56             5.28
-
-              **Os 28rem do celular sao piso, nao folga.** Com 24rem ali o topo do
-              texto subia para 52% do gradiente e a linha das estrelas, em
-              `porcelana/85`, dava **4.47**, logo abaixo do piso de 4.5. Em 28rem
-              ele volta para 44,6% e a linha vai a 5.12. Quem reprova primeiro e
-              sempre a linha das estrelas, nunca o texto cheio.
-
-              **E o celular e o pior caso**, porque o painel ali e curto e o mesmo
-              bloco de texto ocupa uma fracao maior dele. Mexeu no veu, no tamanho
-              da fonte ou no tamanho do texto? Refaca a medida em 390 primeiro.
+                Contra branco puro, que e o pior caso de qualquer midia, o topo
+                da chamada fica em `rgb(98,88,83)` e da 6.9 em porcelana.
             */}
-          <div
-            aria-hidden
-            className="absolute inset-x-0 bottom-0 h-[28rem] bg-gradient-to-t from-tinta/90 via-tinta/70 to-transparent lg:h-[30rem]"
-          />
+            <div
+              aria-hidden
+              className="absolute inset-x-0 -top-40 bottom-0 bg-gradient-to-t from-tinta/90 via-tinta/75 via-[calc(100%-10rem)] to-transparent"
+            />
+            <div className="container relative">
+              {/*
+                  A coluna para antes do carrossel, que e absoluto no mesmo pe do
+                  painel e tem 320px: em 1024 sobram 576px, dali para cima 768px.
+              */}
+              <Revelar className="max-w-xl xl:max-w-3xl">
+                {/*
+                    **A chamada e serifa grande, a pedido do cliente**, com uma
+                    referencia em que a frase sobre a foto era o maior texto da
+                    tela. Ela ja foi corpo de texto, `text-lg` e `text-2xl`, e
+                    lia como legenda. Fica um degrau abaixo do `h1` no desktop,
+                    48px contra 56px, para o titulo continuar sendo o titulo. Em
+                    1280 e 1440 a frase atual cabe em quatro linhas, como na
+                    referencia.
+                  */}
+                <p className="text-pretty font-display text-[1.75rem] leading-[1.12] text-porcelana sm:text-4xl sm:leading-[1.1] lg:text-[2.5rem] xl:text-5xl xl:leading-[1.1]">
+                  {texto}
+                </p>
 
-          {/* Chamada e estrelas, dentro da imagem. O `container` de dentro e
-                que traz o texto de volta para a coluna da pagina, agora que o
-                painel nao esta mais dentro de um. */}
-          <div className="absolute inset-x-0 bottom-6 lg:bottom-10">
-            <div className="container">
-              {/* A coluna abriu de `max-w-md` para `max-w-xl` junto com a
-                  fonte. Em 448px o texto novo passava de seis linhas e a pilha
-                  encostava no carrossel, que e absoluto no mesmo pe do painel. */}
-              <Revelar className="lg:max-w-xl">
-                {/* Corpo maior a pedido do time de trafego: no tamanho antigo a
-                    frase lia como legenda de foto e nao como a promessa da
-                    pagina. Crescer aqui obriga a refazer o veu logo acima. */}
-                <p className="text-lg text-porcelana sm:text-2xl sm:leading-snug">{texto}</p>
-
-                <div className="mt-4 flex items-center gap-2">
+                <div className="mt-5 flex items-center gap-2">
                   <div className="flex" aria-hidden>
                     {Array.from({ length: 5 }).map((_, indice) => (
                       <Star

@@ -21,7 +21,7 @@ type Unidade = NonNullable<Clinica['unidades']>[number]
  * escrita no fonte, entao montar isso por concatenacao faria a regra sumir.
  */
 const LINK_DE_CONTATO =
-  'h-auto justify-start gap-2 p-0 text-sm font-normal text-tinta-suave hover:translate-y-0 hover:bg-transparent hover:text-cacau hover:shadow-none'
+  'h-auto justify-start gap-2 p-0 text-sm font-normal text-porcelana/80 before:via-porcelana/10 hover:translate-y-0 hover:bg-transparent hover:text-caramelo-claro hover:shadow-none'
 
 /**
  * O WhatsApp e marca, entao nao esta no lucide. Fica local aqui pelo mesmo
@@ -47,16 +47,33 @@ type Props = {
   unidades: Unidade[]
 }
 
+/**
+ * **O rodape e escuro, a pedido do cliente**: fundo `tinta` com texto claro. Ele
+ * ja foi porcelana com texto escuro. Pela regra da paleta, o acento sobre
+ * `tinta` e o `caramelo-claro`, que aqui faz o hover dos links.
+ *
+ * Os tons de texto foram escolhidos pela conta contra `tinta`: `porcelana` nos
+ * titulos, `porcelana/80` nos links e no endereco, e `porcelana/60` no texto de
+ * apoio. O mais fraco, o de 60%, da 6.5.
+ */
 export function Footer({ nome, logo, whatsapp, email, instagram, horarios, unidades }: Props) {
   // O mapa sai da primeira unidade que tiver um embed valido.
   const mapa = unidades.map((unidade) => enderecoDoMapa(unidade.mapaEmbed)).find(Boolean)
 
   return (
-    <footer className="border-t border-tinta/10 bg-porcelana py-16">
+    // O `pb-28` deixa a ultima linha acima do WhatsApp flutuante, que ocupa os
+    // 104px de baixo da tela: com `pb-16`, rolado ate o fim, ele cobria o
+    // credito do canto direito.
+    <footer className="bg-tinta pb-28 pt-16 text-porcelana">
       <div className="container grid gap-12 md:grid-cols-[1fr_1.4fr]">
         <div>
-          <Logotipo nome={nome} logo={logo} tamanho="lg" />
-          {horarios && <p className="mt-4 text-sm text-neutro">{horarios}</p>}
+          {/* A logo e um PNG transparente de desenho escuro, e sobre `tinta`
+              ela sumiria. O circulo branco e o mesmo recurso do cartao do Sobre,
+              e com a logo em texto de reserva ele vira uma pilula. */}
+          <div className="inline-flex rounded-full bg-porcelana p-2">
+            <Logotipo nome={nome} logo={logo} tamanho="lg" />
+          </div>
+          {horarios && <p className="mt-4 text-sm text-porcelana/60">{horarios}</p>}
 
           <div className="mt-6 flex flex-col gap-3 text-sm">
             {/* Passa pelo BotaoWhatsapp, e nao por um `<a>` com o wa.me montado
@@ -98,14 +115,23 @@ export function Footer({ nome, logo, whatsapp, email, instagram, horarios, unida
             <div className="flex flex-col gap-8">
               {unidades.map((unidade) => (
                 <div key={unidade.nome}>
-                  <h2 className="font-display text-lg text-tinta">{unidade.nome}</h2>
-                  <address className="mt-3 whitespace-pre-line text-sm not-italic text-tinta-suave">
+                  <h2 className="font-display text-lg text-porcelana">{unidade.nome}</h2>
+                  <address className="mt-3 whitespace-pre-line text-sm not-italic text-porcelana/80">
                     {unidade.endereco}
                   </address>
-                  {unidade.telefone && <p className="mt-2 text-sm text-neutro">{unidade.telefone}</p>}
+                  {unidade.telefone && (
+                    <p className="mt-2 text-sm text-porcelana/60">{unidade.telefone}</p>
+                  )}
 
                   <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
-                    <Button asChild variant="outline" size="sm">
+                    {/* O `outline` nasce para fundo claro. A borda em 40% da 3.8
+                        contra `tinta`, acima do 3:1 de componente de interface. */}
+                    <Button
+                      asChild
+                      variant="outline"
+                      size="sm"
+                      className="border-porcelana/40 text-porcelana before:via-porcelana/10 hover:border-caramelo-claro hover:text-caramelo-claro"
+                    >
                       <a
                         href={rotaNoMapa(nome, unidade.endereco)}
                         target="_blank"
@@ -121,7 +147,7 @@ export function Footer({ nome, logo, whatsapp, email, instagram, horarios, unida
                         href={unidade.mapaUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 text-sm text-cacau hover:underline"
+                        className="inline-flex items-center gap-2 text-sm text-caramelo-claro hover:underline"
                       >
                         <MapPin className="h-4 w-4" /> Ver no mapa
                       </a>
@@ -150,13 +176,13 @@ export function Footer({ nome, logo, whatsapp, email, instagram, horarios, unida
         )}
       </div>
 
-      <div className="container mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-tinta/10 pt-6 text-xs text-neutro">
+      <div className="container mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-porcelana/10 pt-6 text-xs text-porcelana/60">
         <p>
           {new Date().getFullYear()} {nome}. Todos os direitos reservados.
         </p>
         <p>
-          Site por{' '}
-          <a href="https://www.instagram.com/renanrocha.01/" target="_blank" rel="noopener noreferrer" className="hover:text-cacau">
+          Site desenvolvido por{' '}
+          <a href="https://www.instagram.com/renanrocha.01/" target="_blank" rel="noopener noreferrer" className="hover:text-caramelo-claro">
             Renan Rocha
           </a>
         </p>

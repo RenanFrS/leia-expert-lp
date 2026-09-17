@@ -3,7 +3,7 @@ import config from '@payload-config'
 
 import { Header } from '@/components/sections/Header'
 import { Hero } from '@/components/sections/Hero'
-import { Metricas } from '@/components/sections/Metricas'
+import { FaixaProblemas } from '@/components/sections/FaixaProblemas'
 import { Sobre } from '@/components/sections/Sobre'
 import { Tratamentos } from '@/components/sections/Tratamentos'
 import { Tricoscopia } from '@/components/sections/Tricoscopia'
@@ -135,7 +135,7 @@ export default async function Home() {
           painel={clinica?.heroPainel}
           intervalo={clinica?.heroIntervalo}
         />
-        <Metricas metricas={clinica?.metricas || []} />
+        <FaixaProblemas termos={(clinica?.faixaProblemas || []).map((item) => item.termo)} />
         <Tratamentos tratamentos={tratamentos.docs} />
         <Tricoscopia
           video={clinica?.videoTricoscopia}

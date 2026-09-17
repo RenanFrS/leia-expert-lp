@@ -491,6 +491,23 @@ export const popularConteudo = async (payload: Payload) => {
       // demograficos do midia kit, do tipo 75% mulheres e 22% Rio de Janeiro:
       // descrevem quem segue o Instagram, nao quem se trata, e a clinica e em
       // Sao Paulo.
+      // A faixa em movimento abaixo do hero. So problemas que os tratamentos
+      // cadastrados cobrem, sem promessa nenhuma.
+      faixaProblemas: [
+        'Queda capilar',
+        'Calvície',
+        'Alopecia androgenética',
+        'Alopecia areata',
+        'Eflúvio telógeno',
+        'Fios mais finos',
+        'Perda de volume',
+        'Falhas no cabelo',
+        'Entradas aparentes',
+        'Caspa',
+        'Coceira no couro cabeludo',
+        'Descamação',
+        'Couro cabeludo oleoso',
+      ].map((termo) => ({ termo })),
       metricas: [
         { valor: '5,0', rotulo: 'Nota no Google' },
         { valor: '143', rotulo: 'Avaliações no Google' },

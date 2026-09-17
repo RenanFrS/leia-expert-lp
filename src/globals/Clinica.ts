@@ -234,14 +234,35 @@ export const Clinica: GlobalConfig = {
           ],
         },
         {
-          label: 'Numeros',
-          description: 'Aparecem na faixa de prova social da página.',
+          // Aba sem `name`: trocar o rotulo nao muda onde o dado mora.
+          label: 'Faixa de problemas',
+          description:
+            'A faixa em movimento logo abaixo do topo da página, com os problemas que a clínica trata.',
           fields: [
+            {
+              name: 'faixaProblemas',
+              type: 'array',
+              label: 'Problemas da faixa',
+              labels: { singular: 'Problema', plural: 'Problemas' },
+              admin: {
+                description:
+                  'Termos curtos, de uma a três palavras, do jeito que as pessoas procuram no Google. Eles aparecem uma vez no texto da página e contam para o SEO. Só coloque o que a clínica trata. Sem itens, a faixa não aparece.',
+              },
+              fields: [{ name: 'termo', type: 'text', required: true }],
+            },
+            /*
+              **Campo antigo, escondido e nao apagado**, pelo mesmo motivo do
+              `foto` e do `retrato` na aba Sobre: apagar faria o push do modo dev
+              derrubar uma tabela com dado no banco de producao. Eram os numeros
+              da faixa de prova social, que deu lugar a faixa de problemas. O site
+              nao le mais este campo.
+            */
             {
               name: 'metricas',
               type: 'array',
               maxRows: 4,
               labels: { singular: 'Numero', plural: 'Numeros' },
+              admin: { hidden: true },
               fields: [
                 { name: 'valor', type: 'text', required: true, admin: { description: 'Exemplo: 1.200+' } },
                 { name: 'rotulo', type: 'text', required: true },

@@ -62,14 +62,14 @@ src/
                        Media, Users
   globals/             Clinica, Seo, Rastreamento, todos no grupo Configuracoes do painel
   components/
-    sections/          Header, Hero, Metricas, Tratamentos, Tricoscopia,
+    sections/          Header, Hero, FaixaProblemas, Tratamentos, Tricoscopia,
                        Resultados, GaleriaResultados, Depoimentos, Sobre,
                        Duvidas, Agendamento, AClinica, Footer,
                        WhatsappFlutuante
     ui/                componentes shadcn mais os primitivos da landing:
                        eyebrow, titulo-secao, lista-verificada, cartao-vidro,
                        animated-content, camada-especular, camada-parallax,
-                       carrossel-fotos, carrossel-tratamentos, galeria-parallax,
+                       carrossel-fotos, carrossel-tratamentos, faixa-infinita, galeria-parallax,
                        grade-parallax, midia-rotativa, video-fundo
     BotaoWhatsapp.tsx  casca padrao do CTA de WhatsApp
     Logotipo.tsx       assinatura da marca, com reserva em texto
@@ -443,45 +443,39 @@ causa..." nomeava as condicoes em tom clinico e escorregava para o metodo antes 
 gratuidade e **sem promessa de cura**. O proprio FAQ admite perda antiga que ja nao responde, entao a
 frase descreve o que a clinica faz, e nao garante resultado.
 
-Ela tambem **cresceu de `text-base sm:text-lg` para `text-lg sm:text-2xl`**, com a coluna abrindo de
-`max-w-md` para `max-w-xl`. No tamanho antigo ela lia como legenda de foto, e nao como a promessa da
-pagina.
+**A chamada e serifa grande, a pedido do cliente**, que mandou uma referencia em que a frase sobre a
+foto era o maior texto da tela. Ela ja foi corpo de texto, `text-base` e depois `text-lg sm:text-2xl`,
+e nos dois lia como legenda. Hoje e `font-display` em **28px no celular, 36px no `sm`, 40px no `lg` e
+48px no `xl`**, com entrelinha 1.1. No desktop ela fica um degrau abaixo do `h1`, 48px contra 56px,
+para o titulo continuar sendo o titulo. A frase atual cabe em **4 linhas em 1280, 1440 e 1920**, como
+na referencia, 5 em 1024 e 6 em 390.
 
-**A altura do veu e fixa, `h-[28rem]` e `lg:h-[30rem]`, e nao uma fracao do painel.** Enquanto era
-`h-2/3` ele acompanhava a altura do painel, mas a chamada fica ancorada no **pe** dele: no celular, com
-painel curto, ela subia para a parte fraca do gradiente. Medido naquele estado, contra uma foto de
-jaleco branco, o fundo atras do texto era `rgb(244,243,243)` e o contraste caia para **1.11**, ou seja
-texto branco sobre branco.
+**A coluna para antes do carrossel**, que e absoluto no mesmo pe do painel e tem 320px: `max-w-xl` ate
+o `lg` e `max-w-3xl` no `xl`. Medido, sobram 88px ate o cartao em 1024, 152px em 1280 e 288px em 1440.
+Frase mais longa cresce para cima, nao para o lado.
 
-**O veu subiu de 22rem junto com a fonte, e essa dependencia e a coisa mais importante desta secao.** A
-chamada e ancorada no pe do painel, entao texto maior empurra o **topo** do bloco para cima, para a
-parte fraca do gradiente. E o mesmo defeito de antes por outro caminho. Com o texto novo e o veu de
-22rem, o topo caia a 65% do gradiente, onde o alfa e ~`tinta/49`.
+**O veu mede o bloco da chamada, e nao o painel, e essa e a coisa mais importante desta secao.** A
+chamada e ancorada no pe do painel, entao texto maior empurra o topo dela para cima. Com veu de altura
+fixa, isso joga o topo para a parte fraca do gradiente, e **esse defeito ja aconteceu tres vezes**:
 
-Medido no navegador depois da correcao, escondendo o texto por folha injetada para sobrar so o fundo
-composto, contra o pixel mais claro da faixa e nao contra a media dela:
+- com `h-2/3` do painel, no celular de painel curto: contraste **1.11** contra foto de jaleco branco
+- com 22rem e a fonte do `text-2xl`: topo em ~`tinta/49`
+- com 30rem e a serifa grande, pela conta: topo em ~`tinta/28`
 
-| Largura | Fundo composto | porcelana | porcelana/85 |
-| --- | --- | --- | --- |
-| 390 | `rgb(103,94,88)` | 6.33 | 5.12 |
-| 768 | `rgb(95,85,81)` | 7.23 | 5.80 |
-| 1024 | `rgb(101,91,87)` | 6.59 | 5.30 |
-| 1440 | `rgb(101,91,86)` | 6.60 | 5.31 |
-| 1920 | `rgb(102,91,87)` | 6.56 | 5.28 |
+Hoje o veu e **filho do mesmo bloco da chamada**, `absolute inset-x-0 -top-40 bottom-0`: ele sobe 10rem
+acima do texto. O gradiente vai de `tinta/90` no pe a `tinta/75` em `calc(100% - 10rem)`, que e
+exatamente o topo do texto, e so nesses 10rem de cima esmaece ate sumir. **O topo da chamada cai sempre
+em `tinta/75`, qualquer que seja a fonte, o texto ou a tela.** Contra branco puro, o pior caso de
+qualquer midia, isso compoe `rgb(98,88,83)` e da **6.9** em porcelana.
 
-**Os 28rem do celular sao piso, nao folga.** Com 24rem o topo do texto subia para 52% do gradiente e a
-linha das estrelas, em `porcelana/85`, dava **4.47**, logo abaixo do piso de 4.5. Em 28rem ele volta
-para 44,6% e a linha vai a 5.12.
+Medido no navegador sobre o video atual, com a midia pausada e o texto escondido por folha injetada,
+contra o pixel mais claro atras da primeira linha: **8.72 em 768, 9.35 em 390 e acima de 11 de 1024 a
+1920**. A linha das estrelas, em `porcelana/85`, fica acima de 8.99 em todas.
 
-**Quem reprova primeiro e sempre a linha das estrelas, nunca o texto cheio**, e **o celular e o pior
-caso**, porque o painel ali e curto e o mesmo bloco ocupa uma fracao maior dele. Mexeu no veu, no
-tamanho da fonte ou no comprimento do texto? Refaca a medida em 390 primeiro, contra o pixel mais claro.
-
-**Com a frase em pergunta, o bloco encurtou e a conta melhorou por estrutura.** Sao ~125 caracteres
-contra 183, e o topo do texto desceu de 44 a 52% do gradiente para **36,5% no desktop e 38,4% no
-celular**, onde o veu vale perto de `tinta/75`: isso passa ate contra um quadro branco puro. Medido
-sobre o video atual do painel, **8.78 e 6.67** na linha das estrelas em 1440 e 390. Os numeros absolutos
-dependem da midia do momento, que e mais escura que a foto da tabela acima; a posicao no gradiente nao.
+**O `via-[calc(100%-10rem)]` e posicao, nao cor.** O Tailwind infere o tipo pelo `calc` e gera
+`--tw-gradient-via-position`. Conferido no estilo computado: `rgba(46,33,26,0.75) calc(100% - 160px)`.
+Mexeu nessa classe? Confira de novo, porque um tipo inferido errado vira cor invalida e o gradiente some
+sem erro.
 
 **O indicador de desenvolvimento do Next falseia a medida em 1440.** Ele fica no canto inferior
 esquerdo, tem um "N" branco puro e encosta na borda do bloco da chamada: a leitura cai para 1.00. Esconda
@@ -572,6 +566,56 @@ O `overflow-x-clip` da secao ficou de heranca: ele existia porque o titulo nasci
 telefone isso o punha fora da tela. Com a entrada vertical isso nao acontece mais, mas ele fica, porque
 a secao continua tendo filhos absolutos encostados nas bordas do painel e o `clip` e barato. E `clip` e
 nao `hidden` de proposito, para nao criar container de rolagem novo.
+
+### Faixa de problemas
+
+Logo abaixo do hero, uma fileira de pilulas com os problemas que a clinica trata corre sem parar **da
+esquerda para a direita**. Ela entrou **no lugar da faixa de numeros** (nota e avaliacoes no Google,
+seguidores e visualizacoes), a pedido do cliente, para somar a pagina texto com as palavras que as
+pessoas procuram. A prova social continua no hero e nos depoimentos.
+
+Sao dois arquivos: `sections/FaixaProblemas.tsx`, server component com a secao e um `h2` so para leitor
+de tela, e `ui/faixa-infinita.tsx`, o movimento. A forma vem do **Logo Loop do React Bits**, escolhido
+pelo cliente, reconstruido sem dependencia nova. As pilulas seguem um print que ele mandou: porcelana
+sobre areia, fio `cacau/15`, `CircleCheck` em `caramelo`, texto `tinta-suave` em 16px no celular e 18px
+do `md` para cima.
+
+**Os termos saem do painel**, no campo `faixaProblemas` da global Clinica, aba "Faixa de problemas".
+A aba ja se chamou "Numeros"; aba sem `name` nao muda onde o dado mora. A lista inicial so usa o que os
+tratamentos cadastrados cobrem, sem promessa. O campo `metricas` ficou escondido, e nao apagado, pelo
+mesmo motivo do `foto` e do `retrato`.
+
+Seis decisoes, todas medidas:
+
+- **So a primeira copia vem do servidor.** As outras entram depois de montar, com `aria-hidden`. O HTML
+  da faixa, conferido por `curl`, traz uma `ul` e cada termo uma vez, entao nao ha repeticao de palavra
+  chave para o Google nem para o leitor de tela. Os termos tambem vao no payload RSC, dentro de
+  `<script>`, o que o Next faz com qualquer prop de client component.
+- **O movimento e por `requestAnimationFrame`, com o `transform` escrito direto no trilho.** A posicao e
+  `deslocamento - L`, com o deslocamento dando a volta em `L`, a largura de uma copia com o `pr-3` que
+  imita o `gap`. Medido: **45px/s**, sem salto, em 390, 1440 e 1920.
+- **A quantidade de copias vem da largura**, por `ResizeObserver`: a faixa dividida por uma volta, mais
+  uma. Lista curta no painel nao deixa buraco. Com os 13 termos iniciais, uma volta tem 2724px no
+  desktop e 2528px no celular, e o trilho cobre a tela mais uma volta nas tres larguras.
+- **A velocidade persegue o alvo com amortecimento de 0.25s**, como no original. Mouse em cima desacelera
+  ate zero; so o ponteiro de mouse pausa, porque no toque o `pointerenter` deixaria a faixa parada.
+- **Nao ha botao de pausa, a pedido do cliente**, que quer a faixa sempre andando. Ja houve um, com
+  `aria-pressed`, e ele saiu. **Vale saber o custo**: a regra de acessibilidade pede um jeito de parar
+  conteudo que se move sozinho por mais de cinco segundos, e hoje so o mouse em cima para a faixa;
+  teclado e toque nao tem como. Quem pediu menos movimento no sistema recebe a lista parada, logo
+  abaixo. Se a agencia ou uma auditoria cobrar, o botao volta pelo historico do git.
+- **As bordas esmaecem por `mask-image`** no trilho, 3rem de cada lado no celular e 7rem do `md` para
+  cima, como no original.
+- **Fora da tela o laco para**, pelo `IntersectionObserver`. Medido: rolado ate o rodape, o trilho nao
+  andou nada.
+
+**`prefers-reduced-motion` troca a fileira por pilulas quebrando linha**, todas visiveis e sem copia. No celular elas encolhem: no tamanho normal, os 13 termos davam 11 linhas e **648px** de faixa;
+compactas, 7 linhas e 352px. Em 1440 sao 3 linhas.
+
+Contraste nas pilulas: texto **11.33**, icone **4.64**, os dois sobre porcelana.
+
+**As pilulas nao sao link, e isso e decisao.** Alvo em movimento e dificil de acertar, e ancora na mesma
+pagina quase nao conta para SEO. O ganho aqui e o texto.
 
 ### Carrossel de tratamentos
 
@@ -1140,7 +1184,7 @@ Paleta de quatro cores fechada com o cliente, em marrom e bege. Use sempre os to
 | Token | Hex | Papel |
 | --- | --- | --- |
 | `porcelana` | `#FFFFFF` | fundo da pagina e dos cartoes |
-| `areia` | `#DDCCC2` | blocos que quebram o ritmo, como metricas e depoimentos |
+| `areia` | `#DDCCC2` | blocos que quebram o ritmo, como a faixa de problemas e os depoimentos |
 | `cacau` | `#775642` | cor principal, botao padrao e secao de agendamento |
 | `caramelo` | `#966B54` | detalhe, eyebrow e estrela, sobre fundo claro |
 | `cacau-escuro` | `#5C4133` | derivada, estado pressionado do botao e acento sobre areia |
@@ -1371,6 +1415,19 @@ O botao do cartao e `destaque` e nao leva `especular`, pelo teto de contextos We
 ### Rodape
 
 O rodape traz o mapa da unidade num iframe do Google e um botao **Definir rota**.
+
+**Ele e escuro, a pedido do cliente**: fundo `tinta` com texto claro, e ja foi porcelana com texto
+escuro. O que isso mudou:
+
+- **os tons de texto seguem a conta contra `tinta`**: `porcelana` nos titulos, **15.57**;
+  `porcelana/80` nos links e no endereco, **10.41**; `porcelana/60` no texto de apoio, **6.48**, que e o
+  mais fraco. O hover vai para `caramelo-claro`, o acento da paleta sobre `tinta`
+- **a logo vai num circulo branco**, como no cartao do Sobre. O arquivo e um PNG transparente de desenho
+  escuro e sumiria no fundo. Com a logo em texto de reserva, o circulo vira pilula
+- **o "Definir rota" e `outline` com borda `porcelana/40`**, que da **3.69**, acima do 3:1 de
+  componente. A variante nasce para fundo claro, entao borda e texto sao trocados pela `className`
+- **o `pb` e 28, e nao 16**: o WhatsApp flutuante ocupa os 104px de baixo da tela e, rolado ate o fim,
+  cobria o credito do canto direito em 1440
 
 - **O endereco do embed vem do painel**, no campo `mapaEmbed` de cada unidade. Ele aceita tanto a URL
   quanto o codigo inteiro do iframe, porque e isso que o Google entrega no botao de incorporar, e o

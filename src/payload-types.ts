@@ -802,6 +802,15 @@ export interface Clinica {
       }[]
     | null;
   horarios?: string | null;
+  /**
+   * Termos curtos, de uma a três palavras, do jeito que as pessoas procuram no Google. Eles aparecem uma vez no texto da página e contam para o SEO. Só coloque o que a clínica trata. Sem itens, a faixa não aparece.
+   */
+  faixaProblemas?:
+    | {
+        termo: string;
+        id?: string | null;
+      }[]
+    | null;
   metricas?:
     | {
         /**
@@ -923,6 +932,12 @@ export interface ClinicaSelect<T extends boolean = true> {
         id?: T;
       };
   horarios?: T;
+  faixaProblemas?:
+    | T
+    | {
+        termo?: T;
+        id?: T;
+      };
   metricas?:
     | T
     | {
