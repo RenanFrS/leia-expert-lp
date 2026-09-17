@@ -83,46 +83,74 @@ export const Clinica: GlobalConfig = {
               type: 'text',
               label: 'Rótulo da coluna',
               defaultValue: 'Minha história',
-              admin: { description: 'Texto miúdo que abre a grade, à esquerda do resumo.' },
+              admin: { description: 'Pílula que abre a seção, acima do título.' },
             },
             {
               name: 'sobreResumo',
               type: 'textarea',
               label: 'Resumo',
               maxLength: 320,
-              admin: { description: 'Parágrafo curto, em cinza. Duas ou três linhas.' },
+              admin: { description: 'Parágrafo curto logo abaixo do título, em letra um pouco maior. Duas ou três linhas.' },
             },
             {
               name: 'sobre',
               type: 'textarea',
-              label: 'Frase principal',
-              admin: { description: 'O bloco grande, em destaque. É o que sustenta a seção.' },
+              label: 'Texto de apresentação',
+              admin: {
+                description:
+                  'Separe os parágrafos com uma linha em branco. Todos saem em texto corrido, abaixo do resumo.',
+              },
             },
+            {
+              name: 'fotos',
+              type: 'upload',
+              relationTo: 'media',
+              hasMany: true,
+              label: 'Fotos da seção',
+              admin: {
+                description:
+                  'Viram um carrossel ao lado do texto, na ordem desta lista. Use fotos em pé, com o rosto no terço de cima, e marque o ponto de foco no alto da cabeça: assim o cabelo nunca é cortado. O cartão com o nome cobre a parte de baixo.',
+              },
+            },
+            /*
+              **Campo antigo, escondido e nao apagado.** Era a foto unica da
+              secao, antes de ela virar carrossel. Apagar o campo faria o push do
+              modo dev derrubar uma coluna com dado no banco de producao, e esse
+              push pede confirmacao interativa quando ha perda de dado, o que num
+              dev em segundo plano trava. Escondido, ele segue como reserva: o site
+              so le este campo quando `fotos` esta vazio.
+            */
             {
               name: 'foto',
               type: 'upload',
               relationTo: 'media',
-              label: 'Foto da seção',
-              admin: { description: 'Foto larga, atravessa a página inteira. Ideal por volta de 2000 por 900.' },
+              label: 'Foto da seção (antiga)',
+              admin: { hidden: true },
             },
+            /*
+              **Outro campo antigo, escondido pelo mesmo motivo do `foto`.** Era
+              o avatar redondo ao lado do nome. No layout novo o cartao do nome
+              leva a logo da clinica, e a foto que estava aqui entrou no
+              carrossel, pelo campo `fotos`. O site nao le mais este campo.
+            */
             {
               name: 'retrato',
               type: 'upload',
               relationTo: 'media',
-              label: 'Retrato da assinatura',
-              admin: { description: 'Aparece pequeno e redondo, ao lado do nome. Rosto centralizado.' },
+              label: 'Retrato da assinatura (antigo)',
+              admin: { hidden: true },
             },
             {
               name: 'nomeProfissional',
               type: 'text',
-              label: 'Nome na assinatura',
+              label: 'Nome no cartão da foto',
               defaultValue: 'Leia',
             },
             {
               name: 'credencial',
               type: 'text',
               label: 'Credencial',
-              admin: { description: 'A linha sob o nome. Exemplo: Tricologista clínica.' },
+              admin: { description: 'A linha sob o nome, no cartão da foto. Exemplo: Tricologista clínica.' },
             },
             /*
               Formacao e especializacao, uma por linha. Existe porque a
@@ -138,7 +166,7 @@ export const Clinica: GlobalConfig = {
               fields: [{ name: 'texto', type: 'text', required: true }],
               admin: {
                 description:
-                  'Aparecem em lista na seção Sobre. Uma por linha, curtas. Sem itens, a lista não aparece.',
+                  'Aparecem em lista com selo, abaixo do texto de apresentação. Uma por linha, curtas. Sem itens, a lista não aparece.',
               },
             },
           ],
@@ -168,10 +196,13 @@ export const Clinica: GlobalConfig = {
               name: 'fotoAgendamento',
               type: 'upload',
               relationTo: 'media',
-              label: 'Foto do agendamento',
+              // O nome do campo ficou o de quando a foto era da secao de
+              // contato. Trocar o nome mudaria a coluna no banco, e so o lugar
+              // no site mudou.
+              label: 'Foto das dúvidas frequentes',
               admin: {
                 description:
-                  'Ocupa a metade direita da seção de contato, sangrando até a borda da tela. Fica em pé no celular e alta no desktop.',
+                  'Fica nas dúvidas frequentes, com um cartão de contato sobre a parte de baixo. Use foto deitada, com os rostos nos dois terços de cima, e marque o ponto de foco entre eles.',
               },
             },
             {

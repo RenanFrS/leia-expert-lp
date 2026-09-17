@@ -739,32 +739,30 @@ export interface Clinica {
    */
   videoDepoimentos?: (number | null) | Media;
   /**
-   * Texto miúdo que abre a grade, à esquerda do resumo.
+   * Pílula que abre a seção, acima do título.
    */
   sobreRotulo?: string | null;
   /**
-   * Parágrafo curto, em cinza. Duas ou três linhas.
+   * Parágrafo curto logo abaixo do título, em letra um pouco maior. Duas ou três linhas.
    */
   sobreResumo?: string | null;
   /**
-   * O bloco grande, em destaque. É o que sustenta a seção.
+   * Separe os parágrafos com uma linha em branco. Todos saem em texto corrido, abaixo do resumo.
    */
   sobre?: string | null;
   /**
-   * Foto larga, atravessa a página inteira. Ideal por volta de 2000 por 900.
+   * Viram um carrossel ao lado do texto, na ordem desta lista. Use fotos em pé, com o rosto no terço de cima, e marque o ponto de foco no alto da cabeça: assim o cabelo nunca é cortado. O cartão com o nome cobre a parte de baixo.
    */
+  fotos?: (number | Media)[] | null;
   foto?: (number | null) | Media;
-  /**
-   * Aparece pequeno e redondo, ao lado do nome. Rosto centralizado.
-   */
   retrato?: (number | null) | Media;
   nomeProfissional?: string | null;
   /**
-   * A linha sob o nome. Exemplo: Tricologista clínica.
+   * A linha sob o nome, no cartão da foto. Exemplo: Tricologista clínica.
    */
   credencial?: string | null;
   /**
-   * Aparecem em lista na seção Sobre. Uma por linha, curtas. Sem itens, a lista não aparece.
+   * Aparecem em lista com selo, abaixo do texto de apresentação. Uma por linha, curtas. Sem itens, a lista não aparece.
    */
   credenciais?:
     | {
@@ -787,7 +785,7 @@ export interface Clinica {
    */
   instagram?: string | null;
   /**
-   * Ocupa a metade direita da seção de contato, sangrando até a borda da tela. Fica em pé no celular e alta no desktop.
+   * Fica nas dúvidas frequentes, com um cartão de contato sobre a parte de baixo. Use foto deitada, com os rostos nos dois terços de cima, e marque o ponto de foco entre eles.
    */
   fotoAgendamento?: (number | null) | Media;
   unidades?:
@@ -897,6 +895,7 @@ export interface ClinicaSelect<T extends boolean = true> {
   sobreRotulo?: T;
   sobreResumo?: T;
   sobre?: T;
+  fotos?: T;
   foto?: T;
   retrato?: T;
   nomeProfissional?: T;

@@ -69,8 +69,8 @@ src/
     ui/                componentes shadcn mais os primitivos da landing:
                        eyebrow, titulo-secao, lista-verificada, cartao-vidro,
                        animated-content, camada-especular, camada-parallax,
-                       carrossel-tratamentos, galeria-parallax, grade-parallax,
-                       midia-rotativa, video-fundo
+                       carrossel-fotos, carrossel-tratamentos, galeria-parallax,
+                       grade-parallax, midia-rotativa, video-fundo
     BotaoWhatsapp.tsx  casca padrao do CTA de WhatsApp
     Logotipo.tsx       assinatura da marca, com reserva em texto
     Analytics.tsx      GTM, GA4, Pixel, Ads e banner de consentimento
@@ -165,6 +165,7 @@ abria conversa sem aparecer em relatorio nenhum. Hoje passa pelo componente, com
 | Contato, numero grande | `clique_whatsapp`, `contato-numero` |
 | Sobre | `clique_whatsapp`, `sobre` |
 | Fechamento, secao A clinica | `clique_whatsapp`, `fechamento` |
+| Duvidas frequentes, cartao da foto | `clique_whatsapp`, `duvidas` |
 | Rodape | `clique_whatsapp`, `footer` |
 | Botao flutuante | `clique_whatsapp`, `botao-flutuante` |
 
@@ -691,6 +692,20 @@ primitivos do projeto, nao codigo copiado.
 O Sobre fala em primeira pessoa e o conteudo inteiro vem da aba **Sobre** da global Clinica. O campo
 `sobre` e so dessa secao.
 
+**O `sobre` e dividido em paragrafos por linha em branco, e todos saem em corpo.** O texto de
+apresentacao que o cliente mandou tem quatro paragrafos e ~870 caracteres: num `<p>` so, a quebra de
+paragrafo sumia, porque o `textarea` guarda a quebra mas o `<p>` nao a respeita. Cada paragrafo vira um
+`<p>` com `whitespace-pre-line` para a quebra simples. **O primeiro ja saiu em serifa de destaque**, e
+saiu disso no layout da referencia: ao lado de um "Sobre mim" grande, dois blocos em serifa brigavam.
+
+**O texto novo so pode ir ao banco depois do deploy desse componente.** O banco e o de producao e a home
+revalida em 300s: gravado antes, o site no ar mostraria os ~870 caracteres num bloco so em serifa
+grande.
+
+**A credencial tem hifen no meio, e isso e pedido do cliente**: "Tricologista - Especialista em Saude
+Capilar", escrita exatamente como ele mandou. E excecao a regra de texto do projeto, restrita a esse
+valor. Nao corrija.
+
 **A descricao do `MedicalClinic` nos dados estruturados vem do campo `descricao` da global Seo**, com a
 `chamada` e o `sobre` so de reserva, nessa ordem. Ela ja foi a propria `chamada`, enquanto a chamada era
 institucional. Quando a chamada virou pergunta ao sintoma, que funciona no hero e le mal no resultado de
@@ -698,21 +713,94 @@ busca, as duas divergiram e a descricao passou para o campo que ja existia para 
 ultimo porque fala em primeira pessoa. **Se o `descricao` do Seo ficar vazio, a pergunta do hero volta a
 ir para o Google.**
 
-**O Sobre foi remontado a pedido do time**, que pediu para valorizar a apresentacao da profissional:
+**O Sobre segue uma referencia mandada pelo cliente, espelhada**: texto a esquerda, com pilula, titulo,
+paragrafos, lista com selo e botao, e a foto em cartao a direita, com um vidro no pe levando nome e
+credencial. Na referencia a foto ficava a esquerda, e o cliente pediu a inversao. Antes era uma
+faixa larga de foto entre o titulo e o texto, com um cartao de assinatura sobre areia; texto e
+carrossel continuaram, mudou a posicao das coisas. O fundo segue porcelana: a referencia e escura, mas
+o pedido foi de posicao, e a secao de cima ja quebra o ritmo com areia.
 
-- **O rotulo virou eyebrow acima do titulo.** Ele ficava enterrado na primeira coluna da grade, e era o
-  unico lugar do site onde o eyebrow nao abria a secao.
-- **O resumo virou paragrafo de abertura**, sob o titulo. Em cinza pequeno na coluna estreita ele lia
-  como nota de rodape, quando e a frase que apresenta a Leia.
-- **A assinatura virou cartao sobre areia**, com retrato de 64px, nome, credencial e a lista de
-  formacao. Antes eram um retrato de 44px e duas linhas soltas. Sobre areia o acento e o
-  `cacau-escuro` em texto pequeno, pela regra da paleta.
-- **Campo novo `credenciais`**, array de texto na aba Sobre. A `credencial` e uma linha so, e lista de
-  formacao e o que sustenta autoridade numa pagina de clinica. Sem itens a lista nao aparece, e o
-  cartao fica curto: com ele vazio sobra espaco embaixo, entao vale preencher.
-- **A foto larga ganhou `CamadaParallax preencher`**, o mesmo tratamento da foto do cartao de
-  tratamento. Sem dependencia nova.
-- **Entrou `BotaoWhatsapp` com `local="sobre"`.** A secao terminava sem saida nenhuma.
+- **O texto vem primeiro no DOM**, que e a ordem do desktop: o leitor de tela chega ao titulo antes das
+  fotos, e o Tab passa pelo botao antes dos pontinhos. **No celular a foto continua em cima do texto**,
+  pelo `max-lg:order-first` no bloco dela.
+- **A foto tem altura minima pela proporcao e estica ate a altura do texto**: 4:5 no celular, quadrada
+  no `lg` e 5:4 no `xl`. A figura leva `aspect-ratio` e `height: 100%` juntos. Na hora de medir a linha
+  da grade a porcentagem nao resolve e vale a proporcao; depois a altura acompanha a linha. Texto longo
+  nao deixa vazio ao lado da foto, e texto curto fica centralizado. Com o texto curto que esta no banco
+  hoje, em 1440 sao 525px de foto contra 381px de texto.
+- **O 5:4 so entra no `xl`.** No `lg` a coluna tem 460px, e numa caixa mais baixa que quadrada o queixo
+  da foto do blazer encostaria nos pontinhos.
+- **O vidro com o nome e o `rodape` do carrossel**, e a logo fica nele, a direita. **A logo e a mesma do
+  header**, pelo campo `logo`, num circulo branco: o arquivo e um PNG transparente de desenho escuro,
+  e direto sobre o vidro ele sumiria. Ela leva `alt` vazio, porque ali so assina o cartao.
+- **O vidro e `cacau-escuro/85` nas duas pontas**, a mesma correcao do cartao das duvidas. Medido contra
+  o pixel mais claro atras do texto, nas duas fotos, de 390 a 1920: nome entre **6.19 e 6.38**,
+  credencial entre **5.03 e 5.15**.
+- **As `credenciais` viram a lista com selo**, pelo `ListaVerificada`, na coluna do texto. O campo esta
+  vazio hoje, entao a lista nao aparece; preenchido, e o que a referencia mostra ali.
+- **A pilula do rotulo e o `Eyebrow`**, que existia e nao era usado em secao nenhuma.
+- **O `retrato` esta escondido no painel**, pelo mesmo motivo do `foto`, logo abaixo. A foto dele entrou
+  no carrossel, e o cartao passou a levar a logo.
+- **Entrou `BotaoWhatsapp` com `local="sobre"`** na remontagem anterior, e ele segue no pe do texto.
+
+**O `cn` precisou aprender os tamanhos de fonte do projeto, e foi aqui que isso apareceu.** O
+`tailwind-merge` aceita qualquer valor depois de `text-` como cor, entao lia `text-display-lg` e
+`text-eyebrow` como cor. Na mesma chamada com `text-tinta` ele apagava o tamanho: o "Sobre mim" saiu em
+corpo de texto e o rotulo do `Eyebrow` saiu grande. O `cn` de `src/lib/utils.ts` agora usa
+`extendTailwindMerge` com os quatro tamanhos do `tailwind.config.ts`. **Criou tamanho novo? Acrescente
+la.** Nada mais no site passava essas classes pelo `cn`, entao nenhuma outra secao mudou.
+
+#### O carrossel de fotos do Sobre
+
+As fotos saem do campo **`fotos`**, um `upload` com `hasMany`, na ordem da lista. Hoje sao a midia 6,
+`img-9943 (1).png`, e a 5, `img_9895.jpg`, a que era o retrato. Troca sozinha a cada 6 segundos em
+esmaecimento, pausa com o ponteiro em cima ou foco dentro, e tem pontinhos clicaveis e arraste. Com uma
+foto so, nao ha pontinho, giro nem arraste.
+
+**A midia 6 entrou no lugar do recorte 73**, que era a mesma foto aparada em 819x460 para a faixa larga.
+No cartao vertical o recorte sairia ampliado e borrado; a original tem 1024x1536.
+
+**Os campos `foto` e `retrato` estao escondidos, e nao apagados, de proposito.** Apagar o campo faria o
+push do modo dev derrubar uma coluna com dado no banco de producao, e esse push pede confirmacao
+interativa quando ha perda de dado, o que num dev em segundo plano trava. O `foto` segue como
+**reserva**: o site so le ele quando `fotos` esta vazio. O `retrato` o site nao le mais.
+
+**Nao ha parallax nas fotos, e isso e decisao.** Enquanto a secao era faixa larga, a foto vivia num
+`CamadaParallax preencher`, uma camada 30% mais alta que a figura, com 15% escondidos em cima mais o
+curso da rolagem. No cartao vertical o rosto fica no alto da foto, e essa faixa escondida cortava o
+cabelo com qualquer ponto de foco: medido em 1440, o topo da cabeca saia da figura. Sem a camada, o
+`object-position` do foco e exato.
+
+**O ponto de foco dessas fotos fica no alto da cabeca, e nao no centro do rosto.** O `enquadramento`
+usa o foco como `object-position`, e com o foco na altura do topo do cabelo esse topo nunca sai da
+caixa, com folga de 10% da altura dela. No centro do rosto, a foto do blazer perdia o alto do cabelo na
+caixa 5:4. As duas estao em `50/10`, e a descricao do campo no painel ensina essa regra a clinica.
+
+Medido nas duas fotos, de 390 a 1920: rosto inteiro, com **38 a 91px** acima do cabelo, e o pior caso
+entre queixo e pontinhos e a foto do blazer em 1280, com **35px**. Trocou foto ou proporcao? Refaca essa
+medida.
+
+**Pontinhos e vidro dividem um bloco so, preso ao pe da figura**: os pontinhos em cima, centralizados, e
+o `rodape` embaixo. Assim eles ficam logo acima do vidro qualquer que seja a altura dele, que muda com o
+nome e com a tela. O vidro nao se mexe quando a foto troca, medido por clique e por arraste.
+
+**Os pontinhos vao numa pilula `tinta/60`, e os inativos sao `porcelana/80`, e nao os 40% do hero.**
+As fotos da Leia tem fundo branco. Com 60% o inativo dava **2.75**, abaixo do 3:1 de controle de
+interface. Em 80%, medido nas duas fotos de 390 a 1920, fica entre **3.58 e 3.91**. Pela conta, sobre
+branco puro a pilula compoe `rgb(130,122,118)` e o inativo da 3.36, entao nenhuma foto derruba o piso.
+Quem distingue o atual e o formato alongado, nao a cor.
+
+**Cuidado ao medir a pilula: amostre longe das pontas.** Ela e `rounded-full`, e o pixel da borda
+arredondada mistura com o branco da foto: amostrando a 6px da ponta a leitura caiu para 2.68 em 390,
+sem defeito nenhum. A 14px ela bate com a conta.
+
+**O alvo de cada pontinho e 24x24**, maior que o desenho. So a altura nao bastava: medido, o botao do
+pontinho redondo saia com 14px de largura, e quem resolve e o `min-w-6`.
+
+**O arraste e por ponteiro, com `touch-action: pan-y`.** O navegador segue cuidando da rolagem vertical
+por cima da foto e entrega so o gesto horizontal. Testado com toque de verdade: deslizar para a esquerda
+avanca, para a direita volta, deslizar na vertical rola a pagina e nao troca a foto, e arraste abaixo de
+40px e ignorado. `prefers-reduced-motion` para o giro, mas pontinho e arraste continuam.
 
 #### A secao de contato
 
@@ -720,20 +808,21 @@ ir para o Google.**
 O que saiu junto esta na secao Contatos e leads e no Rastreamento; o resumo e que a conversao do Ads e a
 gravacao de UTM mudaram de lugar, nao sumiram.
 
-A forma segue o bloco escolhido pelo cliente: coluna de texto a esquerda e a foto sangrando ate a borda
-da janela a direita, empilhando com a foto por ultimo no celular. O conteudo e eyebrow, titulo, um
-paragrafo curto, o CTA com a seta e, mais abaixo, telefone e e mail grandes.
+**Hoje ela e so texto, centralizado**, dentro do `container` como as outras: eyebrow, titulo, um
+paragrafo curto, o CTA com a seta e, mais abaixo, telefone e e mail grandes. O titulo leva
+`text-balance`, senao em 1440 "cabelo." ficava sozinho na terceira linha.
 
-**Esta e a segunda secao sem `container`, junto com o hero**, e o motivo e a foto encostar na borda.
-Nenhum truque de margem negativa resolve isso de dentro de uma coluna de grade, porque porcentagem em
-margem resolve contra a celula e nao contra o container.
+**A foto que ficava aqui foi para o cartao das duvidas frequentes**, a pedido do cliente. Ela sangrava
+ate a borda da janela a direita, e por isso esta secao ja foi a segunda fora do `container`, com o
+recuo da coluna de texto calculado a mao, `lg:pl-[max(1.25rem,calc((100vw-1376px)/2))]`. Com a foto
+fora, o recuo e o `overflow-x-clip` sairam junto. Se a foto voltar a sangrar, aquela conta e a que
+alinhava o texto com o resto da pagina: medida em 32px em 1440, 272px em 1920 e 20px em 1280.
 
-**O recuo da coluna de texto e calculado a mao e reproduz a calha do `container`:**
-`lg:pl-[max(1.25rem,calc((100vw-1376px)/2))]`. O container e 1440px com 2rem de respiro a partir do
-`2xl`, o que da 1376px uteis, entao a calha e `(100vw - 1376px) / 2` com piso de 1.25rem. Medido contra
-o titulo do Sobre: **32px em 1440, 272px em 1920 e 20px em 1280, alinhado nos tres**. Mexeu no
-`container.padding` ou no `screens` do tailwind.config? Refaca aqui, senao esta secao sai desalinhada do
-resto da pagina.
+**A copy dessa secao fala de atendimento, e nao de conversa.** O titulo era "Vamos conversar sobre o
+seu cabelo" e o CTA era "Falar no WhatsApp"; o cliente trocou os dois porque soavam como bate papo.
+Hoje sao "Vamos entender o que esta acontecendo com o seu cabelo." e "Agendar minha consulta". O CTA
+diz a acao e nao o canal, mas continua abrindo o WhatsApp com `local="card-agendamento"`. O titulo nao
+tem mais quebra fixa: ele e longo e quebra sozinho, em tres linhas tanto em 1440 quanto em 390.
 
 **O numero grande e link de WhatsApp, e isso mudou de regra.** Antes o numero era texto puro de
 proposito, para nao existir um segundo caminho de conversa fora do componente que grava o evento.
@@ -741,14 +830,14 @@ Passando por dentro do `BotaoWhatsapp`, com `local="contato-numero"`, o motivo d
 aplica: o clique entra no relatorio como qualquer outro.
 
 **O tamanho do numero vai num `span` interno, e nao na `className` do botao.** O `Button` nasce com
-`text-sm` na base, e o `tailwind-merge` nao reconhece `text-display-md` como do mesmo grupo de
-`font-size`, porque e chave custom do `tailwind.config.ts`: as duas classes sobrevivem e o `text-sm`
-vence pela ordem da folha. Medido, o numero saia miudo ao lado do e mail. Num descendente nao ha empate.
-**Vale para qualquer classe de fonte custom aplicada sobre o `Button`.**
+`text-sm` na base, e quando o numero entrou o `cn` ainda nao conhecia os tamanhos proprios do
+`tailwind.config.ts`: as duas classes sobreviviam e o `text-sm` vencia pela ordem da folha, com o numero
+miudo ao lado do e mail. Hoje o `cn` conhece, como esta na secao Sobre, e a classe no botao tambem
+funcionaria. O `span` ficou porque ja estava medido.
 
 **O video de fundo saiu junto com o formulario.** A secao era `bg-cacau` com o
 `public/backgrounds/background-agendamento.mp4` sob veu de `cacau/85`, calculado contra o pixel mais
-claro do arquivo, `rgb(178,159,146)`. Hoje ela e porcelana lisa e quem traz cor e a foto. O arquivo
+claro do arquivo, `rgb(178,159,146)`. Hoje ela e porcelana lisa, sem foto nenhuma. O arquivo
 continua em `public/`, so nao e usado em lugar nenhum: se voltar a ser, a conta do veu precisa ser
 refeita, porque o texto agora e escuro sobre claro e o risco inverte de lado.
 
@@ -798,6 +887,13 @@ encolhem, para 361px e 305px. **O cartao central nao aumenta, o resto e que dimi
 Duas coisas mudaram em relacao ao skiper47, e as duas por pedido: `slidesPerView` bem acima do 2.43 do
 original, que era exatamente o numero que fazia aparecerem so dois e meio, e o par das pontas cortado
 pela borda do container, com veu esmaecendo.
+
+**O carrossel abre no terceiro caso, e nao no primeiro**, tambem por pedido. Com `centeredSlides`,
+abrir no primeiro deixa o lado esquerdo inteiro vazio, porque nao ha slide antes dele. Pelo
+`initialSlide`, com trava para listas de menos de tres casos. **O estado `ativo` nasce com o mesmo
+valor**, porque o `onSlideChange` nao dispara na montagem: sem isso o cartao interativo seria o
+primeiro enquanto o do centro e o terceiro, e a divisa do centro nao responderia. Medido em 1440 e
+390: o terceiro abre centrado, e o unico interativo, e o terceiro pontinho fica ativo.
 
 **A armadilha grande e o arraste.** A divisa e um `input[type=range]` esticado sobre o cartao inteiro, e
 arrastar nela e o mesmo gesto que troca de slide. Sao tres travas, e nenhuma delas e opcional:
@@ -1055,9 +1151,9 @@ Paleta de quatro cores fechada com o cliente, em marrom e bege. Use sempre os to
 O container trava em **1440px**, com 2rem de respiro lateral a partir dessa largura, o que da 1376px de
 conteudo util.
 
-**Duas secoes ficam fora do `container`: o hero e a de contato.** As duas por precisarem que a midia
-encoste na borda da janela. A de contato resolve o alinhamento do texto por um recuo calculado, descrito
-na secao Sobre e contato; o hero resolve por `container` interno, como segue.
+**So o hero fica fora do `container`**, porque o painel dele encosta na borda da janela, e o que
+fica sobre a foto se realinha por um `container` interno, como segue. A secao de contato ja foi a
+segunda, enquanto tinha foto sangrando; o historico esta na secao Sobre e contato.
 
 O painel do hero vai de borda a borda da janela, a pedido do cliente. O que fica **sobre** a foto, a chamada e o carrossel, tem um `container` proprio por dentro,
 entao continua alinhado com a coluna do resto da pagina em vez de encostar na borda: conferido em 1920,
@@ -1207,6 +1303,70 @@ Duas notas:
 - **A traducao e a do Payload, e nao cobre tudo.** Na tela de login, por exemplo, "Senha" e "Esqueceu a
   senha?" saem traduzidos e "Email" e "Login" continuam em ingles. Nao ha o que fazer do nosso lado sem
   manter traducao propria.
+
+### Duvidas frequentes
+
+A coluna do titulo tem um **cartao com a foto do campo `fotoAgendamento`** e um vidro por cima, com
+"Ficou alguma duvida?", o paragrafo da secao de contato e o botao "Agendar minha consulta", com
+`local="duvidas"`. Entrou a pedido do cliente, para ocupar o vazio embaixo do titulo e somar um ponto
+de conversao depois das respostas. O titulo do cartao e nosso: a referencia dizia "Ainda esta em
+duvida?", e copy de outra clinica nao entra aqui. **O nome do campo ficou o antigo**, da epoca em que a
+foto era da secao de contato: trocar o nome mudaria a coluna no banco.
+
+**As duas colunas so abrem no `xl`.** Abaixo disso a secao e uma pilha: titulo, perguntas, cartao. Do
+`md` ao `lg` ela ja teve duas colunas, e a do titulo saia com 272px em 768: foto miuda e **380px vazios**
+embaixo do titulo, justamente o defeito que o cartao veio resolver.
+
+**A ordem do DOM e a da pilha.** No `xl` a grade tem duas linhas: o titulo na primeira, o cartao na
+segunda, e as perguntas ocupando as duas na coluna ao lado. Assim a pilha sai sem `order` e o leitor
+de tela ouve a pergunta do cartao depois das respostas.
+
+**No `xl` o cartao fica parado quando uma pergunta abre.** Ele ja foi `self-end` na linha 2, e como a
+linha cresce com a resposta aberta, a foto descia junto; o cliente achou isso estranho. Hoje ele e
+`self-start`, com `margin-top` vindo da variavel `--recuo-cartao`, que poe o pe dele no fim da lista
+**fechada**. Quem grava a variavel e um efeito do `Duvidas.tsx`, porque a altura da lista depende de
+quantas perguntas o painel tem e o CSS nao sabe disso. Duas coisas nesse calculo nao sao opcionais:
+
+- **a altura de referencia e a soma de cada item menos a resposta dele**, e nao a altura da lista. Essa
+  subtracao vale ate no meio da animacao de abrir e fechar, entao o recuo so muda com largura, fonte ou
+  conteudo. Gravar a altura da lista "quando nada esta aberto" falha no fechamento: o estado ja diz
+  fechado enquanto a resposta ainda encolhe, e o cartao pularia
+- **as medidas sao por `offsetTop` e `offsetHeight`**, que ignoram `transform`. Os tres blocos entram
+  pelo `Revelar`, que desloca cada um enquanto aparece
+
+Medido em 1280, 1440 e 1920, abrindo a primeira, a quinta, a ultima e a segunda pergunta e fechando de
+novo, com amostra a cada quadro: **desvio zero** no topo do cartao, e o pe dele no mesmo pixel do fim da
+lista fechada. O recuo sai 29px em 1440 e 88px em 1280. Na pilha, abaixo do `xl`, o cartao vem depois
+das perguntas e desce quando uma abre, o que e o esperado.
+
+**Os rostos mandam no cartao, e o cliente reprovou a primeira versao por isso.** O vidro era alto e
+cobria o paciente e a Leia. Na foto atual as duas cabecas vao de 33% a 84% da largura e de 31% a 64% da
+altura, e tres coisas saem dessa medida:
+
+- **a caixa tem proporcao fixa, nunca a altura da coluna.** Esticada ate o pe das perguntas ela ficaria
+  quase quadrada, cortaria um dos dois e cresceria mais a cada pergunta aberta. No `xl` e **5:4**, a
+  mais alta em que os dois cabem, e mostra 70% da largura; do `md` ao `xl` e **16:9**, a da propria foto,
+  sem recorte; no celular e **4:3**
+- **o ponto de foco esta em 60% por 48%**, gravado no painel. Em 5:4 isso mostra de 18% a 88% da
+  largura. Em 55% o cabelo da Leia ficava a 26px da borda
+- **o vidro fica abaixo dos rostos.** Do `md` para cima ele e uma faixa de **103px**, com texto e botao
+  lado a lado; a folga ate o queixo e de 72px em 1440, 53px em 1280 e 29px em 768, que e o pior caso. No
+  celular nao cabe lado a lado, o vidro subiria nos rostos, entao ali ele sai de cima e vira o pe do
+  cartao, embaixo da foto
+
+**O vazio embaixo do titulo no `xl` e 77px em 1440 e 136px em 1280**, contando os 48px do `gap` da
+grade e o recuo. Em 4:3 eram 110px e 166px. A folga que sobra e o preco de nao cortar ninguem.
+
+**Trocou a foto? Refaca a medida dos rostos** antes de mexer na proporcao, no foco ou no vidro.
+
+**O vidro desse cartao e mais escuro que o padrao do `CartaoVidro`**, com `cacau-escuro/85` nas duas
+pontas. O tom escuro padrao clareia ate `cacau/75`, e sobre a foto o paragrafo em `porcelana/85` dava
+**3.93**. Com o ajuste, medido contra o pixel mais claro atras do texto, de 390 a 1440: titulo entre
+**6.67 e 7.26** e paragrafo entre **5.38 e 5.72**. Pela conta, contra uma foto branca pura, o pior caso
+de qualquer foto que a clinica suba, ficam 6.07 e 4.86. O ajuste e so ali, pela `className`: o
+`tailwind-merge` troca as pontas do gradiente, e o cartao do hero segue com o tom padrao.
+
+O botao do cartao e `destaque` e nao leva `especular`, pelo teto de contextos WebGL.
 
 ### Rodape
 

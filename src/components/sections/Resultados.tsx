@@ -223,7 +223,19 @@ function Comparador({ resultado, ativo }: { resultado: Resultado; ativo: boolean
  * meio do arrasto da divisa e hostil.
  */
 export function Resultados({ resultados }: { resultados: Resultado[] }) {
-  const [ativo, setAtivo] = useState(0)
+  /*
+    **O carrossel abre no terceiro caso, e nao no primeiro, a pedido do
+    cliente.** Com `centeredSlides`, abrir no primeiro deixa todo o lado
+    esquerdo vazio, porque nao ha slide antes dele para ocupar a fila. No
+    terceiro ha dois de cada lado, e a fila fica cheia da borda a borda no
+    desktop. Com menos de tres casos ele abre no ultimo que existir.
+
+    O `ativo` nasce com o mesmo valor do `initialSlide`, e isso nao e
+    redundancia: o `onSlideChange` nao dispara na montagem, entao sem isso o
+    cartao interativo seria o primeiro enquanto o do centro e o terceiro.
+  */
+  const inicial = Math.min(2, Math.max(resultados.length - 1, 0))
+  const [ativo, setAtivo] = useState(inicial)
   const [reduzido, setReduzido] = useState(false)
 
   /*
@@ -309,6 +321,7 @@ export function Resultados({ resultados }: { resultados: Resultado[] }) {
                 // Clique num cartao lateral traz ele para o meio. So funciona
                 // porque a `figure` fora do centro e `pointer-events-none`.
                 slideToClickedSlide
+                initialSlide={inicial}
                 // A trava do arrasto, descrita no bloco acima.
                 noSwipingSelector=".comparador-divisa"
                 keyboard={{ enabled: true }}

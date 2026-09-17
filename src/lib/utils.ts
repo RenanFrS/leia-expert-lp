@@ -1,7 +1,23 @@
 import { clsx, type ClassValue } from 'clsx'
 import type { CSSProperties } from 'react'
 import type { Media } from '@/payload-types'
-import { twMerge } from 'tailwind-merge'
+import { extendTailwindMerge } from 'tailwind-merge'
+
+/*
+  **Os tamanhos de fonte proprios do `tailwind.config.ts` precisam estar aqui.**
+  Sem isso o `tailwind-merge` le `text-display-lg` e `text-eyebrow` como cor,
+  porque aceita qualquer valor depois de `text-` como cor. Ai, na mesma chamada
+  com `text-tinta`, ele apagava o tamanho e o titulo saia em corpo de texto; e ao
+  lado de `text-sm` ele mantinha os dois, e quem vencia era a ordem da folha.
+  Criou tamanho novo no config? Acrescente na lista.
+*/
+const twMerge = extendTailwindMerge({
+  extend: {
+    classGroups: {
+      'font-size': [{ text: ['display-xl', 'display-lg', 'display-md', 'eyebrow'] }],
+    },
+  },
+})
 
 export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs))
 

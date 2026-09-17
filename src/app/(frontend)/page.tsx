@@ -152,14 +152,22 @@ export default async function Home() {
           resumo={clinica?.sobreResumo}
           texto={clinica?.sobre}
           foto={clinica?.foto}
-          retrato={clinica?.retrato}
+          fotos={clinica?.fotos}
+          logo={clinica?.logo}
           nomeProfissional={clinica?.nomeProfissional}
           credencial={clinica?.credencial}
           credenciais={clinica?.credenciais}
           whatsapp={whatsapp}
           mensagemWhatsapp={clinica?.mensagemWhatsapp}
         />
-        <Duvidas perguntas={perguntas.docs} />
+        {/* A foto que era da secao de contato mora aqui agora, no cartao da
+            coluna do titulo. O campo continua sendo o `fotoAgendamento`. */}
+        <Duvidas
+          perguntas={perguntas.docs}
+          foto={clinica?.fotoAgendamento}
+          whatsapp={whatsapp}
+          mensagemWhatsapp={clinica?.mensagemWhatsapp}
+        />
         {/* Os IDs de rastreamento sairam daqui: a conversao passou do envio do
             formulario para o clique de WhatsApp, e quem publica o rotulo do Ads
             agora e o `Analytics.tsx`, pelo window. */}
@@ -167,7 +175,6 @@ export default async function Home() {
           whatsapp={whatsapp}
           mensagemWhatsapp={clinica?.mensagemWhatsapp}
           email={clinica?.email}
-          foto={clinica?.fotoAgendamento}
         />
         <AClinica
           fotos={galeriaClinica}

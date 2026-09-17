@@ -49,6 +49,9 @@ export function WhatsappFlutuante({ numero, mensagem }: { numero: string; mensag
     }
   }, [])
 
+  // 84px, e nao os 64px de antes: o cliente achou o botao pequeno e pediu uns
+  // 30% a mais. A animacao tem respiro proprio dentro do quadro, entao o icone
+  // desenhado e bem menor que a caixa.
   return (
     <a
       href={whatsappLink(numero, mensagem || undefined)}
@@ -56,7 +59,7 @@ export function WhatsappFlutuante({ numero, mensagem }: { numero: string; mensag
       rel="noopener noreferrer"
       onClick={() => registrarContatoWhatsapp('botao-flutuante')}
       aria-label="Falar no WhatsApp"
-      className="fixed bottom-5 right-5 z-40 h-16 w-16 drop-shadow-lg transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-caramelo focus-visible:ring-offset-2 focus-visible:rounded-2xl"
+      className="fixed bottom-5 right-5 z-40 h-[84px] w-[84px] drop-shadow-lg transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-caramelo focus-visible:ring-offset-2 focus-visible:rounded-2xl"
     >
       <div ref={containerRef} className="h-full w-full" />
     </a>

@@ -268,7 +268,7 @@ const perguntas = [
     ordem: 6,
   },
   {
-    pergunta: 'Com que frequência preciso ir à clínica?',
+    pergunta: 'Com que frequência preciso realizar as sessões?',
     resposta:
       'Depende do protocolo indicado. A frequência é definida na consulta, junto com a intensidade das sessões, e é combinada com a sua rotina. Nada é fechado antes de você saber quantas sessões são e em que intervalo.',
     ordem: 7,
@@ -466,15 +466,22 @@ export const popularConteudo = async (payload: Payload) => {
         // palavra aqui, nem promessa de gratuidade, porque a consulta e cobrada.
         'Seu cabelo está caindo, afinando ou abrindo falhas? Descobrimos por que isso acontece e tratamos a causa, não só o sintoma.',
       sobreRotulo: 'Minha história',
-      // Texto da propria Leia, transcrito do site dela. A abertura fica no
-      // resumo e o corpo no `sobre`, que e curto de proposito: ele ocupa metade
-      // da grade em corpo grande, e texto longo ali desequilibra a secao.
+      // Textos da propria Leia. A abertura fica no resumo e a apresentacao no
+      // `sobre`, que ja foi curto e hoje tem quatro paragrafos, enviados pelo
+      // cliente. Os paragrafos sao separados por linha em branco: o primeiro sai
+      // em destaque e os demais em texto corrido, pela regra do `Sobre.tsx`.
       sobreResumo:
         'Prazer, me chamo Léia! Sou especialista em Saúde Capilar, formada em estética e cosmética, pós-graduada em tricologia funcional.',
-      sobre:
-        'Ofereço consultas especializadas, com avaliação detalhada do couro cabeludo e dos fios, além de exames biofísicos e programas personalizados de cuidados capilares. Cada tratamento é planejado de forma exclusiva, unindo ciência, tecnologia e acolhimento, para que você tenha resultados reais e duradouros.',
-      nomeProfissional: 'Léia Varjão de Jesus',
-      credencial: 'Especialista em Saúde Capilar, pós-graduada em Tricologia Funcional',
+      sobre: [
+        'Minha atuação é dedicada à investigação e ao cuidado do couro cabeludo e dos fios, especialmente em casos de queda capilar, afinamento, perda de volume, alterações no crescimento e outras queixas relacionadas à saúde capilar.',
+        'Acredito que cada pessoa tem uma história e que, antes de pensar em qualquer conduta, é importante compreender o que está acontecendo.',
+        'Por isso, meu trabalho começa com uma investigação cuidadosa, considerando o histórico de cada paciente e as condições do couro cabeludo e dos fios. A partir dessa análise, é possível orientar uma conduta individualizada, de acordo com as necessidades de cada caso.',
+        'Meu propósito é oferecer um atendimento próximo, cuidadoso e responsável, ajudando cada pessoa a compreender melhor sua saúde capilar e os caminhos possíveis para cuidar dela.',
+      ].join('\n\n'),
+      nomeProfissional: 'Léia Varjão',
+      // O hifen no meio vai de proposito, exatamente como o cliente escreveu. E
+      // excecao a regra de texto do projeto, restrita a este valor.
+      credencial: 'Tricologista - Especialista em Saúde Capilar',
       whatsapp: '5511991834175',
       mensagemWhatsapp: MENSAGEM_WHATSAPP_PADRAO,
       email: 'leia.expert@gmail.com',
