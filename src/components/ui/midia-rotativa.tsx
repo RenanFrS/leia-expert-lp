@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { cn, enquadramento, midia } from '@/lib/utils'
+import { tocarComReserva } from '@/lib/autoplay'
 import { posterDeVideo } from '@/lib/poster-video'
 import type { Media } from '@/payload-types'
 
@@ -81,11 +82,16 @@ function Video({
     if (visivel) setCarregado(true)
   }, [visivel])
 
+  // O `tocarComReserva` cobre o iPhone em Modo de Pouca Energia, que recusa o
+  // `play()` sem gesto: o video comeca no primeiro toque da pessoa na pagina.
   useEffect(() => {
     const video = ref.current
     if (!video || !carregado) return
-    if (reduzido || !visivel) video.pause()
-    else void video.play().catch(() => {})
+    if (reduzido || !visivel) {
+      video.pause()
+      return
+    }
+    return tocarComReserva(video)
   }, [visivel, carregado, reduzido])
 
   return (

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { tocarComReserva } from '@/lib/autoplay'
 import { cn } from '@/lib/utils'
 
 /**
@@ -45,11 +46,16 @@ export function VideoFundo({ src, veu = 'bg-cacau/85', className }: Props) {
     return () => consulta.removeEventListener('change', aoMudar)
   }, [])
 
+  // O `tocarComReserva` cobre o iPhone em Modo de Pouca Energia, que recusa o
+  // `play()` sem gesto: o video comeca no primeiro toque da pessoa na pagina.
   useEffect(() => {
     const video = ref.current
     if (!video) return
-    if (reduzido) video.pause()
-    else void video.play().catch(() => {})
+    if (reduzido) {
+      video.pause()
+      return
+    }
+    return tocarComReserva(video)
   }, [reduzido])
 
   return (

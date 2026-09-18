@@ -46,10 +46,14 @@ type Props = {
  * - **A foto tem altura minima pela proporcao e estica ate a altura do texto.**
  *   E 4:5 no celular, quadrada no `lg` e 5:4 no `xl`, onde a coluna e larga o
  *   bastante para uma caixa mais baixa sem espremer o rosto contra os pontinhos.
- *   A figura tem `aspect-ratio` e `height: 100%` ao mesmo tempo: na hora de medir
- *   a linha da grade a porcentagem nao resolve e vale a proporcao, e depois a
- *   altura acompanha a linha. Texto longo nao deixa vazio ao lado da foto, e
- *   texto curto fica centralizado.
+ *   A figura tem `aspect-ratio`, `height: 100%` e `width: 100%` ao mesmo tempo:
+ *   na hora de medir a linha da grade a porcentagem da altura nao resolve e
+ *   vale a proporcao, e depois a altura acompanha a linha. Texto longo nao deixa
+ *   vazio ao lado da foto, e texto curto fica centralizado.
+ * - **O `w-full` nao e redundante.** Com altura definida e largura automatica, o
+ *   `aspect-ratio` calcula a largura pela altura. Com o texto longo a foto saia
+ *   com 796px numa coluna de 656 em 1440, e a pagina ganhava rolagem lateral.
+ *   Com as duas medidas definidas, a proporcao so vale como altura minima.
  * - **O ponto de foco das fotos fica no alto da cabeca, e nao no centro do
  *   rosto.** O `enquadramento` usa o foco como `object-position`, e com o foco
  *   na altura do topo do cabelo esse topo nunca sai da caixa, com folga de 10% da
@@ -183,7 +187,7 @@ export function Sobre({
         <AnimatedContent distance={40} scale={0.98} className="max-lg:order-first lg:h-full">
           {/* O `relative` e do carrossel, que e absoluto aqui dentro, e o
               `overflow-hidden` recorta as fotos no canto arredondado. */}
-          <figure className="relative aspect-[4/5] overflow-hidden rounded-lg bg-areia lg:aspect-square lg:h-full xl:aspect-[5/4]">
+          <figure className="relative aspect-[4/5] w-full overflow-hidden rounded-lg bg-areia lg:aspect-square lg:h-full xl:aspect-[5/4]">
             <CarrosselFotos
               fotos={fotosDoCarrossel}
               sizes="(max-width: 1024px) 100vw, 50vw"

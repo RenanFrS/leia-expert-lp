@@ -79,6 +79,7 @@ src/
     painel/            componentes do admin do Payload, nao do site
   lib/
     analytics.ts       camada unica de eventos, conversao e leitura de UTM
+    autoplay.ts        play de video com reserva para o iPhone em Modo de Pouca Energia
     acesso.ts          regra de papel usada no access control
     aviso-lead.ts      email de lead novo, da epoca do formulario
     motivos.ts         lista canonica dos motivos, usada so pela colecao Leads
@@ -681,6 +682,34 @@ valeria, porque la ele e o assunto.
 
 Cada secao com video precisa de `relative isolate`, senao a camada em `-z-10` cai atras do fundo de um
 ancestral e some. A cor de fundo original continua como reserva.
+
+### Reproducao automatica no iPhone
+
+Houve relato de video parado num iPhone de Safari antigo. **A entrega foi descartada, e vale saber o
+que foi medido**, para ninguem refazer a investigacao:
+
+- o HTML do servidor sai com `muted`, `playsinline` e, nos que tocam sozinhos, `autoplay`, que e
+  exatamente o que o iOS exige para video sem gesto
+- pedindo cada video a CDN como Safari do iOS 12, 14 e 17, todos voltam em **H.264** (`avc1`), nunca em
+  HEVC, com **206** para `Range` e o `moov` antes do `mdat`. O Safari do iPhone recusa video de servidor
+  sem `Range`, e e por isso que nenhum video pode sair pela rota do Payload
+
+**O que sobra e do aparelho, e sao duas causas:**
+
+- **Modo de Pouca Energia.** O iOS bloqueia toda reproducao automatica, mesmo muda: ignora o `autoplay`
+  e recusa o `play()` em silencio. Nao ha como furar, mas o bloqueio cai no primeiro gesto. O
+  `src/lib/autoplay.ts`, pela `tocarComReserva`, tenta tocar e, se for recusado, escuta `touchend`,
+  `click`, `pointerup` e `keydown` no documento e chama o `play()` de dentro do proprio ouvinte. Tambem
+  tenta de novo ao voltar para a aba e no `pageshow`. **Os dois componentes de video usam ele**, o
+  `MidiaRotativa` e o `VideoFundo`; video novo deve passar pelo mesmo caminho.
+
+  Testado simulando o bloqueio no Chrome, com o `play()` recusado sem ativacao do usuario e o `autoplay`
+  arrancado: os tres videos da pagina nascem parados, tres recusas, e comecam juntos depois de um
+  clique. Sem simulacao, tocam ao carregar como antes. **Rolar a pagina nao destrava**, porque rolagem
+  nao conta como gesto para o navegador.
+- **"Reduzir movimento" ligado no iPhone.** Ai o video fica parado de proposito: o site respeita o
+  `prefers-reduced-motion` e pausa os dois componentes. Quem investigar o proximo relato deve perguntar
+  por esse ajuste antes de mexer em codigo.
 
 ### Tricoscopia
 
