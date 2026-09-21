@@ -399,7 +399,10 @@ const nomesPlaceholderAntigos = [
  * A primeira daqui dizia que a avaliacao era gratuita, e a clinica passou a
  * cobrar pela consulta.
  */
-const perguntasAntigas = ['A avaliação capilar é gratuita mesmo?']
+const perguntasAntigas = [
+  'A avaliação capilar é gratuita mesmo?',
+  'Com que frequência preciso ir à clínica?',
+]
 
 export const popularConteudo = async (payload: Payload) => {
   const registro: string[] = []
