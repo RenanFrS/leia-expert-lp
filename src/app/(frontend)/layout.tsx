@@ -41,7 +41,7 @@ export async function generateMetadata(): Promise<Metadata> {
     payload.findGlobal({ slug: 'clinica', depth: 0 }).catch(() => null),
   ])
 
-  const titulo = seo?.titulo || 'Tricologia clinica e tratamento capilar | Léia Expert'
+  const titulo = seo?.titulo || 'Tricologista em São Paulo | Léia Expert'
   const descricao =
     seo?.descricao ||
     // Reserva, usada so quando a descricao do painel esta vazia. Sem a palavra

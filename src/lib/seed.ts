@@ -531,7 +531,7 @@ export const popularConteudo = async (payload: Payload) => {
   await payload.updateGlobal({
     slug: 'seo',
     data: {
-      titulo: 'Tratamento capilar em São Paulo | Léia Expert',
+      titulo: 'Tricologista em São Paulo | Léia Expert',
       descricao:
         'Tricologia clínica na Zona Leste de São Paulo. Tricoscopia, exame biofísico e protocolo individual para queda capilar, alopecias e saúde do couro cabeludo.',
       palavrasChave: [
