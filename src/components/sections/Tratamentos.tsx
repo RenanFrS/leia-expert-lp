@@ -1,6 +1,7 @@
 import { Revelar } from '@/components/Revelar'
 import { AnimatedContent } from '@/components/ui/animated-content'
 import { CamadaParallax } from '@/components/ui/camada-parallax'
+import { FaixaInfinita } from '@/components/ui/faixa-infinita'
 import { MidiaRotativa } from '@/components/ui/midia-rotativa'
 import { urlDeEntrega } from '@/lib/cloudinary-url'
 import { cn, midia } from '@/lib/utils'
@@ -30,21 +31,50 @@ import type { Tratamento } from '@/payload-types'
  *    largura cheia e so a espinha continua, reta.
  */
 
-export function Tratamentos({ tratamentos }: { tratamentos: Tratamento[] }) {
+type Props = {
+  tratamentos: Tratamento[]
+  /** Termos da faixa em movimento, do campo `faixaProblemas` da global Clinica. */
+  problemas?: string[]
+}
+
+export function Tratamentos({ tratamentos, problemas = [] }: Props) {
   if (!tratamentos.length) return null
 
+  const termos = problemas.map((termo) => termo.trim()).filter(Boolean)
+
   return (
-    <section id="tratamentos" className="overflow-x-clip py-24 md:py-32">
-      <div className="container">
-        {/* O cabecalho e centralizado so nesta secao, porque e dele que a espinha
-            nasce. Alinhado a esquerda, o fio central comecaria do nada. */}
-        <Revelar className="text-center">
-          <p className="text-eyebrow font-mono uppercase text-caramelo">O que tratamos</p>
-          <h2 className="mx-auto mt-4 max-w-2xl font-display text-display-lg text-tinta">
+    <section id="tratamentos" className="overflow-x-clip py-10 md:py-14">
+      {/*
+        O cabecalho e centralizado so nesta secao, porque e dele que a espinha
+        nasce. Alinhado a esquerda, o fio central comecaria do nada.
+
+        **A faixa de problemas fica entre o rotulo e o titulo, a pedido do
+        cliente.** Ela ja foi uma secao propria, numa faixa areia logo abaixo do
+        hero. Aqui ela nao tem fundo: uma faixa areia no meio do cabecalho
+        separaria o rotulo do titulo dele. Por isso o cabecalho fica fora do
+        `container`, e so o rotulo e o titulo voltam para dentro: a faixa corre de
+        borda a borda da janela, como antes, com as pontas esmaecendo.
+      */}
+      <Revelar className="text-center">
+        <p className="container text-eyebrow font-mono uppercase text-caramelo">O que tratamos</p>
+        {termos.length > 0 && (
+          <div className="mt-6 md:mt-8">
+            <FaixaInfinita termos={termos} rotulo="Problemas capilares que tratamos" />
+          </div>
+        )}
+        <div className="container">
+          <h2
+            className={cn(
+              'mx-auto max-w-2xl font-display text-display-lg text-tinta',
+              termos.length ? 'mt-6 md:mt-8' : 'mt-4',
+            )}
+          >
             Cada queixa pede um protocolo diferente.
           </h2>
-        </Revelar>
+        </div>
+      </Revelar>
 
+      <div className="container">
         {tratamentos.map((tratamento, indice) => {
           const arquivo = midia(tratamento.imagem)
 

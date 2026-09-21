@@ -265,7 +265,7 @@ export function Resultados({ resultados }: { resultados: Resultado[] }) {
   if (!resultados.length) return null
 
   return (
-    <section id="resultados" className="py-24 md:py-32">
+    <section id="resultados" className="py-10 md:py-14">
       <div className="container">
         <Revelar>
           <p className="text-eyebrow font-mono uppercase text-caramelo">Resultados</p>

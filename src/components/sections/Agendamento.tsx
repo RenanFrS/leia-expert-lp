@@ -38,7 +38,7 @@ type Props = {
  */
 export function Agendamento({ whatsapp, mensagemWhatsapp, email }: Props) {
   return (
-    <section id="agendar" className="py-24 md:py-32">
+    <section id="agendar" className="py-10 md:py-14">
       <div className="container text-center">
         <Revelar className="mx-auto max-w-2xl">
           {/* Nao esta no bloco de referencia, mas abre todas as outras secoes

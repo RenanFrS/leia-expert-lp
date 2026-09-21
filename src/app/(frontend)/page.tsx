@@ -3,7 +3,6 @@ import config from '@payload-config'
 
 import { Header } from '@/components/sections/Header'
 import { Hero } from '@/components/sections/Hero'
-import { FaixaProblemas } from '@/components/sections/FaixaProblemas'
 import { Sobre } from '@/components/sections/Sobre'
 import { Tratamentos } from '@/components/sections/Tratamentos'
 import { Tricoscopia } from '@/components/sections/Tricoscopia'
@@ -135,8 +134,10 @@ export default async function Home() {
           painel={clinica?.heroPainel}
           intervalo={clinica?.heroIntervalo}
         />
-        <FaixaProblemas termos={(clinica?.faixaProblemas || []).map((item) => item.termo)} />
-        <Tratamentos tratamentos={tratamentos.docs} />
+        <Tratamentos
+          tratamentos={tratamentos.docs}
+          problemas={(clinica?.faixaProblemas || []).map((item) => item.termo)}
+        />
         <Tricoscopia
           video={clinica?.videoTricoscopia}
           whatsapp={whatsapp}

@@ -71,7 +71,7 @@ export function Depoimentos({
 
   return (
     // `relative isolate` sustenta o video, e o `bg-areia` continua como reserva.
-    <section id="depoimentos" className="relative isolate border-y border-tinta/10 bg-areia py-24">
+    <section id="depoimentos" className="relative isolate border-y border-tinta/10 bg-areia py-10 md:py-14">
       {/*
         O veu vai em `areia/90`, e aqui a conta e o inverso das outras duas
         secoes com video: esta e clara com texto escuro, entao o risco vem do

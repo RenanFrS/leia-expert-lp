@@ -62,7 +62,7 @@ src/
                        Media, Users
   globals/             Clinica, Seo, Rastreamento, todos no grupo Configuracoes do painel
   components/
-    sections/          Header, Hero, FaixaProblemas, Tratamentos, Tricoscopia,
+    sections/          Header, Hero, Tratamentos, Tricoscopia,
                        Resultados, GaleriaResultados, Depoimentos, Sobre,
                        Duvidas, Agendamento, AClinica, Footer,
                        WhatsappFlutuante
@@ -570,16 +570,27 @@ nao `hidden` de proposito, para nao criar container de rolagem novo.
 
 ### Faixa de problemas
 
-Logo abaixo do hero, uma fileira de pilulas com os problemas que a clinica trata corre sem parar **da
-esquerda para a direita**. Ela entrou **no lugar da faixa de numeros** (nota e avaliacoes no Google,
-seguidores e visualizacoes), a pedido do cliente, para somar a pagina texto com as palavras que as
-pessoas procuram. A prova social continua no hero e nos depoimentos.
+Uma fileira de pilulas com os problemas que a clinica trata corre sem parar **da esquerda para a
+direita**. Ela entrou **no lugar da faixa de numeros** (nota e avaliacoes no Google, seguidores e
+visualizacoes), a pedido do cliente, para somar a pagina texto com as palavras que as pessoas procuram. A
+prova social continua no hero e nos depoimentos.
 
-Sao dois arquivos: `sections/FaixaProblemas.tsx`, server component com a secao e um `h2` so para leitor
-de tela, e `ui/faixa-infinita.tsx`, o movimento. A forma vem do **Logo Loop do React Bits**, escolhido
-pelo cliente, reconstruido sem dependencia nova. As pilulas seguem um print que ele mandou: porcelana
-sobre areia, fio `cacau/15`, `CircleCheck` em `caramelo`, texto `tinta-suave` em 16px no celular e 18px
-do `md` para cima.
+**Ela fica no cabecalho dos tratamentos, entre o rotulo "O que tratamos" e o titulo**, tambem a pedido
+do cliente. Antes era uma secao propria logo abaixo do hero, numa faixa `areia` de borda a borda, com um
+`h2` so para leitor de tela. Tres coisas mudaram com a troca:
+
+- **Ela perdeu o fundo `areia`.** Uma faixa colorida no meio do cabecalho separaria o rotulo do titulo
+  dele. As pilulas continuam as mesmas, porcelana com fio `cacau/15`, agora sobre porcelana.
+- **Ela continua de borda a borda da janela.** O `Revelar` do cabecalho fica fora do `container`, e so o
+  rotulo e o titulo voltam para dentro dele. O respiro e simetrico, **32px** acima e abaixo da faixa do
+  `md` para cima e **24px** no celular.
+- **O `h2` proprio saiu**, porque ele viria antes do titulo da secao. A lista segue com `aria-label`, e o
+  rotulo visivel ja a apresenta. O `sections/FaixaProblemas.tsx` foi apagado; o `Tratamentos` recebe os
+  termos pela prop `problemas`. **Sem tratamento cadastrado a secao some, e a faixa vai junto.**
+
+O movimento e o `ui/faixa-infinita.tsx`. A forma vem do **Logo Loop do React Bits**, escolhido pelo
+cliente, reconstruido sem dependencia nova. As pilulas seguem um print que ele mandou: fio `cacau/15`,
+`CircleCheck` em `caramelo`, texto `tinta-suave` em 16px no celular e 18px do `md` para cima.
 
 **Os termos saem do painel**, no campo `faixaProblemas` da global Clinica, aba "Faixa de problemas".
 A aba ja se chamou "Numeros"; aba sem `name` nao muda onde o dado mora. A lista inicial so usa o que os
@@ -610,8 +621,9 @@ Seis decisoes, todas medidas:
 - **Fora da tela o laco para**, pelo `IntersectionObserver`. Medido: rolado ate o rodape, o trilho nao
   andou nada.
 
-**`prefers-reduced-motion` troca a fileira por pilulas quebrando linha**, todas visiveis e sem copia. No celular elas encolhem: no tamanho normal, os 13 termos davam 11 linhas e **648px** de faixa;
-compactas, 7 linhas e 352px. Em 1440 sao 3 linhas.
+**`prefers-reduced-motion` troca a fileira por pilulas quebrando linha**, todas visiveis e sem copia, no
+`container`. No celular elas encolhem: no tamanho normal, os 13 termos davam 11 linhas; compactas, sao 7
+linhas e 286px de lista em 390. Em 1440 sao 3 linhas.
 
 Contraste nas pilulas: texto **11.33**, icone **4.64**, os dois sobre porcelana.
 
@@ -1213,7 +1225,7 @@ Paleta de quatro cores fechada com o cliente, em marrom e bege. Use sempre os to
 | Token | Hex | Papel |
 | --- | --- | --- |
 | `porcelana` | `#FFFFFF` | fundo da pagina e dos cartoes |
-| `areia` | `#DDCCC2` | blocos que quebram o ritmo, como a faixa de problemas e os depoimentos |
+| `areia` | `#DDCCC2` | blocos que quebram o ritmo, como os depoimentos |
 | `cacau` | `#775642` | cor principal, botao padrao e secao de agendamento |
 | `caramelo` | `#966B54` | detalhe, eyebrow e estrela, sobre fundo claro |
 | `cacau-escuro` | `#5C4133` | derivada, estado pressionado do botao e acento sobre areia |

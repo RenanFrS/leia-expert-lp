@@ -50,7 +50,7 @@ const config: Config = {
         'display-xl': ['clamp(2.75rem, 6vw, 5.25rem)', { lineHeight: '0.98', letterSpacing: '-0.03em' }],
         'display-lg': ['clamp(2rem, 4vw, 3.5rem)', { lineHeight: '1.04', letterSpacing: '-0.02em' }],
         'display-md': ['clamp(1.5rem, 2.5vw, 2.25rem)', { lineHeight: '1.12', letterSpacing: '-0.01em' }],
-        eyebrow: ['0.6875rem', { lineHeight: '1', letterSpacing: '0.18em' }],
+        eyebrow: ['1rem', { lineHeight: '1', letterSpacing: '0.18em' }],
       },
       borderRadius: { lg: '0.75rem', md: '0.5rem', sm: '0.375rem' },
       // Mesma curva do fade-up. Sai rapido e desacelera longo, que e o que da a

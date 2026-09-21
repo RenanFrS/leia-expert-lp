@@ -105,7 +105,7 @@ export function Duvidas({ perguntas, foto, whatsapp, mensagemWhatsapp }: Props) 
   const imagem = midia(foto)
 
   return (
-    <section id="duvidas" className="py-24 md:py-32">
+    <section id="duvidas" className="py-10 md:py-14">
       <div ref={grade} className="container grid gap-12 xl:grid-cols-2 xl:grid-rows-[auto_1fr]">
         <Revelar className="xl:col-start-1 xl:row-start-1">
           <p className="text-eyebrow font-mono uppercase text-caramelo">Dúvidas frequentes</p>

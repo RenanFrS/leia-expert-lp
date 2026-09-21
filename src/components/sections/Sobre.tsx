@@ -145,7 +145,7 @@ export function Sobre({
   ) : undefined
 
   return (
-    <section id="sobre" className="py-24 md:py-32">
+    <section id="sobre" className="py-10 md:py-14">
       <div className="container grid gap-12 lg:grid-cols-2 lg:gap-16">
         <Revelar className="lg:self-center">
           {rotulo && <Eyebrow>{rotulo}</Eyebrow>}

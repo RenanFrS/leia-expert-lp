@@ -54,7 +54,7 @@ export function Tricoscopia({
     // `relative isolate` sustenta o video: sem contexto de empilhamento proprio a
     // camada em `-z-10` cai atras do fundo de um ancestral e some. O `bg-tinta`
     // continua como reserva enquanto o arquivo carrega, e se nao houver arquivo.
-    <section id="tricoscopia" className="relative isolate bg-tinta py-24 text-porcelana md:py-32">
+    <section id="tricoscopia" className="relative isolate bg-tinta py-10 text-porcelana md:py-14">
       {/*
         **O veu subiu de `tinta/80` para `tinta/85` porque o arquivo mudou.** O
         video antigo era escuro, com pixel mais claro em `rgb(197,194,202)`. O

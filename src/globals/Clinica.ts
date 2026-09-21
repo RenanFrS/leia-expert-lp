@@ -237,7 +237,7 @@ export const Clinica: GlobalConfig = {
           // Aba sem `name`: trocar o rotulo nao muda onde o dado mora.
           label: 'Faixa de problemas',
           description:
-            'A faixa em movimento logo abaixo do topo da página, com os problemas que a clínica trata.',
+            'A faixa em movimento na seção de tratamentos, entre o rótulo "O que tratamos" e o título, com os problemas que a clínica trata.',
           fields: [
             {
               name: 'faixaProblemas',

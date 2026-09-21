@@ -71,7 +71,7 @@ export function AClinica({
   if (!cartoes.length) return null
 
   return (
-    <section id="a-clinica" className="py-24 md:py-32">
+    <section id="a-clinica" className="py-10 md:py-14">
       <div className="container">
         <Revelar>
           {/* Sobre porcelana o acento e o caramelo. O cacau ficaria pesado ao
