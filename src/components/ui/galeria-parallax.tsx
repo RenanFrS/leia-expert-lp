@@ -61,7 +61,7 @@ export type CartaoDaGrade = {
 /**
  * Em quantas colunas a distribuicao divide os cartoes.
  *
- * **Precisa casar com o `CURSOS` do `grade-parallax.tsx`**, que e quem move cada
+ * **Precisa casar com o `COLUNAS` do `grade-parallax.tsx`**, que e quem move cada
  * coluna. A constante e declarada duas vezes de proposito: aquele arquivo e
  * `'use client'`, e importar um valor dele para ca faria ele atravessar a
  * fronteira RSC como referencia de cliente em vez de numero, o que ja quebrou a

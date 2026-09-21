@@ -1,19 +1,22 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion'
+import {
+  motion,
+  useMotionValue,
+  useReducedMotion,
+  useScroll,
+  useTransform,
+} from 'framer-motion'
 
 import { cn } from '@/lib/utils'
-
-/** Curso de cada coluna, em porcentagem da altura da grade. Indice = coluna. */
-const CURSOS = [0.06, -0.1]
 
 /** Degrau de partida de cada coluna, que e o desencontro vertical da referencia. */
 const DEGRAUS = ['lg:mt-0', 'lg:mt-14']
 
 /**
- * Quantas colunas este arquivo sabe mover. Sai do proprio `CURSOS`, que e a
- * lista que precisa casar com a quantidade de `useTransform` daqui.
+ * Quantas colunas este arquivo sabe mover. Precisa casar com a quantidade de
+ * `useTransform` daqui e com o `COLUNAS` da galeria.
  *
  * **Nao exporte isso para a galeria.** Ela e server component, e valor importado
  * de um modulo `'use client'` atravessa a fronteira RSC como referencia de
@@ -22,13 +25,26 @@ const DEGRAUS = ['lg:mt-0', 'lg:mt-14']
  * (reading 'push')". A galeria declara a propria constante, e o comentario de la
  * aponta para ca.
  */
-const COLUNAS = CURSOS.length
+const COLUNAS = DEGRAUS.length
 
 /** Acima daqui o parallax liga. Abaixo, a grade fica parada. */
 const CONSULTA_DESKTOP = '(min-width: 1024px)'
 
 /**
- * Move as tres colunas a partir de **uma unica medicao de rolagem**.
+ * Move as colunas a partir de **uma unica medicao de rolagem**.
+ *
+ * **Cada coluna anda so a folga que ela tem dentro da grade, e nunca sai dela.**
+ * A grade tem a altura da coluna mais alta; a outra e mais curta pelo degrau e
+ * pela conta de cartoes, que com numero impar de casos da um cartao inteiro. Essa
+ * diferenca, medida em pixel, e o curso: com o topo da grade na tela a coluna
+ * curta fica rente ao topo, com o pe na tela ela fica rente ao pe, e no meio
+ * desliza. A mais alta nao se mexe, porque nao tem folga.
+ *
+ * **Antes o curso era porcentagem fixa da altura, e quebrava dos dois lados.**
+ * Com 10% a coluna da direita saia ~214px da caixa: no topo o `overflow-clip`
+ * cortava a primeira foto dela, e no meio da rolagem sobrava um buraco embaixo,
+ * porque a porcentagem nao sabia que a coluna tinha um cartao a menos. E cada
+ * pixel que a coluna passava do pe virava vazio antes da secao seguinte.
  *
  * **Antes cada coluna chamava o proprio `useScroll`, e era dai que vinha o
  * engasgo.** Medido: o transform acompanhava a rolagem sem atraso nenhum, com o
@@ -63,13 +79,18 @@ const CONSULTA_DESKTOP = '(min-width: 1024px)'
  * sequencia do painel. No `lg` a coluna volta a ser caixa e o `order` la dentro
  * ja e crescente, entao nada muda ali.
  */
+/*
+  **O `items-start` nao e enfeite.** Sem ele a grade estica cada coluna ate a
+  altura da mais alta, a folga medida da zero e a coluna curta nao desliza: as
+  fotos ficam no topo da caixa esticada e o buraco fica dentro dela, embaixo.
+*/
 const LAYOUT = {
   1: {
-    grade: 'flex flex-col gap-3 md:gap-4 lg:grid lg:grid-cols-2 lg:gap-5',
+    grade: 'flex flex-col gap-3 md:gap-4 lg:grid lg:grid-cols-2 lg:items-start lg:gap-5',
     coluna: 'contents lg:flex lg:flex-col lg:gap-5',
   },
   2: {
-    grade: 'grid grid-cols-2 gap-3 md:gap-4 lg:gap-5',
+    grade: 'grid grid-cols-2 items-start gap-3 md:gap-4 lg:gap-5',
     coluna: 'flex flex-col gap-3 md:gap-4 lg:gap-5',
   },
 } as const
@@ -94,9 +115,16 @@ export function GradeParallax({
     return () => consulta.removeEventListener('change', aoMudar)
   }, [])
 
-  // Do momento em que o topo da grade entra por baixo da tela ate a base sair
-  // por cima, que e a janela inteira de rolagem util.
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] })
+  /*
+    **Do topo da grade no topo da tela ate o pe da grade no pe da tela.** Antes
+    disso o progresso fica em 0, e a coluna curta rente ao topo, que e o que esta
+    a vista. Depois fica em 1, rente ao pe. O `useTransform` trava nas pontas,
+    entao o alinhamento vale em toda a entrada e em toda a saida.
+
+    Grade mais baixa que a tela inverteria as duas marcas, e por isso a medicao
+    abaixo zera o curso nesse caso.
+  */
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end end'] })
 
   /*
     **Nao ha mola aqui, e isso foi medido, nao suposto.**
@@ -115,11 +143,49 @@ export function GradeParallax({
 
   const ativo = desktop && !menosMovimento
 
+  // A folga de cada coluna, em pixel. Vive em motion value, e nao em estado,
+  // para a medida nova chegar ao transform sem renderizar a grade de novo.
+  const folga0 = useMotionValue(0)
+  const folga1 = useMotionValue(0)
+
+  useEffect(() => {
+    const grade = ref.current
+    if (!ativo || !grade) {
+      folga0.set(0)
+      folga1.set(0)
+      return
+    }
+    const colunas = [...grade.children] as HTMLElement[]
+    const medir = () => {
+      // Grade mais baixa que a tela: sem rolagem util, sem movimento.
+      const cabe = grade.offsetHeight <= window.innerHeight
+      const folgas = colunas.map((coluna) =>
+        cabe
+          ? 0
+          : // `offsetTop` e `offsetHeight` ignoram o `transform`, entao a medida
+            // nao muda com a propria coluna em movimento. O `relative` da grade
+            // faz dela o `offsetParent`, e o degrau entra no `offsetTop`.
+            Math.max(0, grade.offsetHeight - coluna.offsetTop - coluna.offsetHeight),
+      )
+      folga0.set(folgas[0] ?? 0)
+      folga1.set(folgas[1] ?? 0)
+    }
+    medir()
+    const observador = new ResizeObserver(medir)
+    observador.observe(grade)
+    colunas.forEach((coluna) => observador.observe(coluna))
+    window.addEventListener('resize', medir)
+    return () => {
+      observador.disconnect()
+      window.removeEventListener('resize', medir)
+    }
+  }, [ativo, folga0, folga1])
+
   // Os dois `useTransform` sao criados sempre, e nao dentro de um map sobre os
   // filhos: `COLUNAS` e constante do modulo, entao a contagem de hooks nunca
   // muda, mas deixar isso implicito num map convidaria a quebrar a regra depois.
-  const y0 = useTransform(progresso, [0, 1], [`${CURSOS[0] * 100}%`, `${-CURSOS[0] * 100}%`])
-  const y1 = useTransform(progresso, [0, 1], [`${CURSOS[1] * 100}%`, `${-CURSOS[1] * 100}%`])
+  const y0 = useTransform([progresso, folga0], ([p, f]: number[]) => p * f)
+  const y1 = useTransform([progresso, folga1], ([p, f]: number[]) => p * f)
   const deslocamentos = [y0, y1]
 
   return (
@@ -133,7 +199,9 @@ export function GradeParallax({
         `display: contents` nunca recebe transform: elemento sem caixa nao teria
         onde aplica-lo.
       */
-      className={LAYOUT[colunasNoCelular].grade}
+      // O `relative` faz da grade o `offsetParent` das colunas, que e de onde a
+      // medida da folga le o `offsetTop`.
+      className={cn('relative', LAYOUT[colunasNoCelular].grade)}
     >
       {colunas.map((coluna, indice) => (
         <motion.div

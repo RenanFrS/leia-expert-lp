@@ -1202,9 +1202,27 @@ Sete coisas que sustentam a grade:
   defeito.
 - **`will-change: transform` nas colunas**, e nenhum transform abaixo do `lg`. O corte do celular e por
   `matchMedia` em JS, e nao so por classe, para a conta nem rodar la.
-- **O curso vai de 4% a 10% da altura da coluna, e e curto de proposito.** Como a secao tem respiro
-  vertical proprio, o deslocamento acontece dentro dele e nao abre fresta no topo nem no pe. Aumentar
-  o curso pede aumentar o respiro junto.
+- **Cada coluna anda so a folga que tem dentro da grade, em pixel, e nunca sai dela.** A grade tem a
+  altura da coluna mais alta; a outra e mais curta pelo degrau `lg:mt-14` e, com numero impar de casos,
+  por um cartao inteiro. Essa diferenca e o curso. O `useScroll` vai de `start start` a `end end`: com o
+  topo da grade na tela a coluna curta fica rente ao topo, com o pe na tela fica rente ao pe, e no meio
+  desliza. A mais alta fica parada. Grade mais baixa que a tela nao anda, porque as duas marcas se
+  inverteriam.
+
+  **Ja foi porcentagem fixa da altura, e quebrou dos dois lados**, reprovado pelo cliente em print. Com
+  a coluna da direita andando 10%, uns 214px em 1440, ela saia da caixa: no topo o `overflow-clip`
+  cortava a primeira foto dela, sem as pilulas, e no meio sobrava um buraco embaixo, porque a
+  porcentagem nao sabia que a coluna tinha um cartao a menos. Cada pixel alem do pe ainda virava vazio
+  antes dos depoimentos: eram 260px em 1440.
+
+  **O `items-start` da grade e obrigatorio.** Sem ele a grade estica a coluna curta ate a altura da
+  alta, a folga medida da zero e nada anda: as fotos ficam no topo da caixa esticada e o buraco dentro
+  dela. Foi exatamente o que aconteceu na primeira tentativa.
+
+  Medido varrendo a rolagem inteira, de 40 em 40px, em 1024, 1050, 1440 e 1920: **nenhuma foto passa da
+  borda da grade**, no topo as colunas partem juntas com o degrau de 56px, no pe terminam no mesmo pixel,
+  e o vazio ate os depoimentos e o proprio respiro, **56px**. Abaixo do `lg`, sem movimento, 56px no
+  tablet e 40px no celular.
 - **Video e descartado na entrada.** A colecao aponta para a Media, que aceita os dois, e o otimizador
   do Next responde 400, "The requested resource isn't a valid image", para um `.mp4`. Sem o filtro uma
   foto trocada por video deixaria um buraco na grade sem erro nenhum na tela.
@@ -1235,6 +1253,23 @@ Paleta de quatro cores fechada com o cliente, em marrom e bege. Use sempre os to
 
 O container trava em **1440px**, com 2rem de respiro lateral a partir dessa largura, o que da 1376px de
 conteudo util.
+
+**O respiro vertical das secoes e `py-10 md:py-14`, 40px no celular e 56px do `md` para cima**, igual em
+todas: Tratamentos, Tricoscopia, Resultados, Depoimentos, Sobre, Duvidas, Agendamento e A clinica. Entre
+duas secoes de mesmo fundo o vazio e a soma das duas, 112px no desktop. Ja foi `py-24 md:py-32`, e o
+cliente reprovou por vazio demais. Tres lugares nao seguem a regra por escrever so um lado:
+
+- **a `GaleriaResultados`** tem so `pb-10 md:pb-14`, porque o topo dela e o fim da secao Resultados. Ficou
+  de fora do primeiro ajuste porque a busca por `py-` nao acha `pb-`, e o cliente apontou o vazio que
+  sobrou. **Ao mexer no respiro, procure tambem `pt-` e `pb-`.**
+- **o hero** tem `pb-16 md:pb-20` e nao foi mexido. O vazio entre o painel e o "O que tratamos" e esse
+  `pb` mais os 56px de cima dos tratamentos, 136px no desktop.
+- **o rodape** tem o proprio `pt-16 pb-28`, pelo motivo da secao Rodape.
+
+**O rotulo de secao, o `text-eyebrow`, tem 16px**, e nao os 11px do comeco. O cliente achou pequeno demais
+duas vezes, com 13px e depois com 16px. E um token so, no `tailwind.config.ts`, entao mexer nele muda
+todos os rotulos de uma vez: os das secoes, a pilula do Sobre e o "Contato". Medido em 1440 e 390, nenhum
+quebra linha, nem "Duvidas frequentes".
 
 **So o hero fica fora do `container`**, porque o painel dele encosta na borda da janela, e o que
 fica sobre a foto se realinha por um `container` interno, como segue. A secao de contato ja foi a

@@ -170,7 +170,7 @@ export function GaleriaResultados({ resultados }: { resultados: Resultado[] }) {
   if (!cartoes.length) return null
 
   return (
-    <section aria-labelledby="galeria-resultados" className="pb-24 md:pb-32">
+    <section aria-labelledby="galeria-resultados" className="pb-10 md:pb-14">
       <div className="container">
         <h2 id="galeria-resultados" className="sr-only">
           Antes e depois de cada caso
