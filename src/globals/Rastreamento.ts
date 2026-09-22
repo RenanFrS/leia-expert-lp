@@ -1,9 +1,15 @@
 import type { GlobalConfig } from 'payload'
 
+import { ehAds } from '@/lib/acesso'
+
 /**
  * Os IDs vivem aqui para que a agencia de marketing consiga trocar container,
  * pixel ou medicao sem depender de deploy. As variaveis de ambiente continuam
  * valendo como valor padrao quando o campo estiver vazio.
+ *
+ * E o unico lugar do painel que o papel `ads` abre. Por isso a escrita continua
+ * liberada para qualquer usuario logado: quem nao pode entrar aqui ja nao tem
+ * login. A excecao e o campo `consentimento`, logo abaixo.
  */
 export const Rastreamento: GlobalConfig = {
   slug: 'rastreamento',
@@ -52,6 +58,13 @@ export const Rastreamento: GlobalConfig = {
       admin: {
         description:
           'Com a opcao ligada o site inicia em modo negado e so libera medicao e anuncios apos o aceite, seguindo a LGPD e o Consent Mode v2.',
+      },
+      access: {
+        // O banner e obrigacao de LGPD da clinica, e nao ajuste de campanha.
+        // O papel ads mexe nas tags, mas recebe este campo somente leitura:
+        // desligar o consentimento melhora a medicao e o risco juridico fica
+        // com a clinica, entao a decisao nao pode sair da agencia.
+        update: ({ req }) => !ehAds(req.user),
       },
     },
   ],

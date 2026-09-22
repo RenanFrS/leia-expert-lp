@@ -1,10 +1,20 @@
 import type { GlobalConfig } from 'payload'
 
+import { ehAds, ehEquipe } from '@/lib/acesso'
+
 export const Seo: GlobalConfig = {
   slug: 'seo',
   label: 'SEO da home',
-  admin: { group: 'Configuracoes' },
-  access: { read: () => true },
+  admin: {
+    group: 'Configuracoes',
+    // Fora do alcance do papel ads, que so cuida de rastreamento.
+    hidden: ({ user }) => ehAds(user),
+  },
+  access: {
+    read: () => true,
+    // Conteudo do site: escrita so de administrador e editor.
+    update: ({ req }) => ehEquipe(req.user),
+  },
   fields: [
     {
       name: 'titulo',

@@ -4,6 +4,8 @@ import { MetaDescriptionComponent as MetaDescriptionComponent_a8a977ebc872c5d5ea
 import { MetaImageComponent as MetaImageComponent_a8a977ebc872c5d5ea7ee689724c0860 } from '@payloadcms/plugin-seo/client'
 import { PreviewComponent as PreviewComponent_a8a977ebc872c5d5ea7ee689724c0860 } from '@payloadcms/plugin-seo/client'
 import { RecorteImagem as RecorteImagem_6b1e66911d41d2dbcdcbe4ce72d7be56 } from '@/components/painel/RecorteImagem'
+import { IconePainel as IconePainel_2933642fafa0f6c17a8a626679413461 } from '@/components/painel/IconePainel'
+import { LogotipoPainel as LogotipoPainel_c0eeb0e85ec90ade716cb76ccde6bcd3 } from '@/components/painel/LogotipoPainel'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
 /** @type import('payload').ImportMap */
@@ -14,5 +16,7 @@ export const importMap = {
   "@payloadcms/plugin-seo/client#MetaImageComponent": MetaImageComponent_a8a977ebc872c5d5ea7ee689724c0860,
   "@payloadcms/plugin-seo/client#PreviewComponent": PreviewComponent_a8a977ebc872c5d5ea7ee689724c0860,
   "@/components/painel/RecorteImagem#RecorteImagem": RecorteImagem_6b1e66911d41d2dbcdcbe4ce72d7be56,
+  "@/components/painel/IconePainel#IconePainel": IconePainel_2933642fafa0f6c17a8a626679413461,
+  "@/components/painel/LogotipoPainel#LogotipoPainel": LogotipoPainel_c0eeb0e85ec90ade716cb76ccde6bcd3,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

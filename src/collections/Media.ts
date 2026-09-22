@@ -1,6 +1,6 @@
 import type { CollectionConfig, PayloadRequest } from 'payload'
 
-import { ehAdmin } from '@/lib/acesso'
+import { ehAdmin, ehAds, ehEquipe } from '@/lib/acesso'
 import { urlDeEntrega } from '@/lib/cloudinary-url'
 
 /**
@@ -124,9 +124,21 @@ const recortar = async (req: PayloadRequest) => {
 export const Media: CollectionConfig = {
   slug: 'media',
   endpoints: [{ path: '/:id/recortar', method: 'post', handler: recortar }],
-  admin: { group: 'Conteudo' },
+  admin: {
+    group: 'Conteudo',
+    // Fora do alcance do papel ads, que so cuida de rastreamento.
+    hidden: ({ user }) => ehAds(user),
+  },
   labels: { singular: 'Midia', plural: 'Midias' },
-  access: { read: () => true },
+  access: {
+    read: () => true,
+    // Conteudo do site: escrita so de administrador e editor. O papel ads entra
+    // no painel apenas para as tags, entao nao cria, nao edita e nao apaga nada
+    // daqui. A leitura segue aberta porque quem le e o site.
+    create: ({ req }) => ehEquipe(req.user),
+    update: ({ req }) => ehEquipe(req.user),
+    delete: ({ req }) => ehEquipe(req.user),
+  },
   upload: {
     mimeTypes: ['image/*', 'video/*'],
     // O Cloudinary entrega os tamanhos sob demanda pela propria URL.

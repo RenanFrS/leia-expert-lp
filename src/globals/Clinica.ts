@@ -1,10 +1,20 @@
 import type { GlobalConfig } from 'payload'
 
+import { ehAds, ehEquipe } from '@/lib/acesso'
+
 export const Clinica: GlobalConfig = {
   slug: 'clinica',
   label: 'Dados da clínica',
-  admin: { group: 'Configuracoes' },
-  access: { read: () => true },
+  admin: {
+    group: 'Configuracoes',
+    // Fora do alcance do papel ads, que so cuida de rastreamento.
+    hidden: ({ user }) => ehAds(user),
+  },
+  access: {
+    read: () => true,
+    // Conteudo do site: escrita so de administrador e editor.
+    update: ({ req }) => ehEquipe(req.user),
+  },
   fields: [
     {
       type: 'tabs',

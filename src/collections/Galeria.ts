@@ -1,5 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
+import { ehAds, ehEquipe } from '@/lib/acesso'
+
 /**
  * Fotos da clinica, do ambiente e da profissional, que alimentam a grade
  * parallax da secao de fechamento.
@@ -25,9 +27,19 @@ export const Galeria: CollectionConfig = {
     useAsTitle: 'titulo',
     defaultColumns: ['titulo', 'ordem', 'publicado'],
     group: 'Conteudo',
+    // Fora do alcance do papel ads, que so cuida de rastreamento.
+    hidden: ({ user }) => ehAds(user),
   },
   labels: { singular: 'Foto da clínica', plural: 'Fotos da clínica' },
-  access: { read: () => true },
+  access: {
+    read: () => true,
+    // Conteudo do site: escrita so de administrador e editor. O papel ads entra
+    // no painel apenas para as tags, entao nao cria, nao edita e nao apaga nada
+    // daqui. A leitura segue aberta porque quem le e o site.
+    create: ({ req }) => ehEquipe(req.user),
+    update: ({ req }) => ehEquipe(req.user),
+    delete: ({ req }) => ehEquipe(req.user),
+  },
   defaultSort: 'ordem',
   fields: [
     {

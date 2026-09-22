@@ -244,6 +244,43 @@ administrador de proposito, porque e criado sem ninguem logado.
 O aviso por email do `afterChange` continua ligado na colecao Leads. Como nada cria lead novo, ele nao
 dispara mais na pratica, mas segue valendo se alguem cadastrar um pela mao no painel.
 
+### Papeis e acesso ao painel
+
+Sao tres valores no campo `papel` da colecao Users, e os tres helpers que decidem tudo vivem em
+`src/lib/acesso.ts`:
+
+| Papel | O que abre |
+| --- | --- |
+| `admin` | tudo, inclusive Leads, Contatos e Usuarios |
+| `editor` | o conteudo do site e os tres globals, sem Leads nem Contatos |
+| `ads` | so `Configuracoes > Rastreamento e ads`, mais a propria conta |
+
+O `ads` e o acesso da agencia de anuncios, que precisa trocar container, pixel e rotulo de conversao sem
+depender de deploy e sem encostar no conteudo. Medido pelo HTML que o painel serve para ele: o menu traz
+`/admin/globals/rastreamento`, `/admin/account` e `/admin/logout`, e nada mais. Pelo REST, escrita em
+tratamentos, FAQ, midia, Clinica e Seo responde 403, e a listagem de usuarios devolve so o proprio.
+
+Tres coisas nao sao opcionais:
+
+- **Colecao nova nasce aberta para o ads.** O padrao do Payload e liberar escrita para qualquer usuario
+  logado e mostrar tudo no menu, entao a trava e escrita a mao em cada colecao: `create`, `update` e
+  `delete` com `ehEquipe`, mais `admin.hidden` com `ehAds`. Criou colecao ou global? Repita os dois,
+  senao a agencia passa a poder editar aquilo, e em silencio.
+- **O checkbox de consentimento e o unico campo do Rastreamento travado para ele**, por acesso de campo
+  na propria global. Desligar o banner melhora a medicao e o risco de LGPD fica com a clinica, entao a
+  decisao nao pode sair da agencia. Testado: ele manda `consentimento: false`, a resposta e 200 e o
+  valor no banco continua `true`.
+- **Na colecao Users o `read` do ads devolve a condicao `id = o proprio`, e nao `false`.** Negando tudo
+  ele entra sem conseguir ler o proprio cadastro, e a pagina da conta, que e onde ele troca a senha,
+  quebra junto.
+
+**O papel e um valor de enum no Postgres**, entao papel novo so existe no banco depois de um `pnpm dev`
+apontando para o banco de destino, como qualquer mudanca de schema aqui.
+
+**Usuario novo se cadastra pelo painel**, em Sistema > Usuarios, por quem for administrador. O
+`maurinoneto@leiaexpert.com` entrou por uma rota de desenvolvimento descartavel, ja apagada, porque o
+CLI do Payload nao roda neste projeto e ninguem estava logado como administrador na maquina.
+
 ### Midia
 
 Cloudinary por adaptador custom em `src/lib/cloudinary-adapter.ts`, plugado no `cloudStoragePlugin`. A
@@ -1423,6 +1460,29 @@ Duas notas:
 - **A traducao e a do Payload, e nao cobre tudo.** Na tela de login, por exemplo, "Senha" e "Esqueceu a
   senha?" saem traduzidos e "Email" e "Login" continuam em ingles. Nao ha o que fazer do nosso lado sem
   manter traducao propria.
+
+#### A marca no lugar da pena do Payload
+
+A tela de login e o topo do menu mostram o logotipo da clinica, por `admin.components.graphics` no
+`payload.config.ts`, apontando para `LogotipoPainel.tsx` e `IconePainel.tsx` em
+`src/components/painel/`. Registrar componente custom ali mexe no `importMap.js`, que precisa ser
+commitado, pelo motivo da secao do CLI.
+
+Tres coisas medidas:
+
+- **O logotipo vai sobre uma chapa branca**, como ja acontece no rodape e no cartao do Sobre. O arquivo
+  e um PNG transparente de desenho escuro, sem nenhum pixel claro: medido, o mais claro tem 0.71 de
+  luminancia. O painel segue o tema do sistema, e no tema escuro a marca sumiria no fundo. No tema
+  claro a chapa cai sobre fundo claro e desaparece sozinha. Conferido por captura de tela nos dois.
+- **A caixa e maior do que parece preciso, 200px**, porque o desenho ocupa so 323x292 dos 500x500 do
+  arquivo e o resto e margem transparente: dentro dela a marca sai com cerca de 129px. Pelo mesmo
+  motivo nao ha padding, a margem do proprio arquivo ja afasta a arte da borda da chapa. Em 132px, que
+  foi a primeira tentativa, ela lia como miniatura ao lado do formulario de 480px.
+- **O arquivo e `public/logo-leia.png`**, copia do `src/app/icon.png`. Ele mora em `public/` para o
+  painel busca-lo como arquivo estatico comum, sem passar pela rota de metadado que serve o favicon.
+
+Os dois componentes usam `<img>` e nao `next/image`: o painel nao carrega o CSS do site e a tela de
+login abre antes de qualquer sessao.
 
 ### Duvidas frequentes
 

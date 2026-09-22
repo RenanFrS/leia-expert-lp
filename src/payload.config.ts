@@ -41,7 +41,15 @@ export default buildConfig({
     meta: {
       titleSuffix: ' | Léia Expert',
     },
-    components: {},
+    components: {
+      // A marca da clinica no lugar da pena do Payload: o Logo e a tela de
+      // login, o Icon e o topo do menu. Registrar componente custom aqui mexe
+      // no importMap, que precisa ser commitado.
+      graphics: {
+        Logo: '@/components/painel/LogotipoPainel#LogotipoPainel',
+        Icon: '@/components/painel/IconePainel#IconePainel',
+      },
+    },
   },
 
   collections: [Tratamentos, Resultados, Galeria, Depoimentos, Faq, Leads, Contatos, Media, Users],

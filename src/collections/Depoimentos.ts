@@ -1,10 +1,26 @@
 import type { CollectionConfig } from 'payload'
 
+import { ehAds, ehEquipe } from '@/lib/acesso'
+
 export const Depoimentos: CollectionConfig = {
   slug: 'depoimentos',
-  admin: { useAsTitle: 'nome', defaultColumns: ['nome', 'nota', 'avaliacoes', 'publicado'], group: 'Conteudo' },
+  admin: {
+    useAsTitle: 'nome',
+    defaultColumns: ['nome', 'nota', 'avaliacoes', 'publicado'],
+    group: 'Conteudo',
+    // Fora do alcance do papel ads, que so cuida de rastreamento.
+    hidden: ({ user }) => ehAds(user),
+  },
   labels: { singular: 'Depoimento', plural: 'Depoimentos' },
-  access: { read: () => true },
+  access: {
+    read: () => true,
+    // Conteudo do site: escrita so de administrador e editor. O papel ads entra
+    // no painel apenas para as tags, entao nao cria, nao edita e nao apaga nada
+    // daqui. A leitura segue aberta porque quem le e o site.
+    create: ({ req }) => ehEquipe(req.user),
+    update: ({ req }) => ehEquipe(req.user),
+    delete: ({ req }) => ehEquipe(req.user),
+  },
   fields: [
     { name: 'nome', type: 'text', required: true },
     { name: 'texto', type: 'textarea', required: true, maxLength: 700 },

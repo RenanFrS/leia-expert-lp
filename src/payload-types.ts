@@ -360,9 +360,9 @@ export interface User {
   id: number;
   nome: string;
   /**
-   * Administrador ve os leads e gerencia usuarios. Editor so cuida do conteudo do site.
+   * Administrador ve os leads e gerencia usuarios. Editor so cuida do conteudo do site. Ads so abre Configuracoes > Rastreamento e ads, para a agencia mexer nas tags sem encostar no conteudo.
    */
-  papel: 'admin' | 'editor';
+  papel: 'admin' | 'editor' | 'ads';
   updatedAt: string;
   createdAt: string;
   email: string;
