@@ -2,6 +2,7 @@ import type { CollectionConfig, PayloadRequest } from 'payload'
 
 import { ehAdmin, ehAds, ehEquipe } from '@/lib/acesso'
 import { urlDeEntrega } from '@/lib/cloudinary-url'
+import { urlSite } from '@/lib/url-site'
 
 /**
  * Hosts que o Payload pode chamar para reler um arquivo da propria Media.
@@ -19,7 +20,7 @@ const hostsDoSite = (): string[] => {
   const lista: string[] = []
 
   try {
-    const { hostname } = new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000')
+    const { hostname } = new URL(urlSite)
     if (hostname) lista.push(hostname)
   } catch {
     // URL malformada no ambiente nao pode derrubar a colecao inteira.

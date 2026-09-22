@@ -48,6 +48,40 @@ comandos `payload ...` falham. O motivo esta na secao abaixo. Na pratica isso qu
 O Next esta fixado em `15.4.11`. O Payload 3 nao aceita a linha 15.5.x. Antes de subir a versao do Next,
 confira o peer range do `@payloadcms/next` no `package.json` da dependencia instalada.
 
+## Dominio e a variavel NEXT_PUBLIC_SITE_URL
+
+O site responde em **`https://www.leiaexpert.com.br`**, que e o dominio primario na Vercel. O apex
+`leiaexpert.com.br` existe e devolve 308 para o www.
+
+**Essa variavel nao serve so ao SEO: ela e a lista de csrf do painel.** O `payload.config.ts` monta
+`cors` e `csrf` a partir dela, e o Payload compara essa lista com o cabecalho `Origin` por string crua,
+em `extractJWT`. `Origin` de navegador nunca tem barra no fim e nunca tem caminho.
+
+**Ja derrubou o painel de producao, e o sintoma engana.** Com `https://leiaexpert.com.br/` gravado na
+Vercel, com barra e sem `www`, todo salvamento respondia falta de permissao enquanto o painel abria
+inteiro e o localhost seguia perfeito. O motivo: navegacao nao manda `Origin`, entao o cookie passava e
+a tela montava; o `fetch` que grava manda, caia fora da lista, o Payload descartava o token e a checagem
+de acesso enxergava um visitante deslogado. **Erro de permissao no painel de producao com localhost
+saudavel e esse bug ate prova em contrario**, e nao papel de usuario.
+
+Duas defesas, em `src/lib/url-site.ts`:
+
+- **a barra do fim e cortada na leitura**, entao a grafia gravada na Vercel deixou de importar. Essa
+  mesma barra saia no `robots.txt`, como `https://leiaexpert.com.br//sitemap.xml`, que foi como ela se
+  denunciou de fora
+- **o `csrf` e o `cors` levam as duas formas do dominio**, com e sem `www`. O 308 resolve navegacao e
+  nao resolve isso, porque o `fetch` sai com o `Origin` do host que a pessoa tem na barra de endereco.
+  Com as duas na lista, inverter o dominio primario nao derruba o painel
+
+**Todo mundo le a variavel pelo `src/lib/url-site.ts`**, e nao pelo `process.env`: o config do Payload,
+o `robots`, o `sitemap`, o `metadataBase` do layout, o `url` dos dados estruturados e o `hostsDoSite` da
+Media. Arquivo novo que precise da URL do site importa de la.
+
+**O valor certo e o host que responde, sem barra no fim.** Ele tambem manda no canonical, no Open Graph
+e no sitemap, entao apontar para o apex faz o Google receber sempre um endereco que redireciona. E
+variavel `NEXT_PUBLIC_`, entao ela entra no bundle no momento do build: mudar o valor so vale depois de
+um redeploy.
+
 ## Estrutura
 
 ```

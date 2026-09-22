@@ -21,11 +21,11 @@ import { Clinica } from './globals/Clinica'
 import { Rastreamento } from './globals/Rastreamento'
 import { Seo } from './globals/Seo'
 import { cloudinaryAdapter } from './lib/cloudinary-adapter'
+import { origensDoSite } from './lib/url-site'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const emProducao = process.env.NODE_ENV === 'production'
-const urlSite = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
 export default buildConfig({
   // O painel responde em /admin.
@@ -96,8 +96,12 @@ export default buildConfig({
   ],
 
   sharp,
-  // Em producao so a url configurada vale. Em desenvolvimento o Next troca de
-  // porta sozinho quando a 3000 esta ocupada, e o painel local bateria no csrf.
-  cors: emProducao ? [urlSite] : '*',
-  csrf: emProducao ? [urlSite] : [],
+  // Em producao valem so as origens do proprio site, com e sem `www`. Em
+  // desenvolvimento o Next troca de porta sozinho quando a 3000 esta ocupada, e
+  // o painel local bateria no csrf.
+  //
+  // **A lista precisa bater com o `Origin` do navegador, letra por letra.** Quem
+  // normaliza e o `origensDoSite`; o porque esta em src/lib/url-site.ts.
+  cors: emProducao ? origensDoSite : '*',
+  csrf: emProducao ? origensDoSite : [],
 })

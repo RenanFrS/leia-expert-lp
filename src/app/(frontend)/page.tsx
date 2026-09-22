@@ -14,6 +14,7 @@ import { Agendamento } from '@/components/sections/Agendamento'
 import { AClinica } from '@/components/sections/AClinica'
 import { Footer } from '@/components/sections/Footer'
 import { WhatsappFlutuante } from '@/components/sections/WhatsappFlutuante'
+import { urlSite } from '@/lib/url-site'
 
 // A pagina e estatica e revalida sozinha, o que mantem o LCP baixo mesmo com
 // conteudo vindo do banco.
@@ -85,7 +86,7 @@ export default async function Home() {
           pessoa.
         */
         description: seo?.descricao || clinica?.chamada || clinica?.sobre,
-        url: process.env.NEXT_PUBLIC_SITE_URL,
+        url: urlSite,
         medicalSpecialty: 'Dermatology',
         address: unidades.map((unidade) => ({
           '@type': 'PostalAddress',

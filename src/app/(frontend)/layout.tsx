@@ -6,6 +6,7 @@ import config from '@payload-config'
 
 import { Analytics } from '@/components/Analytics'
 import { SmoothScroll } from '@/components/SmoothScroll'
+import { urlSite } from '@/lib/url-site'
 import './globals.css'
 
 const display = Fraunces({
@@ -26,8 +27,6 @@ const mono = JetBrains_Mono({
   display: 'swap',
   weight: ['400', '500'],
 })
-
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
 export const viewport: Viewport = {
   themeColor: '#775642',
@@ -51,14 +50,14 @@ export async function generateMetadata(): Promise<Metadata> {
   const imagem = (seo?.imagemCompartilhamento as { url?: string } | undefined)?.url
 
   return {
-    metadataBase: new URL(siteUrl),
+    metadataBase: new URL(urlSite),
     title: { default: titulo, template: `%s | ${clinica?.nome || 'Léia Expert'}` },
     description: descricao,
     alternates: { canonical: '/' },
     openGraph: {
       type: 'website',
       locale: 'pt_BR',
-      url: siteUrl,
+      url: urlSite,
       siteName: clinica?.nome || 'Léia Expert',
       title: titulo,
       description: descricao,
