@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Fraunces, Instrument_Sans, JetBrains_Mono } from 'next/font/google'
+import { Analytics as VercelAnalytics } from '@vercel/analytics/next'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 
@@ -96,6 +97,7 @@ export default async function FrontendLayout({ children }: { children: React.Rea
         </a>
         <SmoothScroll />
         {children}
+        <VercelAnalytics />
         <Analytics
           config={{
             gtmId: rastreamento?.gtmId || process.env.NEXT_PUBLIC_GTM_ID,
