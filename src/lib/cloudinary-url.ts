@@ -36,9 +36,22 @@ export const tipoDoArquivo = (filename: string, mimeType?: string): TipoCloudina
 
 export const pastaDaBiblioteca = () => process.env.CLOUDINARY_FOLDER || 'leia-expert'
 
-/** O Cloudinary trabalha com public_id sem extensao. */
-export const publicIdDe = (filename: string) =>
-  `${pastaDaBiblioteca()}/${filename.replace(/\.[^.]+$/, '')}`
+/**
+ * O Cloudinary trabalha com public_id sem extensao.
+ *
+ * A pasta pode vir de fora porque o carregador do `next/image` roda tambem no
+ * navegador, onde `CLOUDINARY_FOLDER` nao existe: ele passa a copia publica que
+ * o `next.config.mjs` grava no build.
+ */
+export const publicIdDe = (filename: string, pasta = pastaDaBiblioteca()) =>
+  `${pasta}/${filename.replace(/\.[^.]+$/, '')}`
+
+/**
+ * Trecho de transformacao do Cloudinary, do tipo `f_auto,q_auto` ou `w_800`.
+ * E como se distingue uma transformacao do comeco do public_id, ja que os dois
+ * aparecem no mesmo lugar da URL.
+ */
+export const EH_TRANSFORMACAO = /^[a-z]{1,3}_[^/]+$/
 
 /**
  * Endereco publico do arquivo na CDN do Cloudinary.

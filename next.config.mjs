@@ -5,9 +5,19 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,
+  // As fotos saem redimensionadas pelo Cloudinary, e nao pelo otimizador da
+  // Vercel, que tem cota pequena no plano Hobby. O motivo esta no proprio
+  // carregador. Formato e qualidade vao no `f_auto,q_auto` da URL.
   images: {
-    formats: ['image/avif', 'image/webp'],
-    remotePatterns: [{ protocol: 'https', hostname: 'res.cloudinary.com' }],
+    loader: 'custom',
+    loaderFile: './src/lib/carregador-imagem.ts',
+  },
+  // O carregador roda tambem no navegador, que nao enxerga as variaveis do
+  // servidor. O nome da conta e a pasta nao sao segredo: aparecem em toda URL
+  // da CDN. As chaves da API continuam so no servidor.
+  env: {
+    NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME ?? '',
+    NEXT_PUBLIC_CLOUDINARY_FOLDER: process.env.CLOUDINARY_FOLDER || 'leia-expert',
   },
   experimental: {
     optimizePackageImports: ['lucide-react'],

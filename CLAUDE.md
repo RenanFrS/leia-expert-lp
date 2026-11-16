@@ -120,6 +120,7 @@ src/
     seed.ts            conteudo inicial em portugues, textos originais
     cloudinary-adapter.ts
     cloudinary-url.ts  convencao de public_id e de URL da CDN, sem SDK
+    carregador-imagem.ts  carregador do next/image, que manda as fotos para a CDN
     poster-video.ts    quadro parado de video, para o poster do hero
     utils.ts           cn, whatsappLink, formatarWhatsapp e o narrow de midia
   payload-types.ts     gerado, versionado
@@ -333,6 +334,36 @@ Duas armadilhas ja custaram caro nesse arquivo:
 
 A conta esta em Dynamic folders, onde a pasta da biblioteca e um campo separado do `public_id`. Por isso
 o upload manda `asset_folder` alem do caminho no `public_id`, senao a clinica veria tudo solto na raiz.
+
+#### Fotos pelo Cloudinary, e nao pela Vercel
+
+**O `next/image` tem carregador proprio**, `src/lib/carregador-imagem.ts`, ligado por `images.loader:
+'custom'` no `next.config.mjs`. Ele troca `/api/media/file/<arquivo>` pela URL da CDN com
+`f_auto,q_auto,c_limit,w_<largura>`, entao o `srcset` aponta direto para o Cloudinary e
+`/_next/image` nao e usado em lugar nenhum. URL que ja e do Cloudinary, como o quadro parado de video,
+ganha a largura como transformacao encadeada, depois das que ja estavam.
+
+**Isso derrubou as fotos do site em novembro de 2026, e o motivo nao e obvio.** A rota do Payload
+responde `max-age=0`, entao a Vercel guardava cada versao otimizada so pelo minimo do Next, 60
+segundos, e refazia a transformacao na visita seguinte. O plano Hobby da 5 mil transformacoes por mes:
+elas acabaram, e toda foto fora do cache passou a voltar **402,
+`OPTIMIZED_IMAGE_REQUEST_PAYMENT_REQUIRED`**, com o cartao vazio na tela. Cada transformacao ainda
+acordava uma funcao para buscar o original inteiro no Cloudinary.
+
+Tres coisas que sustentam o carregador:
+
+- **Ele roda no navegador tambem**, entao so le variavel publica. O `next.config.mjs` copia
+  `CLOUDINARY_CLOUD_NAME` e `CLOUDINARY_FOLDER` para `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` e
+  `NEXT_PUBLIC_CLOUDINARY_FOLDER` no build. Nome da conta e pasta nao sao segredo, aparecem em toda URL
+  da CDN; as chaves da API continuam so no servidor. Sem o nome da conta no build, a foto volta para a
+  rota do Payload: aparece, mas no tamanho original.
+- **O `public_id` sai do mesmo `publicIdDe` do adaptador**, com a pasta passada de fora. Nome com espaco
+  ou acento e decodificado e codificado de novo trecho por trecho.
+- **`c_limit` so reduz.** Foto menor que a largura pedida sai no tamanho dela, sem ampliar.
+
+O custo passou para o Cloudinary, que esta no plano Free, com 25 creditos por mes. Cada derivada nasce
+uma vez e fica guardada la; o que pesa de verdade e a banda, e nela o video conta muito mais que as
+fotos. Em 16 de novembro de 2026 a conta estava em 9,4 de 25.
 
 #### Recorte e ponto de foco
 
@@ -591,8 +622,9 @@ URL que o Payload grava, `/api/media/file/...`, tres coisas dao errado de uma ve
   costuma vir com o `moov` no fim, e nesse estado o navegador so mostra o primeiro quadro depois de
   baixar tudo
 
-A troca vale **so para video**. Imagem continua saindo pela rota do Payload, porque quem otimiza ela e
-o `next/image`, e mexer nisso mudaria a midia do site inteiro de uma vez.
+A troca no `Hero.tsx` vale **so para video**. Imagem tambem vai para a CDN, mas por outro caminho: o
+carregador global do `next/image`, descrito em "Fotos pelo Cloudinary, e nao pela Vercel", na secao
+Midia.
 
 **O painel e full bleed e nao tem canto arredondado.** Ele saiu do `container`, entao vai de borda a
 borda da janela em qualquer largura. O `rounded-[28px]` foi junto: canto arredondado encostado na borda

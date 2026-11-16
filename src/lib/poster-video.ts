@@ -16,12 +16,9 @@
  * dependencia nenhuma.
  */
 
-/**
- * Trecho de transformacao do Cloudinary, do tipo `f_auto,q_auto` ou `w_800`.
- * E como se distingue uma transformacao do comeco do public_id, ja que os dois
- * aparecem no mesmo lugar da URL.
- */
-const EH_TRANSFORMACAO = /^[a-z]{1,3}_[^/]+$/
+// A regra que separa transformacao de public_id mora em `cloudinary-url.ts`,
+// que tambem e so texto, porque o carregador do `next/image` usa a mesma.
+import { EH_TRANSFORMACAO } from './cloudinary-url'
 
 const MARCA_DE_VIDEO = '/video/upload/'
 
