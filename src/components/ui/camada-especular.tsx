@@ -142,8 +142,30 @@ export function CamadaEspecular({
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
     const dpr = window.devicePixelRatio || 1
-    const renderer = new Renderer({ alpha: true, premultipliedAlpha: true, antialias: true, dpr })
+
+    // **Sem WebGL o botao fica sem brilho, e a pagina segue de pe.** O ogl nao
+    // devolve erro quando o navegador recusa o contexto: ele avisa no console e
+    // em seguida escreve no contexto nulo, o que estoura `Cannot set properties
+    // of null (setting 'renderer')`. Como isso acontece dentro de um efeito, o
+    // React derrubava a arvore inteira e a visita via so "Application error".
+    // Acontece com aceleracao de hardware desligada, placa de video bloqueada
+    // pelo navegador e aparelho antigo.
+    let renderer: Renderer
+    try {
+      renderer = new Renderer({ alpha: true, premultipliedAlpha: true, antialias: true, dpr })
+    } catch {
+      return
+    }
     const gl = renderer.gl
+
+    // Os shaders sao `#version 300 es`, entao so compilam em WebGL2. No WebGL1
+    // que o ogl usa de reserva o programa nao linka e o erro voltaria a cada
+    // quadro, entao o brilho fica de fora tambem.
+    if (!renderer.isWebgl2) {
+      gl.getExtension('WEBGL_lose_context')?.loseContext()
+      return
+    }
+
     gl.clearColor(0, 0, 0, 0)
     gl.enable(gl.BLEND)
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
