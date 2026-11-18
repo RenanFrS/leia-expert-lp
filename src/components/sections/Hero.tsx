@@ -1,17 +1,22 @@
 import { Star } from 'lucide-react'
 
-import { Revelar } from '@/components/Revelar'
 import { CarrosselTratamentos, type ItemCarrossel } from '@/components/ui/carrossel-tratamentos'
 import { MidiaRotativa } from '@/components/ui/midia-rotativa'
 import { urlDeEntrega } from '@/lib/cloudinary-url'
 import { posterDeVideo } from '@/lib/poster-video'
 import { cn, midia } from '@/lib/utils'
-import type { Clinica } from '@/payload-types'
+import type { Clinica, Tratamento } from '@/payload-types'
 
 type Props = {
   nome: string
   chamada?: string | null
-  tratamentos: ItemCarrossel[]
+  subtitulo?: string | null
+  /**
+   * O que o carrossel desenha, mais o segundo do quadro parado. Esse segundo so
+   * serve aqui no servidor, para montar a URL da foto, e nao segue para o
+   * cliente.
+   */
+  tratamentos: (ItemCarrossel & Pick<Tratamento, 'quadroDoCartao'>)[]
   painel?: Clinica['heroPainel']
   intervalo?: number | null
 }
@@ -29,7 +34,7 @@ type Props = {
  * arredondamento do bloco porcelana visto pelo lado de fora.
  *
  * O titulo fica **fora** da imagem, que e o que define este bloco. Dentro dela
- * ficam a chamada com as estrelas, o CTA e o carrossel de tratamentos.
+ * ficam a headline, o subtitulo, as estrelas e o carrossel de tratamentos.
  *
  * Duas coisas sustentam a montagem e nao podem mudar sem quebrar o desenho:
  *
@@ -80,20 +85,31 @@ function FileteCanto({ lado, className }: { lado: 'esquerda' | 'direita'; classN
   )
 }
 
-export function Hero({ nome, chamada, tratamentos, painel, intervalo }: Props) {
+export function Hero({ nome, chamada, subtitulo, tratamentos, painel, intervalo }: Props) {
   const texto =
     chamada ||
-    // Reserva usada so quando a `chamada` do painel esta vazia. Mesma redacao da
-    // chamada gravada no banco.
+    // Reserva usada so quando a headline do painel esta vazia. Mesma redacao da
+    // gravada no banco.
     //
-    // Ela abre pelo problema, em pergunta, para a pessoa se reconhecer no
-    // primeiro segundo: quem chega pelo anuncio busca a queixa, nao a
-    // especialidade. Tres travas continuam valendo aqui: nao afirma diagnostico,
-    // que e ato privativo de medico e a Leia e tricologista; nao promete
-    // gratuidade, porque a consulta e cobrada; e nao promete cura, porque o
-    // proprio FAQ admite perda antiga que ja nao responde. Ela descreve o que a
-    // clinica faz, nao garante resultado.
-    'Seu cabelo está caindo, afinando ou abrindo falhas? Descobrimos por que isso acontece e tratamos a causa, não só o sintoma.'
+    // A dor ja esta nomeada no `h1`, entao a headline fica com o que a clinica
+    // faz: acha a causa e trata a causa. Ela ja abriu em pergunta ao sintoma
+    // ("Seu cabelo esta caindo, afinando ou abrindo falhas?"), que saiu quando o
+    // titulo passou a ser a propria queixa. Tres travas continuam valendo aqui:
+    // nao afirma diagnostico, que e ato privativo de medico e a Leia e
+    // tricologista; nao promete gratuidade, porque a consulta e cobrada; e nao
+    // promete cura, porque o proprio FAQ admite perda antiga que ja nao
+    // responde. Ela descreve o que a clinica faz, nao garante resultado.
+    'Descobrimos por que o seu cabelo está caindo e tratamos a causa, não só o sintoma.'
+
+  const textoSubtitulo =
+    subtitulo ||
+    // Reserva do subtitulo, com a redacao gravada no banco. Responde em tres
+    // frases o que a headline nao cabe: como funciona (a tricoscopia na
+    // consulta), que tratamento e (protocolo de sessoes na clinica) e o que
+    // esperar (frear a queda e fortalecer, com prazo). Os nomes das sessoes e o
+    // prazo vem do proprio site: oxigenacao e estimulo de crescimento ja
+    // estavam nos tratamentos, e o "3o ao 6o mes" e o do FAQ.
+    'Na consulta, a tricoscopia digital amplia o couro cabeludo em até 200 vezes e mostra a causa da queda. A partir disso, montamos um protocolo de sessões na clínica, com oxigenação e estímulo de crescimento, para frear a queda e fortalecer os fios. A diferença costuma aparecer entre o 3º e o 6º mês.'
 
   /*
     O video do painel aponta direto para a CDN do Cloudinary, com `f_auto,q_auto`.
@@ -129,12 +145,17 @@ export function Hero({ nome, chamada, tratamentos, painel, intervalo }: Props) {
     cada poucos segundos.
 
     Na secao de tratamentos, que fica bem abaixo, o video toca de verdade.
+
+    **O quadro sai do segundo gravado em `quadroDoCartao`, e nao sempre do
+    primeiro.** O cartao e 16:10 e corta o resto, e video vertical perde em cima
+    e embaixo: o da alopecia areata abre no rosto da modelo, e o cartao mostrava
+    so os olhos dela, sem falha nenhuma. Com o campo vazio continua o primeiro.
   */
-  const tratamentosResolvidos = tratamentos.map((item) => {
+  const tratamentosResolvidos = tratamentos.map(({ quadroDoCartao, ...item }) => {
     const arquivo = midia(item.imagem)
     if (!arquivo?.filename || !arquivo.mimeType?.startsWith('video/')) return item
 
-    const poster = posterDeVideo(urlDeEntrega(arquivo.filename), 640)
+    const poster = posterDeVideo(urlDeEntrega(arquivo.filename), 640, quadroDoCartao)
     return poster ? { ...item, imagem: { ...arquivo, url: poster } } : item
   })
 
@@ -176,10 +197,18 @@ export function Hero({ nome, chamada, tratamentos, painel, intervalo }: Props) {
             de um lado so e ele para de parecer um recorte proposital.
           */}
         <div className="px-5 lg:absolute lg:left-1/2 lg:top-0 lg:z-10 lg:max-w-full lg:-translate-x-1/2 lg:px-0">
-          {/* Desce da borda de cima ate assentar, que e o sentido em que a
-                forma se le. O curso e curto de proposito: o motivo esta no
-                `Revelar`. */}
-          <Revelar direcao="cima">
+          {/*
+              Desce da borda de cima ate assentar, que e o sentido em que a forma
+              se le, no mesmo curso curto de 24px do `Revelar direcao="cima"`.
+
+              **A entrada e CSS puro, e nao o `Revelar`.** O `Revelar` nasce em
+              `opacity-0` e so revela depois da hidratacao: no celular, com o
+              JavaScript da pagina inteira na frente, o titulo ficava invisivel
+              por segundos e o PageSpeed contava isso. A animacao do
+              `tailwindcss-animate` comeca no primeiro quadro pintado, sem esperar
+              script nenhum, e para quem pede menos movimento ela nem roda.
+          */}
+          <div className="duration-700 ease-out animate-in fade-in slide-in-from-top-6 motion-reduce:animate-none">
             {/*
                 As duas linhas vivem dentro do mesmo `h1`. Nao mova nenhuma para
                 fora do heading: o titulo da pagina passaria a ser so metade da
@@ -205,10 +234,23 @@ export function Hero({ nome, chamada, tratamentos, painel, intervalo }: Props) {
               */}
             <h1 className="relative font-display text-display-xl text-tinta lg:rounded-b-[28px] lg:bg-porcelana lg:px-8 lg:pb-7 lg:pt-1 lg:text-center lg:text-display-lg xl:px-12">
               {/* O `pb` nao e respiro: a entrelinha do display e mais apertada
-                    que o descendente da fonte, e sem ele a cedilha de "começa"
-                    vaza para fora do bloco, em cima da midia. */}
-              <span className="block">Cabelo saudável</span>
-              <span className="block">começa na raiz.</span>
+                    que o descendente da fonte, e sem ele qualquer descendente da
+                    segunda linha vaza do bloco para cima da midia. Foi o que a
+                    cedilha do titulo antigo, "começa na raiz.", fazia. */}
+              {/*
+                  **O titulo nomeia a dor e responde a ela**, a pedido do
+                  cliente: quem chega pelo anuncio procura a queixa, e a frase
+                  diz em quatro palavras que ela tem saida. Ja foi "Cabelo
+                  saudável começa na raiz.", que falava de cuidado e nao do
+                  problema. "Tem tratamento" nao promete cura, so que ha o que
+                  fazer.
+
+                  **As duas linhas tem 15 caracteres cada**, como as de antes,
+                  para o notch continuar simetrico. Trocou o texto, mantenha as
+                  linhas parecidas e refaca a medida em 1024.
+                */}
+              <span className="block">Queda de cabelo</span>
+              <span className="block">tem tratamento.</span>
 
               {/*
                   Os dois cantos onde a midia encosta no notch. Ficam presos ao
@@ -227,7 +269,7 @@ export function Hero({ nome, chamada, tratamentos, painel, intervalo }: Props) {
               <FileteCanto lado="esquerda" className="right-full top-0 -mr-px" />
               <FileteCanto lado="direita" className="left-full top-0 -ml-px" />
             </h1>
-          </Revelar>
+          </div>
         </div>
 
         {/* O painel e o LCP da pagina. */}
@@ -240,11 +282,18 @@ export function Hero({ nome, chamada, tratamentos, painel, intervalo }: Props) {
             absolutos no pe, se espremerem um sobre o outro.
           */}
         <div className="relative h-[520px] overflow-hidden bg-areia sm:h-[600px] lg:h-[calc(100vh-6rem)] lg:min-h-[640px]">
+          {/*
+              O `retratoNoCelular` troca, abaixo do `sm`, o quadro e o video pelo
+              recorte 3:4 do centro: o painel do telefone tem 3:4 e so mostrava
+              os 42% do meio do 16:9. O `sizes` e `100vw` porque o painel vai de
+              borda a borda em toda largura.
+          */}
           <MidiaRotativa
             itens={painelResolvido}
             intervalo={intervalo}
             prioridade
-            sizes="(max-width: 1200px) 100vw, 1200px"
+            retratoNoCelular
+            sizes="100vw"
           />
 
           {/*
@@ -252,7 +301,10 @@ export function Hero({ nome, chamada, tratamentos, painel, intervalo }: Props) {
               `container` de dentro e que traz o texto de volta para a coluna da
               pagina, agora que o painel nao esta mais dentro de um.
           */}
-          <div className="absolute inset-x-0 bottom-0 pb-6 lg:pb-10">
+          {/* O `lg:pb-14`, que ja foi `lg:pb-10`, e o pedido de subir o texto. O
+              resto da subida vem do proprio subtitulo, que empurra a headline
+              para cima. O pe do carrossel acompanha. */}
+          <div className="absolute inset-x-0 bottom-0 pb-6 lg:pb-14">
             {/*
                 Veu de baixo para cima. Sobre foto qualquer, texto solto nao tem
                 contraste garantido, e e ele que mantem a chamada em porcelana
@@ -284,18 +336,34 @@ export function Hero({ nome, chamada, tratamentos, painel, intervalo }: Props) {
                   A coluna para antes do carrossel, que e absoluto no mesmo pe do
                   painel e tem 320px: em 1024 sobram 576px, dali para cima 768px.
               */}
-              <Revelar className="max-w-xl xl:max-w-3xl">
+              {/* Entra por CSS, como o titulo, e pelo mesmo motivo: o `Revelar`
+                  segurava o texto invisivel ate a hidratacao. */}
+              <div className="max-w-xl duration-700 ease-out animate-in fade-in slide-in-from-bottom-4 motion-reduce:animate-none xl:max-w-3xl">
                 {/*
-                    **A chamada e serifa grande, a pedido do cliente**, com uma
+                    **A headline e serifa grande, a pedido do cliente**, com uma
                     referencia em que a frase sobre a foto era o maior texto da
                     tela. Ela ja foi corpo de texto, `text-lg` e `text-2xl`, e
                     lia como legenda. Fica um degrau abaixo do `h1` no desktop,
-                    48px contra 56px, para o titulo continuar sendo o titulo. Em
-                    1280 e 1440 a frase atual cabe em quatro linhas, como na
-                    referencia.
+                    48px contra 56px, para o titulo continuar sendo o titulo.
                   */}
                 <p className="text-pretty font-display text-[1.75rem] leading-[1.12] text-porcelana sm:text-4xl sm:leading-[1.1] lg:text-[2.5rem] xl:text-5xl xl:leading-[1.1]">
                   {texto}
+                </p>
+
+                {/*
+                    **O subtitulo e a outra fonte de proposito**, a Instrument
+                    Sans do corpo do site contra a serifa da headline: a
+                    diferenca de familia e o que separa a promessa da explicacao
+                    sem precisar de cor nova. Ele fica dentro do mesmo bloco do
+                    veu, entao a conta do contraste continua valendo: o veu mede
+                    o bloco, e o subtitulo cai abaixo do topo dele, onde o veu ja
+                    passou de `tinta/75`. Contra branco puro por baixo, o pior
+                    caso de qualquer midia, o `/90` do texto da **7.2** na
+                    primeira linha, onde o veu esta em ~`tinta/81` em 390 e em
+                    1440, e nao cairia abaixo de **6.0** nem no topo do bloco.
+                  */}
+                <p className="mt-4 max-w-2xl text-pretty font-sans text-[15px] leading-relaxed text-porcelana/90 sm:text-lg sm:leading-relaxed xl:text-xl xl:leading-relaxed">
+                  {textoSubtitulo}
                 </p>
 
                 <div className="mt-5 flex items-center gap-2">
@@ -311,7 +379,7 @@ export function Hero({ nome, chamada, tratamentos, painel, intervalo }: Props) {
                     Avaliações reais de pacientes no Google
                   </span>
                 </div>
-              </Revelar>
+              </div>
             </div>
           </div>
         </div>
@@ -319,7 +387,7 @@ export function Hero({ nome, chamada, tratamentos, painel, intervalo }: Props) {
         {/* Carrossel: em fluxo no telefone, sobre a imagem no lg. O
               `container` de dentro alinha ele a coluna da pagina em vez de
               encostar na borda da janela. */}
-        <div className="px-5 lg:absolute lg:inset-x-0 lg:bottom-10 lg:z-10 lg:px-0">
+        <div className="px-5 lg:absolute lg:inset-x-0 lg:bottom-14 lg:z-10 lg:px-0">
           <div className="lg:container lg:flex lg:justify-end">
             <div className="lg:w-[320px]">
               <CarrosselTratamentos itens={tratamentosResolvidos} intervalo={intervalo} />

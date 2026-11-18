@@ -1,27 +1,27 @@
 'use client'
 
 import React, { useRef, useEffect } from 'react'
-import { gsap } from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 /**
  * Componente do React Bits, mantido perto do original para facilitar
- * atualizacao futura. Tres coisas mudaram em relacao ao codigo publicado:
+ * atualizacao futura. Quatro coisas mudaram em relacao ao codigo publicado:
  *
  * 1. `use client`, porque o original nao traz e aqui o App Router exige.
  * 2. Respeita `prefers-reduced-motion`. O original anima sempre, e o projeto
  *    promete o contrario no README.
  * 3. Saiu a busca por `snap-main-container`, que e um elemento do site do React
  *    Bits. Sem ela o scroller cai em `window`, que e o certo aqui.
+ * 4. **O GSAP e o ScrollTrigger vem por `import()` dentro do efeito**, e nao no
+ *    topo do arquivo. Com o import estatico os dois entravam no pacote da home,
+ *    na frente da hidratacao, para animar secoes que estao todas bem abaixo da
+ *    dobra. Assim chegam num pedaco proprio, logo depois.
  *
  * Ele nasce com `visibility: hidden` e so aparece quando o GSAP roda, entao use
  * apenas abaixo da dobra. Acima dela isso seguraria o LCP e deixaria a tela em
- * branco enquanto a hidratacao nao termina. O hero continua com o `Revelar`.
+ * branco enquanto a hidratacao nao termina. O hero entra por CSS.
  */
 
-if (typeof window !== 'undefined') {
-  gsap.registerPlugin(ScrollTrigger)
-}
+type Gsap = (typeof import('gsap'))['gsap']
 
 interface AnimatedContentProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode
@@ -62,9 +62,11 @@ export const AnimatedContent: React.FC<AnimatedContentProps> = ({
     const el = ref.current
     if (!el) return
 
-    // Quem pediu menos movimento ve o conteudo direto, sem deslocamento.
+    // Quem pediu menos movimento ve o conteudo direto, sem deslocamento e sem
+    // baixar o GSAP. O elemento nasce so com o `invisible`, sem transformacao
+    // nenhuma, entao devolver a visibilidade basta.
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      gsap.set(el, { visibility: 'visible', opacity: 1, x: 0, y: 0, scale: 1 })
+      el.style.visibility = 'visible'
       return
     }
 
@@ -77,32 +79,46 @@ export const AnimatedContent: React.FC<AnimatedContentProps> = ({
     const offset = reverse ? -distance : distance
     const startPct = (1 - threshold) * 100
 
-    gsap.set(el, {
-      [axis]: offset,
-      scale,
-      opacity: animateOpacity ? initialOpacity : 1,
-      visibility: 'visible',
-    })
+    // A limpeza pode chegar antes de o `import()` resolver, no Strict Mode ou ao
+    // sair da pagina. Sem o `cancelado` o gatilho seria criado sobre um elemento
+    // que ja saiu da arvore.
+    let cancelado = false
+    let tl: ReturnType<Gsap['timeline']> | undefined
+    let st: { kill: () => void } | undefined
 
-    const tl = gsap.timeline({
-      paused: true,
-      delay,
-      onComplete: () => onComplete?.(),
-    })
+    Promise.all([import('gsap'), import('gsap/ScrollTrigger')]).then(([{ gsap }, { ScrollTrigger }]) => {
+      if (cancelado) return
+      gsap.registerPlugin(ScrollTrigger)
 
-    tl.to(el, { [axis]: 0, scale: 1, opacity: 1, duration, ease })
+      gsap.set(el, {
+        [axis]: offset,
+        scale,
+        opacity: animateOpacity ? initialOpacity : 1,
+        visibility: 'visible',
+      })
 
-    const st = ScrollTrigger.create({
-      trigger: el,
-      scroller: scrollerTarget || window,
-      start: `top ${startPct}%`,
-      once: true,
-      onEnter: () => tl.play(),
+      const linha = gsap.timeline({
+        paused: true,
+        delay,
+        onComplete: () => onComplete?.(),
+      })
+      tl = linha
+
+      linha.to(el, { [axis]: 0, scale: 1, opacity: 1, duration, ease })
+
+      st = ScrollTrigger.create({
+        trigger: el,
+        scroller: scrollerTarget || window,
+        start: `top ${startPct}%`,
+        once: true,
+        onEnter: () => linha.play(),
+      })
     })
 
     return () => {
-      st.kill()
-      tl.kill()
+      cancelado = true
+      st?.kill()
+      tl?.kill()
     }
   }, [
     container,

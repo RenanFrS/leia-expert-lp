@@ -93,14 +93,23 @@ O banner pode ser desligado no painel.
 ## Performance
 
 - Renderizacao estatica com revalidacao a cada 5 minutos, entao o HTML chega pronto
-- Fontes servidas pelo `next/font`, sem requisicao externa e sem deslocamento de layout
+- Fontes servidas pelo `next/font`, sem requisicao externa e sem deslocamento de layout. A fonte mono,
+  que nao aparece na primeira tela, fica fora do preload
 - Imagens em AVIF e WebP pelo `next/image`, com `sizes` definido em cada uso
 - Cloudinary entrega `f_auto` e `q_auto`, ajustando formato e compressao por navegador
+- Nenhum video entra na abertura da pagina: o do topo carrega depois que a pagina termina de abrir, e
+  os outros so quando a secao chega perto da tela. No celular eles saem num recorte vertical, mais leve
+- A primeira imagem da tela e o quadro parado do video do topo, com prioridade alta e, no celular, no
+  recorte vertical do painel
+- O texto do topo aparece sem esperar JavaScript
 - Scripts de medicao carregam depois da interacao, fora do caminho critico
 - `optimizePackageImports` reduz o bundle dos icones
-- As animacoes custam cerca de 47 kB comprimidos no cliente, entre gsap com ScrollTrigger e a parte do
-  ogl que o brilho dos botoes usa. O brilho e aplicado so nos quatro CTAs principais, para nao
-  multiplicar contexto de video na pagina
+- As animacoes de rolagem, a rolagem suave e o brilho dos botoes carregam depois da pagina, fora do
+  pacote inicial. O brilho e aplicado so nos quatro CTAs principais, para nao multiplicar contexto de
+  video na pagina
+- Lighthouse no celular, mediana de 3 rodadas, em 18 de novembro de 2026: nota de 51 para 64, LCP de
+  7,3s para 3,7s e peso da pagina de 10 MB para 2,6 MB. O antes foi medido no site no ar e o depois
+  num build de producao local, entao o PageSpeed precisa ser refeito depois do deploy
 
 ## SEO on page
 

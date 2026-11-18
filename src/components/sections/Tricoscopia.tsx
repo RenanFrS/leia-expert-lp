@@ -2,6 +2,7 @@ import { Revelar } from '@/components/Revelar'
 import { BotaoWhatsapp } from '@/components/BotaoWhatsapp'
 import { VideoFundo } from '@/components/ui/video-fundo'
 import { urlDeEntrega } from '@/lib/cloudinary-url'
+import { VIDEO_FUNDO_CELULAR } from '@/lib/poster-video'
 import { midia } from '@/lib/utils'
 import type { Clinica } from '@/payload-types'
 
@@ -45,10 +46,10 @@ export function Tricoscopia({
     porque este video vive atras de um veu de 80%: sao 4,9 MB em vez de 7,4 MB,
     e a perda de qualidade nao chega a aparecer. Medido neste arquivo.
   */
-  const fonte =
-    arquivo?.filename && arquivo.mimeType?.startsWith('video/')
-      ? urlDeEntrega(arquivo.filename, 'f_auto,q_auto:eco,w_1600')
-      : null
+  const ehVideo = Boolean(arquivo?.filename && arquivo.mimeType?.startsWith('video/'))
+  const fonte = ehVideo ? urlDeEntrega(arquivo!.filename!, 'f_auto,q_auto:eco,w_1600') : null
+  // No celular, o recorte 9:16 do centro: o motivo esta no `VIDEO_FUNDO_CELULAR`.
+  const fonteCelular = ehVideo ? urlDeEntrega(arquivo!.filename!, VIDEO_FUNDO_CELULAR) : null
 
   return (
     // `relative isolate` sustenta o video: sem contexto de empilhamento proprio a
@@ -75,7 +76,7 @@ export function Tricoscopia({
         O preco disso e que o video aparece pouco, porque um arquivo claro atras
         de uma secao escura pede veu pesado. E o custo de manter a secao escura.
       */}
-      {fonte && <VideoFundo src={fonte} veu="bg-tinta/85" />}
+      {fonte && <VideoFundo src={fonte} srcCelular={fonteCelular} veu="bg-tinta/85" />}
       <div className="container grid gap-14 md:grid-cols-[1fr_1.1fr] md:items-center">
         <Revelar>
           <p className="text-eyebrow font-mono uppercase text-caramelo-claro">O exame</p>

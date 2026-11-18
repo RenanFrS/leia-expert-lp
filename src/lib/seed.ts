@@ -457,17 +457,24 @@ export const popularConteudo = async (payload: Payload) => {
     data: {
       nome: 'Léia Expert',
       chamada:
-        // Abre pelo problema, em pergunta, a pedido do cliente: quem chega pelo
-        // anuncio busca a queixa. A versao anterior abria em "Queda de cabelo,
-        // calvicie e alopecia tem causa", que nomeava as condicoes em tom
-        // clinico e escorregava para o metodo, e antes dela em "Tricologia
-        // clinica", que so conversa com quem ja conhece o termo.
+        // A headline do hero. A pergunta ao sintoma ("Seu cabelo esta caindo,
+        // afinando ou abrindo falhas?") saiu daqui quando o `h1` passou a ser
+        // "Queda de cabelo tem tratamento.": quem nomeia a dor agora e o titulo,
+        // e a headline fica com o que a clinica faz. Antes da pergunta houve
+        // "Queda de cabelo, calvicie e alopecia tem causa", em tom clinico, e
+        // "Tricologia clinica", que so conversa com quem ja conhece o termo.
         //
         // Duas travas continuam valendo. Dizia "depende do diagnostico certo":
         // diagnostico e ato privativo de medico e a Leia e tricologista, entao a
         // frase afirmava o que a clinica nao pode oferecer. Nao reintroduza a
         // palavra aqui, nem promessa de gratuidade, porque a consulta e cobrada.
-        'Seu cabelo está caindo, afinando ou abrindo falhas? Descobrimos por que isso acontece e tratamos a causa, não só o sintoma.',
+        'Descobrimos por que o seu cabelo está caindo e tratamos a causa, não só o sintoma.',
+      // Como funciona, por que ir, que tratamento e que resultado esperar, em tres
+      // frases. Os nomes das sessoes e o prazo vem do proprio site: oxigenacao e
+      // estimulo de crescimento ja apareceram nos tratamentos, e o "3o ao 6o mes"
+      // e o do FAQ. Fala em frear e fortalecer, nunca em cura.
+      subtitulo:
+        'Na consulta, a tricoscopia digital amplia o couro cabeludo em até 200 vezes e mostra a causa da queda. A partir disso, montamos um protocolo de sessões na clínica, com oxigenação e estímulo de crescimento, para frear a queda e fortalecer os fios. A diferença costuma aparecer entre o 3º e o 6º mês.',
       sobreRotulo: 'Minha história',
       // Textos da propria Leia. A abertura fica no resumo e a apresentacao no
       // `sobre`, que ja foi curto e hoje tem quatro paragrafos, enviados pelo

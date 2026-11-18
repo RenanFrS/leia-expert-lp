@@ -124,21 +124,33 @@ ${googleAdsId ? `gtag('config', '${googleAdsId}');` : ''}`}
         </Script>
       )}
 
+      {/*
+        **No celular o aviso e compacto**, porque abre por cima do pe do painel
+        do hero, justamente onde ficam a headline e o subtitulo. Com o padding e
+        o texto do desktop ele tinha ~170px e cobria o subtitulo quase inteiro;
+        assim fica em ~120px, com os dois botoes dividindo a linha. Do `md` para
+        cima volta ao tamanho de antes. Texto e comportamento sao os mesmos.
+      */}
       {consentimento && !decidido && (
         <div
           role="dialog"
-          aria-label="Preferencias de cookies"
-          className="fixed inset-x-4 bottom-4 z-50 mx-auto max-w-2xl rounded-lg border border-tinta/10 bg-porcelana p-5 shadow-lg md:p-6"
+          aria-label="Preferências de cookies"
+          className="fixed inset-x-3 bottom-3 z-50 mx-auto max-w-2xl rounded-lg border border-tinta/10 bg-porcelana p-3.5 shadow-lg md:inset-x-4 md:bottom-4 md:p-6"
         >
-          <p className="text-sm text-tinta-suave">
-            Usamos cookies para medir o desempenho do site e melhorar sua experiencia. Voce escolhe se
+          <p className="text-[13px] leading-snug text-tinta-suave md:text-sm md:leading-normal">
+            Usamos cookies para medir o desempenho do site e melhorar sua experiência. Você escolhe se
             quer permitir.
           </p>
-          <div className="mt-4 flex flex-wrap gap-3">
-            <Button size="sm" onClick={() => responder(true)}>
+          <div className="mt-3 flex gap-2 md:mt-4 md:flex-wrap md:gap-3">
+            <Button size="sm" className="flex-1 px-3 md:flex-none md:px-4" onClick={() => responder(true)}>
               Permitir cookies
             </Button>
-            <Button size="sm" variant="outline" onClick={() => responder(false)}>
+            <Button
+              size="sm"
+              variant="outline"
+              className="flex-1 px-3 md:flex-none md:px-4"
+              onClick={() => responder(false)}
+            >
               Apenas o essencial
             </Button>
           </div>

@@ -23,15 +23,35 @@ export const Clinica: GlobalConfig = {
           label: 'Identidade',
           fields: [
             { name: 'nome', type: 'text', required: true, defaultValue: 'Léia Expert' },
-            { name: 'chamada', type: 'text', label: 'Frase de apoio' },
             { name: 'logo', type: 'upload', relationTo: 'media' },
           ],
         },
         {
           label: 'Hero',
           description:
-            'A mídia do topo da página. Aceita foto e vídeo. Com mais de um arquivo, eles se alternam em esmaecimento.',
+            'O texto e a mídia do topo da página. A mídia aceita foto e vídeo. Com mais de um arquivo, eles se alternam em esmaecimento.',
           fields: [
+            // A `chamada` morava na aba Identidade, como "Frase de apoio". Mudou de
+            // aba sem mudar de nome: aba sem `name` nao aninha o dado, entao a
+            // coluna no banco continua a mesma e nada se perde.
+            {
+              name: 'chamada',
+              type: 'text',
+              label: 'Headline do hero',
+              admin: {
+                description:
+                  'A frase grande sobre o vídeo, em serifa. Diz o que a clínica resolve. Sem "diagnóstico", sem promessa de cura e sem consulta gratuita.',
+              },
+            },
+            {
+              name: 'subtitulo',
+              type: 'textarea',
+              label: 'Subtítulo do hero',
+              admin: {
+                description:
+                  'Fica logo abaixo da headline, em texto corrido. Explica como o tratamento funciona e o que esperar dele. Duas ou três frases.',
+              },
+            },
             {
               name: 'heroIntervalo',
               type: 'number',

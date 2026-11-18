@@ -36,7 +36,35 @@ export function CarrosselTratamentos({ itens, intervalo, className }: Props) {
   // Conteudo que anda sozinho precisa poder parar: para no ponteiro em cima e
   // enquanto alguem estiver navegando por dentro dele pelo teclado.
   const [parado, setParado] = useState(false)
+  // Slides que ja podem pedir a foto, alem do atual. Ver o efeito logo abaixo.
+  const [preparados, setPreparados] = useState<ReadonlySet<number>>(() => new Set())
   const ref = useRef<HTMLDivElement>(null)
+
+  /*
+    **So a foto do slide atual sai no HTML.** Os slides ficam empilhados na
+    mesma celula, todos dentro da tela, entao o navegador pedia as cinco fotos
+    de uma vez e em prioridade alta, disputando banda com o quadro do hero, que
+    e o LCP: medido no PageSpeed, 167 KB na abertura por quatro fotos que
+    ninguem estava vendo.
+
+    Depois do `load`, o slide atual e o seguinte entram na lista, e a cada troca
+    o proximo tambem. Assim a foto chega antes da vez dela, e quem ja apareceu
+    continua montado.
+  */
+  useEffect(() => {
+    if (itens.length < 2) return
+    const proximo = (atual + 1) % itens.length
+    const preparar = () =>
+      setPreparados((anteriores) =>
+        anteriores.has(atual) && anteriores.has(proximo) ? anteriores : new Set([...anteriores, atual, proximo]),
+      )
+    if (document.readyState === 'complete') {
+      preparar()
+      return
+    }
+    window.addEventListener('load', preparar, { once: true })
+    return () => window.removeEventListener('load', preparar)
+  }, [atual, itens.length])
 
   useEffect(() => {
     const consulta = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -85,7 +113,7 @@ export function CarrosselTratamentos({ itens, intervalo, className }: Props) {
                 )}
               >
                 <div className="relative aspect-[16/10] overflow-hidden rounded-md bg-areia">
-                  {imagem?.url && (
+                  {imagem?.url && (visivel || preparados.has(indice)) && (
                     <Image
                       src={imagem.url}
                       alt={imagem.alt || item.titulo}

@@ -18,6 +18,8 @@ import config from '@payload-config'
  *
  * Uso: com o pnpm dev no ar,
  * `/api/dev/subir-midia?arquivo=videos/hero.mp4&alt=Descricao&hero=1`.
+ * Com `hero=1` o arquivo passa a ser o unico do painel; com `hero=somar` ele
+ * entra no fim, e o que ja estava la continua.
  * Fora de desenvolvimento a rota responde 404.
  */
 
@@ -42,7 +44,7 @@ export async function GET(requisicao: Request) {
   const parametros = new URL(requisicao.url).searchParams
   const relativo = parametros.get('arquivo')
   const alt = parametros.get('alt')
-  const ligarNoHero = parametros.get('hero') === '1'
+  const modoHero = parametros.get('hero')
   const forcar = parametros.get('forcar') === '1'
 
   if (!relativo) {
@@ -133,7 +135,7 @@ export async function GET(requisicao: Request) {
 
   let painel: string | null = null
 
-  if (ligarNoHero) {
+  if (modoHero === '1') {
     // Troca o painel inteiro pelo arquivo. A midia que estava la nao e apagada,
     // so deixa de estar ligada, e continua na biblioteca.
     await payload.updateGlobal({
@@ -142,6 +144,29 @@ export async function GET(requisicao: Request) {
       overrideAccess: true,
     })
     painel = 'heroPainel passou a ter só este arquivo'
+  }
+
+  if (modoHero === 'somar') {
+    // Poe o arquivo no fim do painel e mantem o que ja estava, na mesma ordem e
+    // com o mesmo id de linha. O fim, e nao o comeco, porque o primeiro arquivo
+    // e o LCP da pagina: um video novo na frente trocaria o quadro que pinta
+    // primeiro.
+    const clinica = await payload.findGlobal({ slug: 'clinica', depth: 0, overrideAccess: true })
+    const atuais = (clinica.heroPainel ?? []).flatMap((item) => {
+      const arquivo = typeof item.arquivo === 'object' && item.arquivo ? item.arquivo.id : item.arquivo
+      return typeof arquivo === 'number' ? [{ id: item.id, arquivo }] : []
+    })
+
+    if (atuais.some((item) => item.arquivo === documento.id)) {
+      painel = 'o arquivo já estava no heroPainel'
+    } else {
+      await payload.updateGlobal({
+        slug: 'clinica',
+        data: { heroPainel: [...atuais, { arquivo: documento.id }] },
+        overrideAccess: true,
+      })
+      painel = `heroPainel passou a ter ${atuais.length + 1} arquivos`
+    }
   }
 
   return NextResponse.json({

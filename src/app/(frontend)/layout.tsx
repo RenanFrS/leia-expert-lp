@@ -21,11 +21,16 @@ const body = Instrument_Sans({
   display: 'swap',
 })
 
+// Sem preload: a mono so aparece em eyebrow e numero de etapa, todos abaixo da
+// dobra. Com preload ela disputava banda com o quadro do hero, que e o LCP, por
+// uma fonte que ninguem ve na primeira tela. Sem ele, ela so e pedida quando
+// algum texto em mono e desenhado.
 const mono = JetBrains_Mono({
   subsets: ['latin'],
   variable: '--font-mono',
   display: 'swap',
   weight: ['400', '500'],
+  preload: false,
 })
 
 export const viewport: Viewport = {

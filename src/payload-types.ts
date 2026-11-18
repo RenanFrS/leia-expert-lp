@@ -153,6 +153,10 @@ export interface Tratamento {
   resumo: string;
   descricao?: string | null;
   imagem?: (number | null) | Media;
+  /**
+   * Só vale quando a mídia é vídeo. O cartão que gira no topo da página mostra uma foto parada do vídeo, tirada neste segundo, e corta as bordas dela. Escolha um momento em que o problema apareça no meio da imagem. Vazio, a foto sai do começo do vídeo.
+   */
+  quadroDoCartao?: number | null;
   indicacoes?:
     | {
         texto: string;
@@ -494,6 +498,7 @@ export interface TratamentosSelect<T extends boolean = true> {
   resumo?: T;
   descricao?: T;
   imagem?: T;
+  quadroDoCartao?: T;
   indicacoes?:
     | T
     | {
@@ -715,8 +720,15 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
 export interface Clinica {
   id: number;
   nome: string;
-  chamada?: string | null;
   logo?: (number | null) | Media;
+  /**
+   * A frase grande sobre o vídeo, em serifa. Diz o que a clínica resolve. Sem "diagnóstico", sem promessa de cura e sem consulta gratuita.
+   */
+  chamada?: string | null;
+  /**
+   * Fica logo abaixo da headline, em texto corrido. Explica como o tratamento funciona e o que esperar dele. Duas ou três frases.
+   */
+  subtitulo?: string | null;
   /**
    * Só tem efeito em bloco com dois arquivos ou mais.
    */
@@ -890,8 +902,9 @@ export interface Rastreamento {
  */
 export interface ClinicaSelect<T extends boolean = true> {
   nome?: T;
-  chamada?: T;
   logo?: T;
+  chamada?: T;
+  subtitulo?: T;
   heroIntervalo?: T;
   heroPainel?:
     | T

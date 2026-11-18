@@ -4,6 +4,7 @@ import { Revelar } from '@/components/Revelar'
 import { AnimatedContent } from '@/components/ui/animated-content'
 import { VideoFundo } from '@/components/ui/video-fundo'
 import { urlDeEntrega } from '@/lib/cloudinary-url'
+import { VIDEO_FUNDO_CELULAR } from '@/lib/poster-video'
 import { enquadramento, midia } from '@/lib/utils'
 import type { Clinica, Depoimento } from '@/payload-types'
 
@@ -64,10 +65,10 @@ export function Depoimentos({
     1,4 MB em vez de 3,3 MB, e o video vive atras de um veu de 90%, entao a
     perda nao chega a aparecer.
   */
-  const fonte =
-    arquivo?.filename && arquivo.mimeType?.startsWith('video/')
-      ? urlDeEntrega(arquivo.filename, 'f_auto,q_auto:eco,w_1600')
-      : null
+  const ehVideo = Boolean(arquivo?.filename && arquivo.mimeType?.startsWith('video/'))
+  const fonte = ehVideo ? urlDeEntrega(arquivo!.filename!, 'f_auto,q_auto:eco,w_1600') : null
+  // No celular, o recorte 9:16 do centro: o motivo esta no `VIDEO_FUNDO_CELULAR`.
+  const fonteCelular = ehVideo ? urlDeEntrega(arquivo!.filename!, VIDEO_FUNDO_CELULAR) : null
 
   return (
     // `relative isolate` sustenta o video, e o `bg-areia` continua como reserva.
@@ -84,7 +85,7 @@ export function Depoimentos({
 
         Trocou o arquivo? Refaca a conta contra o pixel mais escuro do novo.
       */}
-      {fonte && <VideoFundo src={fonte} veu="bg-areia/90" />}
+      {fonte && <VideoFundo src={fonte} srcCelular={fonteCelular} veu="bg-areia/90" />}
       <div className="container">
         <Revelar>
           {/* Sobre a areia o caramelo cheio nao alcanca contraste, entao aqui escurece. */}

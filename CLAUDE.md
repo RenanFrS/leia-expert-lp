@@ -121,7 +121,7 @@ src/
     cloudinary-adapter.ts
     cloudinary-url.ts  convencao de public_id e de URL da CDN, sem SDK
     carregador-imagem.ts  carregador do next/image, que manda as fotos para a CDN
-    poster-video.ts    quadro parado de video, para o poster do hero
+    poster-video.ts    quadro parado e entregas de video pela CDN, inclusive as de celular
     utils.ts           cn, whatsappLink, formatarWhatsapp e o narrow de midia
   payload-types.ts     gerado, versionado
 ```
@@ -229,6 +229,11 @@ passa a disparar em outro momento.
 Consent Mode v2 inicia com `ad_storage`, `ad_user_data`, `ad_personalization` e `analytics_storage`
 negados, liberando so apos o aceite no banner. A decisao fica em `localStorage`, na chave
 `leia-consentimento`. O banner pode ser desligado no painel pelo campo `consentimento`.
+
+**No celular o banner e compacto**, porque nasce em cima do pe do hero, onde fica o texto: `p-3.5`,
+texto em 13px e os dois botoes dividindo a mesma linha. Medido em 390, ele tem 114px e cobre a linha
+das estrelas, nao o subtitulo. Do `md` para cima volta ao tamanho de antes; texto e comportamento sao
+os mesmos nas duas formas.
 
 ### Contatos e leads
 
@@ -505,9 +510,10 @@ contra o branco. Sobrepor nao muda nada, porque a cor e a mesma, e mata o fio.
 
 Cinco coisas que quebram o notch se forem mexidas sem cuidado:
 
-- **As duas linhas querem larguras parecidas**, o oposto da escada. Hoje sao 407px e 407px em 1440.
-  Num bloco centralizado, linhas desiguais deixam um degrau invisivel de um lado so e o recorte para
-  de parecer proposital.
+- **As duas linhas querem larguras parecidas**, o oposto da escada. Hoje sao 414px e 407px em 1440 e
+  303px e 298px em 1024, com o notch em 510px e 367px. Num bloco centralizado, linhas desiguais deixam
+  um degrau invisivel de um lado so e o recorte para de parecer proposital. Trocou o texto, mantenha
+  as duas linhas com o mesmo numero de caracteres, hoje 15 e 15, e refaca a medida.
 - **A fonte cai para `display-lg` no `lg`**, e so ali. Em `display-xl` a linha mais larga da 576px e o
   bloco passaria de 670px, quase metade do painel, largo demais para ler como notch. Abaixo do `lg`
   nao ha notch e o titulo continua em `display-xl`.
@@ -518,8 +524,10 @@ Cinco coisas que quebram o notch se forem mexidas sem cuidado:
   e lembre que o bloco e centralizado: encolher 32px afasta so 16 de cada lado.
 - **As duas linhas ficam dentro do mesmo `h1`.** Tirar uma para fora deixa o titulo da pagina pela
   metade para leitor de tela.
-- **A linha com descendente precisa de `pb`.** A entrelinha do display e mais apertada que o
-  descendente da fonte, e sem o `pb` a cedilha de "começa" vaza do bloco branco para cima da midia.
+- **A segunda linha precisa do `pb`.** A entrelinha do display e mais apertada que o descendente da
+  fonte, e sem o `pb` um descendente da segunda linha vaza do bloco branco para cima da midia, como a
+  cedilha de "começa" fazia no titulo antigo. "tem tratamento." nao tem descendente, mas o `pb` fica:
+  a proxima troca de texto pode trazer um.
 
 Os filetes sao `hidden lg:block`. Abaixo do `lg` nao ha notch, e como as linhas ocupam a largura toda
 eles apareceriam como quadrados brancos soltos na borda da tela.
@@ -527,35 +535,66 @@ eles apareceriam como quadrados brancos soltos na borda da tela.
 Nao ha eyebrow no hero, de proposito: ele seria uma terceira linha dentro do notch e engordaria o
 bloco justamente na altura. O eyebrow segue nas outras secoes.
 
-O que fica **dentro** da imagem: a chamada com as estrelas no canto inferior esquerdo e o carrossel de
-tratamentos no inferior direito. Fora dela, so o titulo. Havia um CTA no canto superior direito e ele
+O que fica **dentro** da imagem: a headline, o subtitulo e as estrelas no canto inferior esquerdo e o
+carrossel de tratamentos no inferior direito. Fora dela, so o titulo. Havia um CTA no canto superior direito e ele
 saiu a pedido do cliente.
 
 Texto sobre foto nao tem contraste garantido, porque quem escolhe a imagem e a clinica. Por isso a
 chamada fica sobre um veu, um gradiente de `tinta` subindo do pe do painel, com o texto em `porcelana`.
 
-**A chamada abre pelo problema, em pergunta ao sintoma**: "Seu cabelo esta caindo, afinando ou abrindo
-falhas? Descobrimos por que isso acontece e tratamos a causa, nao so o sintoma." E a regra dos 3
-segundos do time de trafego: a pessoa precisa se reconhecer antes de decidir ficar.
+**O texto do hero e um trio, e cada peca tem um trabalho.** Vale a regra dos 3 segundos do time de
+trafego: a pessoa precisa se reconhecer antes de decidir ficar, e o resto diz por que ficar.
 
-Ela ja teve duas versoes, e as duas erravam por motivos diferentes. "Tricologia clinica para homens e
-mulheres..." so conversava com quem ja conhece o termo. "Queda de cabelo, calvicie e alopecia tem
-causa..." nomeava as condicoes em tom clinico e escorregava para o metodo antes de falar do problema.
+- **O `h1` nomeia a dor e responde a ela**, em "Queda de cabelo / tem tratamento." O cliente pediu um
+  titulo de impacto, em que a pessoa sinta que a dor dela tem saida. Ja foi "Cabelo saudavel comeca na
+  raiz.", que falava de cuidado e nao do problema. "Tem tratamento" nao promete cura, so que ha o que
+  fazer. O `h1` e fixo no codigo.
+- **A headline, no campo `chamada`, diz o que a clinica faz**: "Descobrimos por que o seu cabelo esta
+  caindo e tratamos a causa, nao so o sintoma." Ela abria em pergunta ao sintoma, "Seu cabelo esta
+  caindo, afinando ou abrindo falhas?", e a pergunta saiu quando o `h1` passou a ser a propria queixa:
+  as duas diriam a mesma coisa, uma embaixo da outra.
+- **O subtitulo, no campo `subtitulo`, explica**: como funciona, com a tricoscopia na consulta; que
+  tratamento e, um protocolo de sessoes na clinica com oxigenacao e estimulo de crescimento; e o que
+  esperar, frear a queda e fortalecer os fios, com a diferenca entre o terceiro e o sexto mes. Nada ali
+  e novo no site: as sessoes vem dos tratamentos e o prazo vem do FAQ. **Se a clinica mudar o
+  protocolo ou o prazo, o subtitulo muda junto**, senao o hero passa a dizer o que o FAQ nao diz.
 
-**Tres travas continuam valendo em qualquer reescrita**: sem a palavra diagnostico, sem promessa de
-gratuidade e **sem promessa de cura**. O proprio FAQ admite perda antiga que ja nao responde, entao a
-frase descreve o que a clinica faz, e nao garante resultado.
+Os dois campos ficam na aba **Hero** da global Clinica, e cada um tem reserva no codigo com a mesma
+redacao do banco. A `chamada` morava na aba Identidade; aba sem `name` nao muda a coluna, entao a troca
+de aba nao mexeu no dado.
 
-**A chamada e serifa grande, a pedido do cliente**, que mandou uma referencia em que a frase sobre a
+A headline ja teve outras duas versoes, e as duas erravam por motivos diferentes. "Tricologia clinica
+para homens e mulheres..." so conversava com quem ja conhece o termo. "Queda de cabelo, calvicie e
+alopecia tem causa..." nomeava as condicoes em tom clinico e escorregava para o metodo antes de falar do
+problema.
+
+**Tres travas continuam valendo em qualquer reescrita das tres pecas**: sem a palavra diagnostico, sem
+promessa de gratuidade e **sem promessa de cura**. O proprio FAQ admite perda antiga que ja nao
+responde, entao o texto descreve o que a clinica faz, e nao garante resultado.
+
+**A headline e serifa grande, a pedido do cliente**, que mandou uma referencia em que a frase sobre a
 foto era o maior texto da tela. Ela ja foi corpo de texto, `text-base` e depois `text-lg sm:text-2xl`,
 e nos dois lia como legenda. Hoje e `font-display` em **28px no celular, 36px no `sm`, 40px no `lg` e
 48px no `xl`**, com entrelinha 1.1. No desktop ela fica um degrau abaixo do `h1`, 48px contra 56px,
-para o titulo continuar sendo o titulo. A frase atual cabe em **4 linhas em 1280, 1440 e 1920**, como
-na referencia, 5 em 1024 e 6 em 390.
+para o titulo continuar sendo o titulo. A frase atual cabe em **3 linhas do 768 ao 1920** e em 4 no
+390.
+
+**O subtitulo e a outra fonte de proposito**: Instrument Sans, a do corpo do site, contra a serifa da
+headline. A diferenca de familia separa a promessa da explicacao sem precisar de cor nova. Ele vai em
+`porcelana/90`, com `leading-relaxed` e `max-w-2xl`, em **15px no celular, 18px no `sm` e 20px no
+`xl`**: 7 linhas em 390 e 5 do 768 ao 1920.
 
 **A coluna para antes do carrossel**, que e absoluto no mesmo pe do painel e tem 320px: `max-w-xl` ate
 o `lg` e `max-w-3xl` no `xl`. Medido, sobram 88px ate o cartao em 1024, 152px em 1280 e 288px em 1440.
-Frase mais longa cresce para cima, nao para o lado.
+Frase mais longa cresce para cima, nao para o lado. O subtitulo fica dentro dessa coluna e nao mexeu
+nessas folgas.
+
+**O texto subiu a pedido do cliente**, por dois caminhos. O subtitulo embaixo empurra a headline para
+cima, e o pe do bloco passou de `lg:pb-10` para `lg:pb-14`, com o carrossel acompanhando em
+`lg:bottom-14`. No celular o painel segue com 520px, e a headline, que tinha 6 linhas com a frase
+antiga, tem 4 e comeca a 144px do topo dele. **O caso mais apertado e janela baixa no `xl`**, com o
+painel no piso de 640px: medido em 1280x700, a headline comeca 69px abaixo do pe do notch. Texto mais
+longo come essa folga primeiro.
 
 **O veu mede o bloco da chamada, e nao o painel, e essa e a coisa mais importante desta secao.** A
 chamada e ancorada no pe do painel, entao texto maior empurra o topo dela para cima. Com veu de altura
@@ -571,7 +610,12 @@ exatamente o topo do texto, e so nesses 10rem de cima esmaece ate sumir. **O top
 em `tinta/75`, qualquer que seja a fonte, o texto ou a tela.** Contra branco puro, o pior caso de
 qualquer midia, isso compoe `rgb(98,88,83)` e da **6.9** em porcelana.
 
-Medido no navegador sobre o video atual, com a midia pausada e o texto escondido por folha injetada,
+**O subtitulo cai abaixo do topo do bloco**, onde o veu ja passou de `tinta/75`. Pela conta, contra
+branco puro, o `porcelana/90` dele da **7.2** na primeira linha, onde o veu esta em torno de `tinta/81`
+em 390 e em 1440, e daria **6.0** mesmo se um dia ele subisse ate o topo do bloco.
+
+Medido no navegador sobre o video atual, ainda com a chamada antiga, com a midia pausada e o texto
+escondido por folha injetada,
 contra o pixel mais claro atras da primeira linha: **8.72 em 768, 9.35 em 390 e acima de 11 de 1024 a
 1920**. A linha das estrelas, em `porcelana/85`, fica acima de 8.99 em todas.
 
@@ -597,18 +641,40 @@ Duas coisas sustentam a montagem:
   CTA e o carrossel, absolutos, se alinham ao painel sem precisar estar dentro dele. Assim cada um e
   montado uma vez so, em vez de uma copia para telefone e outra para desktop.
 
-Abaixo do `lg` a sobreposicao nao se sustenta, porque nao sobra largura para texto ao lado de midia.
-Ali a pilha e direta: titulo, painel, CTA, carrossel e pilulas.
+Abaixo do `lg` o titulo e o carrossel saem de cima do painel, porque nao sobra largura para eles ao
+lado da midia: a pilha e titulo, painel e carrossel. O texto do hero continua sobre o painel, no pe
+dele, com o mesmo veu.
 
 O painel aceita varios arquivos, foto ou video, e alterna em esmaecimento pelo
 `components/ui/midia-rotativa.tsx`. O primeiro arquivo e o LCP da pagina e leva `priority`. **Nao passe
 `loading` junto do `priority`**: isso anula o preload que o Next injeta no head, que e justamente o que
 adianta o LCP.
 
-**Quando o primeiro arquivo e video, o `priority` nao vale.** Ele so tem efeito no ramo do `<Image>`,
-entao sem mais nada o painel pintaria a chapa de areia ate o primeiro quadro decodificar, e o LCP da
-pagina viraria o titulo. Quem segura o lugar e o `poster`, montado pelo `src/lib/poster-video.ts` a
-partir da URL do proprio video, com `so_0`.
+**Cada video do painel toca o tempo todo, mesmo escondido.** Todos ganham `src` no `load` da pagina e
+o `MidiaRotativa` chama o `play` em todos; a troca e so de opacidade. Com dois videos, o hero baixa os
+dois depois da abertura: medido em 18 de novembro de 2026, com o `hero-video` e o `testa-entradas`, sao
+3,1 MB e 5,1 MB no computador e 1,7 MB e 1,9 MB no celular. **Arquivo novo entra no fim da lista**,
+porque o primeiro e o LCP; o `subir-midia` com `hero=somar` ja faz assim.
+
+**Quando o primeiro arquivo e video, o LCP e o quadro parado dele, como imagem de verdade.** O
+`MidiaRotativa` desenha por baixo do video o quadro `so_0`, montado pelo `quadroDeVideo` de
+`src/lib/poster-video.ts`, com `priority` e `fetchpriority="high"`, e o video aparece por cima em
+esmaecimento no primeiro `playing`. **Ja foi o atributo `poster`, e saiu por tres motivos medidos no
+PageSpeed**: o `poster` nao aceita `srcset` nem prioridade, entao o do hero saia em JPEG de 1600px para
+um painel de 390px e entrava na fila atras dos videos; e ele nao tem carregamento preguicoso, entao os
+cartoes de tratamento, bem abaixo da dobra, baixavam ~1 MB de quadro na abertura.
+
+**No celular ha direcao de arte**, pela prop `retratoNoCelular`. Ate 639px o painel tem 3:4 e so
+mostrava os 42% do meio do 16:9, entao quadro e video saem no recorte retrato do centro,
+`c_fill,ar_3:4,g_center`, com o video em 720px de largura. O quadro vira um `<picture>` montado com
+`getImageProps`, porque o `<Image>` so troca de largura, nao de recorte. **O `getImageProps` do Next
+15.4 nao tira o `fetchPriority` do `priority`**, so o `loading="lazy"`: a prioridade alta vai
+explicita, e quem mexer nisso confira o atributo no HTML.
+
+**O video do hero so ganha `src` depois do `load` da pagina.** Nenhum video sai com `src` no HTML: com
+`src` e `autoplay` no servidor, o hero e os dois fundos somavam 7,8 MB na abertura, e o do hero
+disputava banda com o proprio quadro que e o LCP. A entrega, retrato ou 16:9, e escolhida nesse
+instante, pela largura da tela. Sob `prefers-reduced-motion` o `src` nem entra, e fica o quadro.
 
 **O video do painel aponta direto para a CDN do Cloudinary, e isso e obrigatorio.** O `Hero.tsx` troca
 a URL antes de passar para o `MidiaRotativa`, usando `urlDeEntrega` de `src/lib/cloudinary-url.ts`. Pela
@@ -648,12 +714,17 @@ pede 445px e a coluna ao lado do notch tem 436px, entao **ela nao cabe em largur
 logotipo, centralizado como o notch, cai 42px em cima da primeira linha do titulo. Com o painel
 comecando nos 96px nao ha colisao nenhuma: o menu termina em 76px e o notch comeca em 96px.
 
-O hero fica acima da dobra, entao nada ali pode usar o `AnimatedContent`. Continua tudo no `Revelar`.
+O hero fica acima da dobra, entao nada ali pode usar o `AnimatedContent`, **e o `Revelar` tambem saiu
+dali**. Ele nasce em `opacity-0` no HTML e so revela depois da hidratacao: no celular, com o JavaScript
+da pagina inteira na frente, titulo e headline ficavam invisiveis por segundos, e o PageSpeed contava
+isso. A entrada hoje e CSS puro, pelas classes do `tailwindcss-animate`, que ja estava no projeto:
+`animate-in fade-in duration-700 ease-out`, com `slide-in-from-top-6` no titulo e
+`slide-in-from-bottom-4` no bloco da headline, os dois com `motion-reduce:animate-none`. A animacao
+comeca no primeiro quadro pintado, sem esperar script nenhum.
 
-**O titulo desce de cima, nao entra pela esquerda.** E o `Revelar` com `direcao="cima"`, que desloca
-1.5rem para cima no eixo vertical. O padrao do `Revelar` segue sendo subir, e todas as outras secoes
-continuam nele: a direcao e opcao, nao troca de comportamento. A `esquerda` ficou no mapa, herdada da
-silhueta em escada.
+**O titulo desce de cima, nao entra pela esquerda.** O `slide-in-from-top-6` desloca 1.5rem, o mesmo
+curso do `direcao="cima"` do `Revelar`, que ficou sem uso, junto com a `esquerda`, herdada da silhueta
+em escada. O padrao do `Revelar` segue sendo subir, e as outras secoes continuam nele.
 
 O sentido acompanha a forma: o notch esta pendurado na borda de cima, entao ele assenta descendo.
 
@@ -764,7 +835,28 @@ razoes. O cartao desenha com `next/image`, e o otimizador responde **400, "The r
 a valid image"**, para um `.mov` ou um `.mp4`, entao sem isso o slide fica vazio. E este carrossel vive
 acima da dobra, ao lado do painel que ja e o LCP: somar video tocando num cartao de 320px que troca
 sozinho custaria caro. Quem monta o quadro e o `Hero.tsx`, que e server component, com o
-`posterDeVideo`. Na secao de tratamentos, bem abaixo, o mesmo arquivo toca de verdade.
+`posterDeVideo`, em 640px. Na secao de tratamentos, bem abaixo, o mesmo arquivo toca de verdade.
+
+**O quadro do cartao sai do segundo gravado no campo `quadroDoCartao` do tratamento**, e nao sempre do
+primeiro. O cartao e 16:10 e corta o resto, e video vertical perde em cima e embaixo: o `areata.mp4` e
+9:16, abre no rosto da modelo, e o cartao mostrava so os olhos dela, sem falha nenhuma. Ele esta em
+**8,5 s**, onde o recorte do meio pega duas falhas redondas e a testa. Tres coisas desse campo:
+
+- **ele vale so para este cartao.** A secao de tratamentos toca o video do comeco, e o quadro por baixo
+  dele continua sendo o primeiro: um quadro de outro momento daria um salto quando o video entra
+- **vazio e o primeiro quadro, e segundo alem do fim nao quebra**: medido, o Cloudinary devolve o
+  ultimo quadro, com 200
+- **para escolher, recorte o meio em 16:10**, que e o que o cartao mostra. O quadro sai do proprio
+  Cloudinary com `so_<segundo>,w_640,q_auto` na URL de video, sem baixar o arquivo
+
+**O `quadroDoCartao` para no servidor.** O `page.tsx` manda ao Hero os campos do cartao mais esse, e o
+Hero monta a URL e tira o campo antes de passar os itens ao carrossel, que e client component.
+
+**So a foto do slide atual sai no HTML.** Os slides ficam empilhados na mesma celula, todos dentro da
+tela, entao o navegador pedia todas as fotos de uma vez e em prioridade alta, disputando banda com o
+quadro do hero: medido no PageSpeed, 167 KB na abertura por quatro fotos que ninguem estava vendo.
+Depois do `load` da pagina, o slide atual e o seguinte entram numa lista de preparados, e a cada troca
+o proximo tambem. Assim a foto chega antes da vez dela, e quem ja apareceu continua montado.
 
 Houve pilulas com o nome de cada tratamento abaixo do painel, e elas **foram removidas a pedido do
 cliente**. Com isso o unico link interno para tratamento no topo da pagina e o do cartao visivel no
@@ -772,10 +864,10 @@ momento. As ancoras em si continuam existindo nos cartoes da secao de tratamento
 
 ### Fundo em video
 
-Tres secoes tem video de fundo, todas pelo mesmo `components/ui/video-fundo.tsx`: o agendamento, a
-tricoscopia e os depoimentos. Os arquivos das duas ultimas saem do painel, na aba **Videos de fundo** da
-global Clinica, nos campos `videoTricoscopia` e `videoDepoimentos`. Sem arquivo, a secao volta ao fundo
-chapado.
+Duas secoes tem video de fundo, as duas pelo mesmo `components/ui/video-fundo.tsx`: a tricoscopia e os
+depoimentos. O agendamento tambem tinha, e perdeu junto com o formulario, como esta na secao Sobre e
+contato. Os arquivos saem do painel, na aba **Videos de fundo** da global Clinica, nos campos
+`videoTricoscopia` e `videoDepoimentos`. Sem arquivo, a secao volta ao fundo chapado.
 
 **A conta do veu muda de sinal conforme a secao.** Nao existe valor padrao, e copiar o de uma secao para
 outra da errado:
@@ -795,6 +887,25 @@ areia, que existe para quebrar o ritmo da pagina. Foi escolha, nao descuido.
 depoimentos sao 1,4 MB em vez de 3,3 MB. Vale porque o video vive atras de um veu forte. No hero nao
 valeria, porque la ele e o assunto.
 
+**No celular entra outra entrega, pela prop `srcCelular`**: o `VIDEO_FUNDO_CELULAR`, de
+`src/lib/poster-video.ts`, que e `f_auto,q_auto:eco,c_fill,ar_9:16,g_center,w_540`. A secao no telefone
+e alta e estreita, e com `object-cover` o 16:9 de 1600px tinha as laterais cortadas e baixadas a toa.
+Medido: 1,3 MB contra 3,6 MB na tricoscopia e 0,7 MB contra 1,4 MB nos depoimentos. O recorte e um
+pedaco do mesmo quadro, entao nao cria pixel mais extremo e a conta do veu continua valendo.
+
+**O video so carrega perto da tela, e pausa quando sai dela.** As duas secoes ficam bem abaixo da
+dobra, e com `src` e `autoplay` no HTML o navegador baixava os dois arquivos na abertura: 4,8 MB
+disputando banda com o hero, medidos no PageSpeed. Hoje um `IntersectionObserver` com margem de 300px
+entrega o `src` e toca pelo `tocarComReserva`; fora da margem, pausa. Uma vez dentro o `src` fica,
+senao a proxima rolagem baixaria tudo de novo. O video nasce transparente e aparece por esmaecimento no
+`loadeddata`, e nao no `playing`: sob `prefers-reduced-motion` ele nao toca, e o quadro parado ainda
+precisa aparecer atras do veu.
+
+**Transformacao nova em video grande volta 423 ate o Cloudinary processar.** Na primeira vez que uma
+URL com transformacao nova e pedida, a CDN responde 423 e processa em segundo plano; minutos depois a
+mesma URL volta 200. Nesse meio tempo o video simplesmente nao aparece, e a cor da secao segura o
+lugar. **Mudou a transformacao de um video? Peca a URL nova uma vez antes do deploy.**
+
 Cada secao com video precisa de `relative isolate`, senao a camada em `-z-10` cai atras do fundo de um
 ancestral e some. A cor de fundo original continua como reserva.
 
@@ -803,8 +914,10 @@ ancestral e some. A cor de fundo original continua como reserva.
 Houve relato de video parado num iPhone de Safari antigo. **A entrega foi descartada, e vale saber o
 que foi medido**, para ninguem refazer a investigacao:
 
-- o HTML do servidor sai com `muted`, `playsinline` e, nos que tocam sozinhos, `autoplay`, que e
-  exatamente o que o iOS exige para video sem gesto
+- todo video sai com `muted` e `playsinline`, que e o que o iOS exige para tocar sem gesto. **Nenhum
+  sai mais com `src` nem `autoplay` no HTML**, pelos motivos das secoes Hero e Fundo em video: o `src`
+  entra no cliente e quem toca e o `play()` do `tocarComReserva`, que o iOS aceita sem gesto em video
+  mudo com `playsinline`
 - pedindo cada video a CDN como Safari do iOS 12, 14 e 17, todos voltam em **H.264** (`avc1`), nunca em
   HEVC, com **206** para `Range` e o `moov` antes do `mdat`. O Safari do iPhone recusa video de servidor
   sem `Range`, e e por isso que nenhum video pode sair pela rota do Payload
@@ -818,8 +931,8 @@ que foi medido**, para ninguem refazer a investigacao:
   tenta de novo ao voltar para a aba e no `pageshow`. **Os dois componentes de video usam ele**, o
   `MidiaRotativa` e o `VideoFundo`; video novo deve passar pelo mesmo caminho.
 
-  Testado simulando o bloqueio no Chrome, com o `play()` recusado sem ativacao do usuario e o `autoplay`
-  arrancado: os tres videos da pagina nascem parados, tres recusas, e comecam juntos depois de um
+  Testado quando os videos ainda saiam com `autoplay`, simulando o bloqueio no Chrome, com o `play()`
+  recusado sem ativacao do usuario e o `autoplay` arrancado: os tres videos da pagina nascem parados, tres recusas, e comecam juntos depois de um
   clique. Sem simulacao, tocam ao carregar como antes. **Rolar a pagina nao destrava**, porque rolagem
   nao conta como gesto para o navegador.
 - **"Reduzir movimento" ligado no iPhone.** Ai o video fica parado de proposito: o site respeita o
@@ -828,8 +941,8 @@ que foi medido**, para ninguem refazer a investigacao:
 
 ### Tricoscopia
 
-A secao do exame tem video de fundo, pelo mesmo `components/ui/video-fundo.tsx` do agendamento. O
-arquivo sai do painel, no campo `videoTricoscopia` da global Clinica, aba **Exame**. Sem arquivo a
+A secao do exame tem video de fundo, pelo `components/ui/video-fundo.tsx`. O arquivo sai do painel, no
+campo `videoTricoscopia` da global Clinica, aba **Videos de fundo**. Sem arquivo a
 secao volta ao fundo escuro chapado, que era o comportamento antigo.
 
 **O arquivo mudou, e com ele a conta.** O video antigo parecia salao de beleza e o time de trafego
@@ -853,7 +966,8 @@ Tres coisas medidas, nao estimadas:
   de manter a secao escura, e foi escolha, nao descuido.
 - **A transformacao e mais agressiva que a do hero**, `f_auto,q_auto:eco,w_1600` em vez de
   `f_auto,q_auto`. Vale porque o video vive atras de um veu de 85% e a perda nao chega a aparecer. No
-  hero nao valeria, porque la o video e o assunto.
+  hero nao valeria, porque la o video e o assunto. No celular entra o recorte vertical de 540px,
+  descrito em Fundo em video: 1,3 MB contra 3,6 MB.
 - **A URL aponta direto para a CDN**, pelo `urlDeEntrega`, e nao para a rota do Payload. Mesmo motivo do
   hero: aquela rota nao transforma, nao responde a `Range` e passa os bytes pelo servidor do Next.
 
@@ -898,8 +1012,8 @@ valor. Nao corrija.
 `chamada` e o `sobre` so de reserva, nessa ordem. Ela ja foi a propria `chamada`, enquanto a chamada era
 institucional. Quando a chamada virou pergunta ao sintoma, que funciona no hero e le mal no resultado de
 busca, as duas divergiram e a descricao passou para o campo que ja existia para isso. O `sobre` fica por
-ultimo porque fala em primeira pessoa. **Se o `descricao` do Seo ficar vazio, a pergunta do hero volta a
-ir para o Google.**
+ultimo porque fala em primeira pessoa. **Se o `descricao` do Seo ficar vazio, a headline do hero vai
+para o Google no lugar dela.**
 
 **O Sobre segue uma referencia mandada pelo cliente, espelhada**: texto a esquerda, com pilula, titulo,
 paragrafos, lista com selo e botao, e a foto em cartao a direita, com um vidro no pe levando nome e
@@ -1401,7 +1515,9 @@ Onde o acento pode aparecer, por causa de contraste:
 - sobre `tinta`: `caramelo-claro`
 
 Fraunces no display, Instrument Sans no corpo, JetBrains Mono nos numeros e nos eyebrows, todas servidas
-pelo `next/font`. A textura do hero e uma malha de linhas paralelas, referencia a leitura de densidade
+pelo `next/font`. **A JetBrains Mono vai com `preload: false`**: ela nao aparece na primeira tela, e com
+preload entrava na fila da abertura, disputando banda com o LCP. Fraunces e Instrument Sans seguem com
+preload, porque o titulo e o texto do hero usam as duas. A textura do hero e uma malha de linhas paralelas, referencia a leitura de densidade
 capilar, e usa `#2E211A` direto porque e gradiente inline.
 
 O botao tem quatro variantes em `components/ui/button.tsx`. A `destaque` e a chamada das secoes escuras e
@@ -1411,8 +1527,9 @@ inverte, fundo claro com texto `cacau-escuro`, porque o caramelo cheio nao separ
 
 Tres sistemas convivem, cada um com um papel:
 
-- `components/Revelar.tsx` continua nos titulos de secao. Nao depende de biblioteca e pinta na hora,
-  entao e o unico que pode aparecer acima da dobra.
+- `components/Revelar.tsx` continua nos titulos de secao. Nao depende de biblioteca, mas nasce em
+  `opacity-0` no HTML e so aparece depois da hidratacao, entao tambem nao serve acima da dobra. O hero
+  entra por CSS, pelo `tailwindcss-animate`, como esta na secao Hero.
 - `components/ui/animated-content.tsx` e o AnimatedContent do React Bits, com gsap, usado nos cards das
   secoes. Ele nasce com `visibility: hidden` e so aparece quando o gsap roda, portanto **nunca use
   acima da dobra**: seguraria o LCP e deixaria a tela em branco em hidratacao lenta.
@@ -1458,6 +1575,19 @@ rodam juntos nos CTAs.
 
 Tudo isso desliga sob `prefers-reduced-motion`, inclusive sem chegar a criar o contexto WebGL.
 
+**gsap, ScrollTrigger, Lenis e ogl chegam por `import()` dentro do efeito que usa cada um**, e nao por
+import estatico. Os quatro iam no JavaScript inicial da pagina, que no celular e o que segura a
+hidratacao; hoje cada um vem num pedaco separado, depois. Tres cuidados vieram junto:
+
+- **a flag `cancelado` em cada efeito.** O Strict Mode monta duas vezes, e o `import()` pode resolver
+  depois da limpeza: sem a flag nasceriam dois Lenis, ou um gatilho sobre elemento desmontado
+- **o `AnimatedContent` mostra o card na hora sob `prefers-reduced-motion`**, sem esperar o gsap chegar
+- **o WebGL do `CamadaEspecular` so monta com o navegador ocioso**, por `requestIdleCallback`, com um
+  `setTimeout` de reserva para o Safari, que nao tem essa API
+
+Swiper e framer-motion continuam no pacote inicial. Tirar os dois de la e um dos passos que sobraram,
+na secao Desempenho no celular.
+
 ### Tratamentos em zig-zag
 
 `src/components/sections/Tratamentos.tsx` desce os tratamentos ao longo de uma espinha central: um
@@ -1475,7 +1605,7 @@ O movimento sai do `AnimatedContent` com `direction="horizontal"` e `reverse` no
 `reverse` falso o deslocamento e positivo, o cartao parte da direita e vai a zero. O `scale` vai em 1
 de proposito: o zoom padrao de 0.96 embaralha a leitura de um movimento puramente lateral.
 
-Cinco cuidados, todos ja pagos:
+Sete cuidados, todos ja pagos:
 
 - **O `overflow-x-clip` da secao e obrigatorio.** O cartao nasce 120px fora do lugar, e sem o recorte
   esse deslocamento vira barra de rolagem horizontal na pagina inteira enquanto a animacao nao
@@ -1497,7 +1627,10 @@ Cinco cuidados, todos ja pagos:
   `soQuandoVisivel` do `MidiaRotativa`, e ela segura o **`src`**, nao so o
   `play()`. Medido: so com `autoplay` desligado e `preload="metadata"`, com a
   pagina parada no topo, o Chrome ja tinha 11,7s do primeiro video em buffer.
-  Sem `src` ele nao pede byte nenhum, e o `poster` segura o lugar.
+  Sem `src` ele nao pede byte nenhum, e o quadro parado segura o lugar. **O quadro tambem espera**: so
+  entra a 400px da tela, por um `IntersectionObserver` no `MidiaRotativa`. O `loading="lazy"` sozinho
+  nao segurava, porque o Chrome pede imagem preguicosa a ate 1250px da tela, e no celular o primeiro
+  cartao fica a menos que isso do pe do hero: os quadros entravam na abertura, junto do LCP.
 - **A foto fica na borda de fora.** O cartao docado a direita leva a foto a direita e o texto rente a
   espinha, e o par inverte os dois. E isso que mantem a coluna de leitura sempre junto do fio.
 - **A linha interna e flex, nao grid.** As duas colunas tem larguras diferentes, entao com grid o
@@ -1653,6 +1786,58 @@ Foco visivel global, link de pular navegacao, `prefers-reduced-motion` respeitad
 Lenis, alt obrigatorio em toda midia do painel, label associado a cada campo e erro anunciado por leitor
 de tela.
 
+### Desempenho no celular
+
+O PageSpeed do celular estava em **62**, com FCP de 3,1s e LCP de 10,3s, e o cliente pediu ajuste. **A
+causa principal era byte demais na abertura, e nao codigo lento.** Medido no site no ar em 18 de
+novembro de 2026: 7,8 MB de video baixados antes de qualquer rolagem, ~1 MB de quadros parados de
+cartoes abaixo da dobra, o texto do hero escondido ate a hidratacao e ~290 KB de JavaScript inicial.
+
+O que mudou, cada um com o porque na secao do componente:
+
+- nenhum video sai com `src` no HTML: o do hero entra depois do `load`, os de fundo e dos cartoes so
+  perto da tela (Hero, Fundo em video e Tratamentos em zig-zag)
+- o LCP e o quadro parado do hero como imagem, com `fetchpriority="high"` e recorte retrato no
+  celular (Hero)
+- titulo e headline entram por CSS, sem esperar JavaScript (Hero)
+- o carrossel do hero so pede a foto do slide atual na abertura (Carrossel de tratamentos)
+- gsap, ScrollTrigger, Lenis e ogl por `import()` (Animacao)
+- a fonte mono sem preload (Design)
+
+Lighthouse no celular, mediana de 3 rodadas. O antes e o site no ar e o depois e um build de producao
+local, entao **o numero que vale e o do PageSpeed depois do deploy**:
+
+| | Antes | Depois |
+| --- | --- | --- |
+| Nota | 51 | 64 |
+| FCP | 1,58s | 1,38s |
+| LCP | 7,32s | 3,67s |
+| Speed Index | 3,89s | 2,65s |
+| TBT | 1,06s | 1,30s |
+| Peso da pagina | 9,96 MB | 2,64 MB |
+| CLS | 0 | 0 |
+
+**O TBT subiu sem trabalho novo na pagina.** A janela que ele mede vai do FCP ate a pagina ficar
+interativa, e com o FCP mais cedo ela passou a pegar a leitura do documento e o proprio script do
+Lighthouse.
+
+**A meta de LCP abaixo de 2,5s nao foi alcancada.** O que sobra, do maior para o menor:
+
+- a hidratacao do React, com 216 KB comprimidos de JavaScript inicial
+- **GTM e gtag, com ~560ms de tarefa longa.** Pela regra de medicao eles ficam como estao: passar para
+  `lazyOnload` pode perder a visita de quem sai cedo, entao so com o ok do cliente e da agencia
+- Swiper e framer-motion no pacote inicial, 86 KB comprimidos
+- o Lottie do WhatsApp flutuante, que precisaria de um icone estatico de reserva
+- o logotipo pedido em 1080px para uma caixa de 56px, 13 KB
+
+**Como medir**: com o Chrome instalado, tres rodadas e a mediana. Build local so com `pnpm build` e
+`pnpm start`, nunca com o `pnpm dev` no ar, pelo motivo da secao Comandos.
+
+```bash
+CHROME_PATH=/usr/bin/google-chrome npx -y lighthouse@12.8.2 <url> --only-categories=performance \
+  --output=json --output-path=<arquivo> --chrome-flags="--headless=new" --quiet
+```
+
 ### Conteudo
 
 Todo texto e original, escrito sobre as palavras chave de tricologia clinica. Nao aproveite copy de outros
@@ -1714,7 +1899,8 @@ Consequencias e como contornar:
   acento, a URL sai percent encoded e o Cloudinary guarda o `public_id` com o acento, servindo pela CDN
   normalmente, inclusive com transformacao.
 - **Upload**: com o `pnpm dev` no ar, `/api/dev/subir-midia?arquivo=videos/hero.mp4&alt=Descricao&hero=1`
-  sobe um arquivo de `public/` para a Media e, com `hero=1`, ja troca o painel do hero por ele. Pela
+  sobe um arquivo de `public/` para a Media e, com `hero=1`, ja troca o painel do hero por ele. **Com
+  `hero=somar` ele entra no fim do painel** e o que ja estava continua, na mesma ordem. Pela
   Local API o arquivo vai como buffer, em processo, entao um video de 25 MB nao esbarra em limite de
   corpo de requisicao. Repetir nao duplica: reaproveita o documento e corrige o `alt` se mudou.
 - **Import map, na pratica**: com o `pnpm dev` no ar, acesse `/api/dev/gerar-importmap`. O dev **nao**

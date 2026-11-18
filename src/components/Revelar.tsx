@@ -5,14 +5,18 @@ import { cn } from '@/lib/utils'
 
 /**
  * Revela o conteudo quando ele entra na viewport. Usa IntersectionObserver em
- * vez de biblioteca de animacao para nao pesar no carregamento, e por isso e o
- * unico dos tres sistemas de animacao que pode aparecer acima da dobra.
+ * vez de biblioteca de animacao para nao pesar no carregamento.
  *
- * O padrao e subir. As outras duas existem para o titulo do hero, que forma o
- * recorte sobre a midia:
+ * **Nao use acima da dobra.** O conteudo nasce em `opacity-0` no HTML e so
+ * aparece depois da hidratacao: no celular, com o JavaScript da pagina inteira
+ * na frente, o titulo do hero ficava invisivel por segundos. O hero passou a
+ * entrar por CSS, pelas classes do `tailwindcss-animate`.
  *
- * - `cima` e a que vale hoje, com o titulo em forma de notch: ele desce da borda
- *   de cima do painel ate assentar, que e o sentido em que a forma se le.
+ * O padrao e subir. As outras duas direcoes eram do titulo do hero e hoje estao
+ * sem uso:
+ *
+ * - `cima` descia o titulo em forma de notch da borda de cima do painel, que e
+ *   o sentido em que a forma se le. O CSS do hero repete o mesmo curso.
  * - `esquerda` vem da silhueta anterior, em escada, e ficou porque e barata.
  *
  * **O deslocamento de `cima` e curto de proposito, 24px.** No `lg` o titulo

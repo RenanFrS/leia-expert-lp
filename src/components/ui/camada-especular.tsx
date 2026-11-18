@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { Renderer, Program, Mesh, Triangle, Color } from 'ogl'
+import type { Renderer } from 'ogl'
 
 /**
  * Brilho especular na borda, extraido do SpecularButton do React Bits. Vem so a
@@ -12,7 +12,30 @@ import { Renderer, Program, Mesh, Triangle, Color } from 'ogl'
  * passando de uns 16, com teto menor no celular. Por isso isto e opt-in, ligado
  * so nos CTAs principais pela prop `especular` do Button. Nao saia espalhando
  * pelos botoes secundarios.
+ *
+ * **O `ogl` vem por `import()` e a montagem espera o navegador ficar ocioso.**
+ * O botao do header leva o especular, entao o import estatico punha o `ogl` no
+ * pacote de toda pagina, e a criacao dos contextos WebGL com a compilacao dos
+ * shaders rodava dentro da hidratacao, uma instancia atras da outra na mesma
+ * tarefa. O brilho e enfeite: o botao funciona e aparece sem ele, entao ele pode
+ * chegar depois, cada instancia na sua vez.
  */
+
+/**
+ * Roda a tarefa quando o navegador estiver ocioso. O Safari ainda nao tem
+ * `requestIdleCallback`, e ali vai um `setTimeout`, que ao menos separa cada
+ * instancia numa tarefa propria. Devolve o cancelamento.
+ */
+const quandoOcioso = (tarefa: () => void): (() => void) => {
+  // `typeof`, e nao `in window`: para o TypeScript a funcao sempre existe, e o
+  // `in` faria o ramo do Safari virar `never`.
+  if (typeof window.requestIdleCallback === 'function') {
+    const id = window.requestIdleCallback(tarefa, { timeout: 3000 })
+    return () => window.cancelIdleCallback(id)
+  }
+  const id = setTimeout(tarefa, 300)
+  return () => clearTimeout(id)
+}
 
 // Sem folga em volta: o botao tem overflow-hidden por causa do brilho em CSS,
 // entao qualquer sobra do canvas seria recortada de qualquer jeito. Com zero, o
@@ -117,6 +140,152 @@ type Props = {
   proximity?: number
 }
 
+/**
+ * A camada WebGL em si. Devolve a limpeza, ou nada quando o navegador nao da
+ * contexto. Le as props pelo `propsRef`, entao uma troca de cor no botao chega
+ * ao proximo quadro sem remontar o contexto.
+ */
+function montar(
+  { Renderer, Program, Mesh, Triangle, Color }: typeof import('ogl'),
+  fx: HTMLSpanElement,
+  alvo: HTMLElement,
+  propsRef: { current: Required<Props> },
+): (() => void) | undefined {
+  const dpr = window.devicePixelRatio || 1
+
+  // **Sem WebGL o botao fica sem brilho, e a pagina segue de pe.** O ogl nao
+  // devolve erro quando o navegador recusa o contexto: ele avisa no console e
+  // em seguida escreve no contexto nulo, o que estoura `Cannot set properties
+  // of null (setting 'renderer')`. Como isso acontece dentro de um efeito, o
+  // React derrubava a arvore inteira e a visita via so "Application error".
+  // Acontece com aceleracao de hardware desligada, placa de video bloqueada
+  // pelo navegador e aparelho antigo.
+  let renderer: Renderer
+  try {
+    renderer = new Renderer({ alpha: true, premultipliedAlpha: true, antialias: true, dpr })
+  } catch {
+    return
+  }
+  const gl = renderer.gl
+
+  // Os shaders sao `#version 300 es`, entao so compilam em WebGL2. No WebGL1
+  // que o ogl usa de reserva o programa nao linka e o erro voltaria a cada
+  // quadro, entao o brilho fica de fora tambem.
+  if (!renderer.isWebgl2) {
+    gl.getExtension('WEBGL_lose_context')?.loseContext()
+    return
+  }
+
+  gl.clearColor(0, 0, 0, 0)
+  gl.enable(gl.BLEND)
+  gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
+
+  const geometry = new Triangle(gl)
+  if (geometry.attributes.uv) delete geometry.attributes.uv
+
+  const program = new Program(gl, {
+    vertex: VERT,
+    fragment: FRAG,
+    uniforms: {
+      uCenter: { value: [0, 0] },
+      uHalfSize: { value: [1, 1] },
+      uRadius: { value: 0 },
+      uAngle: { value: 2.4 },
+      uPx: { value: dpr },
+      uLineColor: { value: [1, 1, 1] },
+      uBaseColor: { value: [0.32, 0.32, 0.32] },
+      uIntensity: { value: 0 },
+      uShineSize: { value: 0.17 },
+      uShineFade: { value: 0.7 },
+      uThickness: { value: 1 },
+      uBaseWidth: { value: dpr },
+    },
+  })
+
+  const mesh = new Mesh(gl, { geometry, program })
+  fx.appendChild(gl.canvas)
+
+  const tamanho = { w: 1, h: 1 }
+  const redimensionar = () => {
+    const caixa = alvo.getBoundingClientRect()
+    tamanho.w = caixa.width
+    tamanho.h = caixa.height
+    renderer.setSize(caixa.width + PAD * 2, caixa.height + PAD * 2)
+    program.uniforms.uCenter.value = [(PAD + caixa.width / 2) * dpr, (PAD + caixa.height / 2) * dpr]
+    program.uniforms.uHalfSize.value = [(caixa.width / 2) * dpr, (caixa.height / 2) * dpr]
+  }
+  const ro = new ResizeObserver(redimensionar)
+  ro.observe(alvo)
+  redimensionar()
+
+  let anguloPonteiro: number | null = null
+  let proximidade = 0
+
+  const desinscrever = inscrever((evento) => {
+    const caixa = alvo.getBoundingClientRect()
+    const cx = caixa.left + caixa.width / 2
+    const cy = caixa.top + caixa.height / 2
+    const dx = Math.max(caixa.left - evento.clientX, 0, evento.clientX - caixa.right)
+    const dy = Math.max(caixa.top - evento.clientY, 0, evento.clientY - caixa.bottom)
+    const distancia = Math.hypot(dx, dy)
+
+    if (distancia === 0) {
+      const nx = (evento.clientX - cx) / (caixa.width / 2)
+      const ny = (cy - evento.clientY) / (caixa.height / 2)
+      anguloPonteiro = Math.atan2(2 / caixa.height, -2 / caixa.width) + nx * 0.3 + ny * 0.15
+    } else {
+      anguloPonteiro = Math.atan2(cy - evento.clientY, evento.clientX - cx)
+    }
+
+    const t = Math.max(0, 1 - distancia / Math.max(propsRef.current.proximity, 1))
+    proximidade = t * t * (3 - 2 * t)
+  })
+
+  let angulo = 2.4
+  let brilho = 0
+  let anterior = performance.now()
+  let raf = 0
+
+  const corLinha = new Color()
+  const corBase = new Color()
+
+  const atualizar = (agora: number) => {
+    raf = requestAnimationFrame(atualizar)
+    const dt = Math.min((agora - anterior) / 1000, 0.05)
+    anterior = agora
+    const p = propsRef.current
+
+    if (anguloPonteiro != null) {
+      const diff = ((anguloPonteiro - angulo + Math.PI * 3) % (Math.PI * 2)) - Math.PI
+      angulo += diff * (1 - Math.exp(-dt * 7))
+    }
+
+    brilho += (proximidade - brilho) * (1 - Math.exp(-dt * 8))
+
+    corLinha.set(p.lineColor)
+    corBase.set(p.baseColor)
+    program.uniforms.uAngle.value = angulo
+    program.uniforms.uRadius.value = Math.min(p.radius, Math.min(tamanho.w, tamanho.h) / 2) * dpr
+    program.uniforms.uLineColor.value = [corLinha.r, corLinha.g, corLinha.b]
+    program.uniforms.uBaseColor.value = [corBase.r, corBase.g, corBase.b]
+    program.uniforms.uIntensity.value = p.intensity * brilho
+    program.uniforms.uShineSize.value = (p.shineSize * Math.PI) / 180
+    program.uniforms.uShineFade.value = (p.shineFade * Math.PI) / 180
+    program.uniforms.uThickness.value = p.thickness * dpr
+    renderer.render({ scene: mesh })
+  }
+  raf = requestAnimationFrame(atualizar)
+
+  return () => {
+    cancelAnimationFrame(raf)
+    ro.disconnect()
+    desinscrever()
+    if (gl.canvas.parentNode === fx) fx.removeChild(gl.canvas)
+    // Devolve o contexto ao navegador, que so mantem um punhado deles vivos.
+    gl.getExtension('WEBGL_lose_context')?.loseContext()
+  }
+}
+
 export function CamadaEspecular({
   radius = 8,
   lineColor = '#E0B48C',
@@ -141,138 +310,25 @@ export function CamadaEspecular({
     // Sem WebGL nenhum para quem pediu menos movimento.
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
-    const dpr = window.devicePixelRatio || 1
+    // A limpeza pode chegar antes do `import()` ou da hora ociosa, no Strict
+    // Mode ou ao desmontar o botao. O `cancelado` impede que um contexto WebGL
+    // seja aberto para um botao que ja saiu da tela, o que vazaria contexto.
+    let cancelado = false
+    let cancelarEspera: (() => void) | undefined
+    let desmontar: (() => void) | undefined
 
-    // **Sem WebGL o botao fica sem brilho, e a pagina segue de pe.** O ogl nao
-    // devolve erro quando o navegador recusa o contexto: ele avisa no console e
-    // em seguida escreve no contexto nulo, o que estoura `Cannot set properties
-    // of null (setting 'renderer')`. Como isso acontece dentro de um efeito, o
-    // React derrubava a arvore inteira e a visita via so "Application error".
-    // Acontece com aceleracao de hardware desligada, placa de video bloqueada
-    // pelo navegador e aparelho antigo.
-    let renderer: Renderer
-    try {
-      renderer = new Renderer({ alpha: true, premultipliedAlpha: true, antialias: true, dpr })
-    } catch {
-      return
-    }
-    const gl = renderer.gl
-
-    // Os shaders sao `#version 300 es`, entao so compilam em WebGL2. No WebGL1
-    // que o ogl usa de reserva o programa nao linka e o erro voltaria a cada
-    // quadro, entao o brilho fica de fora tambem.
-    if (!renderer.isWebgl2) {
-      gl.getExtension('WEBGL_lose_context')?.loseContext()
-      return
-    }
-
-    gl.clearColor(0, 0, 0, 0)
-    gl.enable(gl.BLEND)
-    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
-
-    const geometry = new Triangle(gl)
-    if (geometry.attributes.uv) delete geometry.attributes.uv
-
-    const program = new Program(gl, {
-      vertex: VERT,
-      fragment: FRAG,
-      uniforms: {
-        uCenter: { value: [0, 0] },
-        uHalfSize: { value: [1, 1] },
-        uRadius: { value: 0 },
-        uAngle: { value: 2.4 },
-        uPx: { value: dpr },
-        uLineColor: { value: [1, 1, 1] },
-        uBaseColor: { value: [0.32, 0.32, 0.32] },
-        uIntensity: { value: 0 },
-        uShineSize: { value: 0.17 },
-        uShineFade: { value: 0.7 },
-        uThickness: { value: 1 },
-        uBaseWidth: { value: dpr },
-      },
+    import('ogl').then((ogl) => {
+      if (cancelado) return
+      cancelarEspera = quandoOcioso(() => {
+        if (cancelado) return
+        desmontar = montar(ogl, fx, alvo, propsRef)
+      })
     })
-
-    const mesh = new Mesh(gl, { geometry, program })
-    fx.appendChild(gl.canvas)
-
-    const tamanho = { w: 1, h: 1 }
-    const redimensionar = () => {
-      const caixa = alvo.getBoundingClientRect()
-      tamanho.w = caixa.width
-      tamanho.h = caixa.height
-      renderer.setSize(caixa.width + PAD * 2, caixa.height + PAD * 2)
-      program.uniforms.uCenter.value = [(PAD + caixa.width / 2) * dpr, (PAD + caixa.height / 2) * dpr]
-      program.uniforms.uHalfSize.value = [(caixa.width / 2) * dpr, (caixa.height / 2) * dpr]
-    }
-    const ro = new ResizeObserver(redimensionar)
-    ro.observe(alvo)
-    redimensionar()
-
-    let anguloPonteiro: number | null = null
-    let proximidade = 0
-
-    const desinscrever = inscrever((evento) => {
-      const caixa = alvo.getBoundingClientRect()
-      const cx = caixa.left + caixa.width / 2
-      const cy = caixa.top + caixa.height / 2
-      const dx = Math.max(caixa.left - evento.clientX, 0, evento.clientX - caixa.right)
-      const dy = Math.max(caixa.top - evento.clientY, 0, evento.clientY - caixa.bottom)
-      const distancia = Math.hypot(dx, dy)
-
-      if (distancia === 0) {
-        const nx = (evento.clientX - cx) / (caixa.width / 2)
-        const ny = (cy - evento.clientY) / (caixa.height / 2)
-        anguloPonteiro = Math.atan2(2 / caixa.height, -2 / caixa.width) + nx * 0.3 + ny * 0.15
-      } else {
-        anguloPonteiro = Math.atan2(cy - evento.clientY, evento.clientX - cx)
-      }
-
-      const t = Math.max(0, 1 - distancia / Math.max(propsRef.current.proximity, 1))
-      proximidade = t * t * (3 - 2 * t)
-    })
-
-    let angulo = 2.4
-    let brilho = 0
-    let anterior = performance.now()
-    let raf = 0
-
-    const corLinha = new Color()
-    const corBase = new Color()
-
-    const atualizar = (agora: number) => {
-      raf = requestAnimationFrame(atualizar)
-      const dt = Math.min((agora - anterior) / 1000, 0.05)
-      anterior = agora
-      const p = propsRef.current
-
-      if (anguloPonteiro != null) {
-        const diff = ((anguloPonteiro - angulo + Math.PI * 3) % (Math.PI * 2)) - Math.PI
-        angulo += diff * (1 - Math.exp(-dt * 7))
-      }
-
-      brilho += (proximidade - brilho) * (1 - Math.exp(-dt * 8))
-
-      corLinha.set(p.lineColor)
-      corBase.set(p.baseColor)
-      program.uniforms.uAngle.value = angulo
-      program.uniforms.uRadius.value = Math.min(p.radius, Math.min(tamanho.w, tamanho.h) / 2) * dpr
-      program.uniforms.uLineColor.value = [corLinha.r, corLinha.g, corLinha.b]
-      program.uniforms.uBaseColor.value = [corBase.r, corBase.g, corBase.b]
-      program.uniforms.uIntensity.value = p.intensity * brilho
-      program.uniforms.uShineSize.value = (p.shineSize * Math.PI) / 180
-      program.uniforms.uShineFade.value = (p.shineFade * Math.PI) / 180
-      program.uniforms.uThickness.value = p.thickness * dpr
-      renderer.render({ scene: mesh })
-    }
-    raf = requestAnimationFrame(atualizar)
 
     return () => {
-      cancelAnimationFrame(raf)
-      ro.disconnect()
-      desinscrever()
-      if (gl.canvas.parentNode === fx) fx.removeChild(gl.canvas)
-      // Devolve o contexto ao navegador, que so mantem um punhado deles vivos.
-      gl.getExtension('WEBGL_lose_context')?.loseContext()
+      cancelado = true
+      cancelarEspera?.()
+      desmontar?.()
     }
   }, [])
 

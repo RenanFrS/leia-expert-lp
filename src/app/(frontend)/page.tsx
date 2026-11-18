@@ -123,14 +123,17 @@ export default async function Home() {
         <Hero
           nome={clinica?.nome || 'Léia Expert'}
           chamada={clinica?.chamada}
+          subtitulo={clinica?.subtitulo}
           // O hero usa os tratamentos duas vezes: no carrossel e nas pilulas.
           // Vai so o que as duas precisam, para nao mandar o documento inteiro
-          // de cada tratamento para o cliente.
-          tratamentos={tratamentos.docs.map(({ titulo, slug, resumo, imagem }) => ({
+          // de cada tratamento para o cliente. O `quadroDoCartao` para no
+          // servidor: o Hero usa para montar a foto parada do video e nao repassa.
+          tratamentos={tratamentos.docs.map(({ titulo, slug, resumo, imagem, quadroDoCartao }) => ({
             titulo,
             slug,
             resumo,
             imagem,
+            quadroDoCartao,
           }))}
           painel={clinica?.heroPainel}
           intervalo={clinica?.heroIntervalo}
