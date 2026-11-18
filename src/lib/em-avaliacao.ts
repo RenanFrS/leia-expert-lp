@@ -37,18 +37,13 @@ type TrocaDeMidia = {
  * Para aprovar: no painel, em Tratamentos, abra o tratamento do slug, troque a
  * midia pelo arquivo e grave o quadro do cartao.
  */
-export const TROCAS_DE_MIDIA: TrocaDeMidia[] = [
-  // Pedido de 18/11/2026: o calvo.mp4 mostrava cabelo cheio, sem falha nenhuma.
-  // O calvo-nuca.mp4 e a coroa rala vista de cima, no centro do quadro, e aos 7 s
-  // ela aparece inteira, ja sem as maos na frente.
-  { slug: 'alopecia-calvicie', arquivo: 'calvo-nuca.mp4', quadroDoCartao: 7 },
-]
+export const TROCAS_DE_MIDIA: TrocaDeMidia[] = []
 
 /**
  * Para aprovar: no painel, em Configuracoes, Clinica, aba Hero, acrescente o
  * arquivo no fim do painel. O fim, porque o primeiro arquivo e o LCP.
  */
-export const VIDEOS_A_MAIS_NO_HERO: string[] = ['testa-entradas.mp4']
+export const VIDEOS_A_MAIS_NO_HERO: string[] = []
 
 const idDaMidia = (arquivo: number | Media) => (typeof arquivo === 'object' ? arquivo.id : arquivo)
 

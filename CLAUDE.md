@@ -97,8 +97,8 @@ definitivo seria um banco so da previa, uma branch do Neon no `DATABASE_URI` do 
 os tratamentos e o painel do hero por ele, que poe a troca por cima do que veio do banco quando o
 `VERCEL_ENV` e `preview` ou o `NODE_ENV` e `development`. Em producao ele devolve o que recebeu, sem
 consulta nenhuma. A comparacao e com `preview` de proposito: variavel ausente desliga a troca, nunca
-liga no site no ar. Em 18/11/2026 sao duas: o `calvo-nuca.mp4` no lugar do `calvo.mp4` em Alopecia e
-calvicie, com o quadro do cartao em 7 s, e o `testa-entradas.mp4` no fim do painel do hero.
+liga no site no ar. As listas estao vazias: as duas trocas de 18/11/2026, o `calvo-nuca.mp4` em
+Alopecia e calvicie e o `testa-entradas.mp4` no hero, foram gravadas no painel no merge do mesmo dia.
 
 - **No `pnpm dev` a troca tambem aparece.** Midia na pagina local diferente da que esta no painel e o
   arquivo em avaliacao, e nao bug.
@@ -107,18 +107,15 @@ calvicie, com o quadro do cartao em 7 s, e o `testa-entradas.mp4` no fim do pain
   troca vai ao ar com o codigo antigo, que no hero volta a baixar os dois videos na abertura.
 - **Link para quem nao tem conta na Vercel.** As previas tem Vercel Authentication. O link
   compartilhavel sai do Share do deploy, ou do `get_access_to_vercel_url` do MCP da Vercel, e vale 23
-  horas. Cada push gera um deploy novo, que pede link novo.
+  horas. Cada push gera um deploy novo, que pede link novo. **Ele ja falhou com a equipe**: em
+  18/11/2026 quem avaliava caiu no login da Vercel, embora o mesmo link abrisse sem login num teste
+  por `curl`. A avaliacao foi abandonada e a versao foi direto para o ar. Antes de mandar o proximo,
+  abra numa janela anonima.
 
-**A headline nova ficou so na previa por outro caminho: o campo vazio.** A Headline do hero esta vazia
-no banco desde 18/11/2026, e cada codigo usa a reserva do proprio `Hero.tsx`: a da `main` e a pergunta
-antiga, que e o que ficou no ar, e a da branch e a headline nova. Assim o link da previa que ja tinha
-ido para a equipe continuou valendo, sem deploy novo. Duas consequencias:
-
-- **quem preencher o campo no painel poe o texto no ar na hora**, em cima das duas reservas
-- **o merge publica a headline nova sozinho.** Depois dele, grave a frase no campo, para ele nao
-  ficar vazio
-
-O subtitulo nao precisou disso: o codigo da `main` nao le esse campo.
+**Texto com reserva no codigo da para avaliar com o campo vazio.** Com o campo do painel vazio, cada
+codigo usa a reserva do proprio componente: a da `main` no ar e a da branch na previa. Foi assim com a
+headline do hero em 18/11/2026. Enquanto o campo estiver vazio, quem preencher no painel poe o texto no
+ar na hora; e o merge publica a reserva nova sozinho, entao grave a frase no campo logo depois dele.
 
 ## Estrutura
 
@@ -693,9 +690,7 @@ adianta o LCP.
 o `MidiaRotativa` chama o `play` em todos; a troca e so de opacidade. Com dois videos, o hero baixa os
 dois depois da abertura: medido em 18 de novembro de 2026, com o `hero-video` e o `testa-entradas`, sao
 3,1 MB e 5,1 MB no computador e 1,7 MB e 1,9 MB no celular. **Arquivo novo entra no fim da lista**,
-porque o primeiro e o LCP; o `subir-midia` com `hero=somar` ja faz assim. Ainda no dia 18 o
-`testa-entradas` saiu do painel e passou a entrar so na previa, pelo `em-avaliacao.ts`, ate a equipe
-aprovar.
+porque o primeiro e o LCP; o `subir-midia` com `hero=somar` ja faz assim.
 
 **Quando o primeiro arquivo e video, o LCP e o quadro parado dele, como imagem de verdade.** O
 `MidiaRotativa` desenha por baixo do video o quadro `so_0`, montado pelo `quadroDeVideo` de
@@ -881,7 +876,9 @@ sozinho custaria caro. Quem monta o quadro e o `Hero.tsx`, que e server componen
 **O quadro do cartao sai do segundo gravado no campo `quadroDoCartao` do tratamento**, e nao sempre do
 primeiro. O cartao e 16:10 e corta o resto, e video vertical perde em cima e embaixo: o `areata.mp4` e
 9:16, abre no rosto da modelo, e o cartao mostrava so os olhos dela, sem falha nenhuma. Ele esta em
-**8,5 s**, onde o recorte do meio pega duas falhas redondas e a testa. Tres coisas desse campo:
+**8,5 s**, onde o recorte do meio pega duas falhas redondas e a testa. Alopecia e calvicie, com o
+`calvo-nuca.mp4`, esta em **7 s**: a coroa rala aparece inteira, ja sem as maos na frente. Tres coisas
+desse campo:
 
 - **ele vale so para este cartao.** A secao de tratamentos toca o video do comeco, e o quadro por baixo
   dele continua sendo o primeiro: um quadro de outro momento daria um salto quando o video entra

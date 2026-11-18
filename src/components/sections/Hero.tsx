@@ -88,11 +88,8 @@ function FileteCanto({ lado, className }: { lado: 'esquerda' | 'direita'; classN
 export function Hero({ nome, chamada, subtitulo, tratamentos, painel, intervalo }: Props) {
   const texto =
     chamada ||
-    // Reserva usada so quando a headline do painel esta vazia. Em 18/11/2026 ela
-    // esta vazia de proposito, enquanto a equipe avalia: a reserva da main e a
-    // pergunta antiga, que e o que fica no ar, e esta so aparece na previa.
-    // Depois do merge, grave esta frase no painel. Ver o CLAUDE.md, em "Previa
-    // para a equipe avaliar".
+    // Reserva usada so quando a headline do painel esta vazia. Mesma redacao da
+    // gravada no banco.
     //
     // A dor ja esta nomeada no `h1`, entao a headline fica com o que a clinica
     // faz: acha a causa e trata a causa. Ela ja abriu em pergunta ao sintoma
