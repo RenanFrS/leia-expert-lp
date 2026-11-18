@@ -109,6 +109,17 @@ calvicie, com o quadro do cartao em 7 s, e o `testa-entradas.mp4` no fim do pain
   compartilhavel sai do Share do deploy, ou do `get_access_to_vercel_url` do MCP da Vercel, e vale 23
   horas. Cada push gera um deploy novo, que pede link novo.
 
+**A headline nova ficou so na previa por outro caminho: o campo vazio.** A Headline do hero esta vazia
+no banco desde 18/11/2026, e cada codigo usa a reserva do proprio `Hero.tsx`: a da `main` e a pergunta
+antiga, que e o que ficou no ar, e a da branch e a headline nova. Assim o link da previa que ja tinha
+ido para a equipe continuou valendo, sem deploy novo. Duas consequencias:
+
+- **quem preencher o campo no painel poe o texto no ar na hora**, em cima das duas reservas
+- **o merge publica a headline nova sozinho.** Depois dele, grave a frase no campo, para ele nao
+  ficar vazio
+
+O subtitulo nao precisou disso: o codigo da `main` nao le esse campo.
+
 ## Estrutura
 
 ```
