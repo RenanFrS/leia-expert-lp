@@ -14,6 +14,7 @@ import { Agendamento } from '@/components/sections/Agendamento'
 import { AClinica } from '@/components/sections/AClinica'
 import { Footer } from '@/components/sections/Footer'
 import { WhatsappFlutuante } from '@/components/sections/WhatsappFlutuante'
+import { aplicarEmAvaliacao } from '@/lib/em-avaliacao'
 import { urlSite } from '@/lib/url-site'
 
 // A pagina e estatica e revalida sozinha, o que mantem o LCP baixo mesmo com
@@ -27,7 +28,7 @@ export default async function Home() {
   // mais nenhum campo dele. Quem le a global agora e so o layout, que monta o
   // `Analytics`. Manter a consulta seria uma ida ao banco por revalidacao sem
   // ninguem usando o resultado.
-  const [clinica, seo, tratamentos, resultados, depoimentos, perguntas, galeria] =
+  const [clinica, seo, tratamentosDoBanco, resultados, depoimentos, perguntas, galeria] =
     await Promise.all([
       payload.findGlobal({ slug: 'clinica', depth: 1 }),
       // So pela descricao, que alimenta o `MedicalClinic` dos dados estruturados.
@@ -61,6 +62,15 @@ export default async function Home() {
         where: { publicado: { equals: true } },
       }),
     ])
+
+  // Na previa da Vercel e no `pnpm dev`, a troca que a equipe ainda vai aprovar
+  // entra por cima do que veio do banco. Em producao volta o que entrou, sem
+  // consulta a mais. O motivo esta em `src/lib/em-avaliacao.ts`.
+  const { tratamentos, heroPainel } = await aplicarEmAvaliacao(
+    payload,
+    tratamentosDoBanco.docs,
+    clinica?.heroPainel,
+  )
 
   const whatsapp = clinica?.whatsapp || process.env.NEXT_PUBLIC_WHATSAPP || ''
   const unidades = clinica?.unidades || []
@@ -128,18 +138,18 @@ export default async function Home() {
           // Vai so o que as duas precisam, para nao mandar o documento inteiro
           // de cada tratamento para o cliente. O `quadroDoCartao` para no
           // servidor: o Hero usa para montar a foto parada do video e nao repassa.
-          tratamentos={tratamentos.docs.map(({ titulo, slug, resumo, imagem, quadroDoCartao }) => ({
+          tratamentos={tratamentos.map(({ titulo, slug, resumo, imagem, quadroDoCartao }) => ({
             titulo,
             slug,
             resumo,
             imagem,
             quadroDoCartao,
           }))}
-          painel={clinica?.heroPainel}
+          painel={heroPainel}
           intervalo={clinica?.heroIntervalo}
         />
         <Tratamentos
-          tratamentos={tratamentos.docs}
+          tratamentos={tratamentos}
           problemas={(clinica?.faixaProblemas || []).map((item) => item.termo)}
         />
         <Tricoscopia

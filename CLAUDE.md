@@ -82,6 +82,33 @@ e no sitemap, entao apontar para o apex faz o Google receber sempre um endereco 
 variavel `NEXT_PUBLIC_`, entao ela entra no bundle no momento do build: mudar o valor so vale depois de
 um redeploy.
 
+## Previa para a equipe avaliar
+
+Mudanca que a equipe precisa aprovar antes de ir ao ar sai numa branch, sem PR, e quem avalia recebe o
+link da previa. O push da branch gera o deploy de previa sozinho; a `main` e a branch de producao.
+
+**A previa usa o mesmo banco da producao.** O que se grava pelo painel, ou por rota de dev, entra no
+site no ar em ate 5 minutos, com o codigo que estiver la. Codigo novo fica na previa; conteudo novo,
+nao. Ja aconteceu: em 18 de novembro de 2026 o `testa-entradas.mp4` entrou no painel do hero para a
+previa e foi junto para o ar, onde o codigo antigo baixava os dois videos do hero na abertura. O
+definitivo seria um banco so da previa, uma branch do Neon no `DATABASE_URI` do ambiente Preview.
+
+**Troca de midia em avaliacao vai no `src/lib/em-avaliacao.ts`, e nao no painel.** O `page.tsx` passa
+os tratamentos e o painel do hero por ele, que poe a troca por cima do que veio do banco quando o
+`VERCEL_ENV` e `preview` ou o `NODE_ENV` e `development`. Em producao ele devolve o que recebeu, sem
+consulta nenhuma. A comparacao e com `preview` de proposito: variavel ausente desliga a troca, nunca
+liga no site no ar. Em 18/11/2026 sao duas: o `calvo-nuca.mp4` no lugar do `calvo.mp4` em Alopecia e
+calvicie, com o quadro do cartao em 7 s, e o `testa-entradas.mp4` no fim do painel do hero.
+
+- **No `pnpm dev` a troca tambem aparece.** Midia na pagina local diferente da que esta no painel e o
+  arquivo em avaliacao, e nao bug.
+- **O merge nao publica a troca.** A producao ignora o arquivo. Quem publica e gravar no painel o que
+  esta descrito acima de cada lista e depois tirar o item dela. Faca depois do merge: antes dele, a
+  troca vai ao ar com o codigo antigo, que no hero volta a baixar os dois videos na abertura.
+- **Link para quem nao tem conta na Vercel.** As previas tem Vercel Authentication. O link
+  compartilhavel sai do Share do deploy, ou do `get_access_to_vercel_url` do MCP da Vercel, e vale 23
+  horas. Cada push gera um deploy novo, que pede link novo.
+
 ## Estrutura
 
 ```
@@ -122,6 +149,7 @@ src/
     cloudinary-url.ts  convencao de public_id e de URL da CDN, sem SDK
     carregador-imagem.ts  carregador do next/image, que manda as fotos para a CDN
     poster-video.ts    quadro parado e entregas de video pela CDN, inclusive as de celular
+    em-avaliacao.ts    troca de midia que so a previa mostra, enquanto a equipe avalia
     utils.ts           cn, whatsappLink, formatarWhatsapp e o narrow de midia
   payload-types.ts     gerado, versionado
 ```
@@ -654,7 +682,9 @@ adianta o LCP.
 o `MidiaRotativa` chama o `play` em todos; a troca e so de opacidade. Com dois videos, o hero baixa os
 dois depois da abertura: medido em 18 de novembro de 2026, com o `hero-video` e o `testa-entradas`, sao
 3,1 MB e 5,1 MB no computador e 1,7 MB e 1,9 MB no celular. **Arquivo novo entra no fim da lista**,
-porque o primeiro e o LCP; o `subir-midia` com `hero=somar` ja faz assim.
+porque o primeiro e o LCP; o `subir-midia` com `hero=somar` ja faz assim. Ainda no dia 18 o
+`testa-entradas` saiu do painel e passou a entrar so na previa, pelo `em-avaliacao.ts`, ate a equipe
+aprovar.
 
 **Quando o primeiro arquivo e video, o LCP e o quadro parado dele, como imagem de verdade.** O
 `MidiaRotativa` desenha por baixo do video o quadro `so_0`, montado pelo `quadroDeVideo` de
