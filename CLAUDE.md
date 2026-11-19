@@ -232,6 +232,7 @@ abria conversa sem aparecer em relatorio nenhum. Hoje passa pelo componente, com
 | Origem | Evento e `local` |
 | --- | --- |
 | Header e menu do celular | `clique_whatsapp`, `header` e `menu-mobile` |
+| Hero, embaixo do subtitulo | `clique_whatsapp`, `hero` |
 | Tricoscopia | `clique_whatsapp`, `tricoscopia` |
 | Contato, CTA principal | `clique_whatsapp`, `card-agendamento` |
 | Contato, numero grande | `clique_whatsapp`, `contato-numero` |
@@ -241,10 +242,12 @@ abria conversa sem aparecer em relatorio nenhum. Hoje passa pelo componente, com
 | Rodape | `clique_whatsapp`, `footer` |
 | Botao flutuante | `clique_whatsapp`, `botao-flutuante` |
 
-**O `local="hero"` nao existe mais.** O CTA de dentro do painel foi removido a pedido do cliente. Vale
-saber o efeito colateral, porque ele nao e obvio: o CTA do header e `hidden xl:inline-flex`, entao
-**abaixo de 1280px nao sobra nenhum botao de agendar visivel acima da dobra**, so o do menu recolhido e
-o WhatsApp flutuante. Se a agencia estranhar a queda de `clique_whatsapp`, e daqui.
+**O `local="hero"` voltou em 19/11/2026**, com o botao "Agende sua consulta" embaixo do subtitulo, a
+pedido do cliente. Ele ja tinha existido no canto de cima do painel e saiu tambem a pedido do cliente;
+nesse intervalo o relatorio da agencia nao tem nenhum clique com `hero`. O CTA do header e
+`hidden xl:inline-flex`, entao **abaixo de 1280px o botao do hero e o unico de agendar no topo da
+pagina**, alem do menu recolhido e do WhatsApp flutuante. Com o texto atual ele fica um pouco abaixo
+da primeira tela no celular, como esta na secao Hero.
 
 #### O que a agencia precisa saber
 
@@ -267,9 +270,10 @@ negados, liberando so apos o aceite no banner. A decisao fica em `localStorage`,
 `leia-consentimento`. O banner pode ser desligado no painel pelo campo `consentimento`.
 
 **No celular o banner e compacto**, porque nasce em cima do pe do hero, onde fica o texto: `p-3.5`,
-texto em 13px e os dois botoes dividindo a mesma linha. Medido em 390, ele tem 114px e cobre a linha
-das estrelas, nao o subtitulo. Do `md` para cima volta ao tamanho de antes; texto e comportamento sao
-os mesmos nas duas formas.
+texto em 13px e os dois botoes dividindo a mesma linha. Medido em 390, ele tem 114px. Com o texto de
+19/11/2026, em 390x844 ele cobre o fim do subtitulo e o alto do botao "Agende sua consulta" ate a
+pessoa escolher; antes cobria so a linha das estrelas. Do `md` para cima volta ao tamanho de antes;
+texto e comportamento sao os mesmos nas duas formas.
 
 ### Contatos e leads
 
@@ -571,9 +575,19 @@ eles apareceriam como quadrados brancos soltos na borda da tela.
 Nao ha eyebrow no hero, de proposito: ele seria uma terceira linha dentro do notch e engordaria o
 bloco justamente na altura. O eyebrow segue nas outras secoes.
 
-O que fica **dentro** da imagem: a headline, o subtitulo e as estrelas no canto inferior esquerdo e o
-carrossel de tratamentos no inferior direito. Fora dela, so o titulo. Havia um CTA no canto superior direito e ele
-saiu a pedido do cliente.
+O que fica **dentro** da imagem: a headline, o subtitulo, o botao "Agende sua consulta" e as estrelas
+no canto inferior esquerdo e o carrossel de tratamentos no inferior direito. Fora dela, so o titulo.
+
+**O botao entrou embaixo do subtitulo em 19/11/2026, a pedido do cliente.** Ja houve um CTA no canto
+superior direito do painel, que saiu tambem a pedido dele. Tres decisoes:
+
+- **`BotaoWhatsapp` com `local="hero"`**, como os outros CTAs: o clique e a conversao do site, pelo
+  motivo da secao Rastreamento. O rotulo vem do pedido do cliente e fala em consulta, nao em canal.
+- **`destaque` e `lg`, sem `especular`.** O `destaque` e a chamada clara das areas escuras, como o da
+  tricoscopia, e aqui o fundo e o veu. O `especular` abriria mais um contexto WebGL justo na area que
+  o PageSpeed mede. No celular o botao ocupa a largura toda.
+- **As estrelas ficam junto do botao**, onde a pessoa decide: ao lado dele no `xl` e embaixo dele abaixo
+  disso, porque a coluna de 576px nao cabe os dois.
 
 Texto sobre foto nao tem contraste garantido, porque quem escolhe a imagem e a clinica. Por isso a
 chamada fica sobre um veu, um gradiente de `tinta` subindo do pe do painel, com o texto em `porcelana`.
@@ -585,15 +599,17 @@ trafego: a pessoa precisa se reconhecer antes de decidir ficar, e o resto diz po
   titulo de impacto, em que a pessoa sinta que a dor dela tem saida. Ja foi "Cabelo saudavel comeca na
   raiz.", que falava de cuidado e nao do problema. "Tem tratamento" nao promete cura, so que ha o que
   fazer. O `h1` e fixo no codigo.
-- **A headline, no campo `chamada`, diz o que a clinica faz**: "Descobrimos por que o seu cabelo esta
-  caindo e tratamos a causa, nao so o sintoma." Ela abria em pergunta ao sintoma, "Seu cabelo esta
-  caindo, afinando ou abrindo falhas?", e a pergunta saiu quando o `h1` passou a ser a propria queixa:
-  as duas diriam a mesma coisa, uma embaixo da outra.
-- **O subtitulo, no campo `subtitulo`, explica**: como funciona, com a tricoscopia na consulta; que
-  tratamento e, um protocolo de sessoes na clinica com oxigenacao e estimulo de crescimento; e o que
-  esperar, frear a queda e fortalecer os fios, com a diferenca entre o terceiro e o sexto mes. Nada ali
-  e novo no site: as sessoes vem dos tratamentos e o prazo vem do FAQ. **Se a clinica mudar o
-  protocolo ou o prazo, o subtitulo muda junto**, senao o hero passa a dizer o que o FAQ nao diz.
+- **A headline, no campo `chamada`, pergunta pelos sintomas**: "Queda de cabelo, falhas, fios afinando,
+  entradas aumentando ou outro problema relacionado ao couro cabeludo?" Foi definida pela equipe em
+  19/11/2026, junto com o subtitulo. **A repeticao de "Queda de cabelo" logo abaixo do `h1` e
+  conhecida**: uma pergunta ao sintoma ja tinha saido daqui por isso, e voltou por escolha do cliente,
+  com o `h1` como esta. Antes dela a headline dizia o que a clinica faz, "Descobrimos por que o seu
+  cabelo esta caindo e tratamos a causa, nao so o sintoma."
+- **O subtitulo, no campo `subtitulo`, apresenta a Leia e convida**, em primeira pessoa: "Sou
+  tricologista, especialista em saude capilar...". Ele lista as queixas que a clinica atende e fecha
+  no que ela faz, ajudar a entender o que esta acontecendo e montar um plano de tratamento
+  personalizado. Tem cerca de 440 caracteres, e e ele que mais pesa na altura do bloco. O anterior
+  explicava a tricoscopia, as sessoes e o prazo do 3o ao 6o mes, que continuam no resto da pagina.
 
 Os dois campos ficam na aba **Hero** da global Clinica, e cada um tem reserva no codigo com a mesma
 redacao do banco. A `chamada` morava na aba Identidade; aba sem `name` nao muda a coluna, entao a troca
@@ -604,21 +620,27 @@ para homens e mulheres..." so conversava com quem ja conhece o termo. "Queda de 
 alopecia tem causa..." nomeava as condicoes em tom clinico e escorregava para o metodo antes de falar do
 problema.
 
-**Tres travas continuam valendo em qualquer reescrita das tres pecas**: sem a palavra diagnostico, sem
-promessa de gratuidade e **sem promessa de cura**. O proprio FAQ admite perda antiga que ja nao
-responde, entao o texto descreve o que a clinica faz, e nao garante resultado.
+**Tres travas continuam valendo em qualquer reescrita das tres pecas**: sem dizer que a clinica faz
+diagnostico, sem promessa de gratuidade e **sem promessa de cura**. O proprio FAQ admite perda antiga
+que ja nao responde, entao o texto descreve o que a clinica faz, e nao garante resultado. A trava ja foi
+"sem a palavra diagnostico"; o subtitulo da equipe usa a palavra para o que a pessoa ja recebeu de fora,
+"ja recebeu um diagnostico de alopecia areata", e isso nao afirma ato privativo de medico.
 
 **A headline e serifa grande, a pedido do cliente**, que mandou uma referencia em que a frase sobre a
 foto era o maior texto da tela. Ela ja foi corpo de texto, `text-base` e depois `text-lg sm:text-2xl`,
-e nos dois lia como legenda. Hoje e `font-display` em **28px no celular, 36px no `sm`, 40px no `lg` e
-48px no `xl`**, com entrelinha 1.1. No desktop ela fica um degrau abaixo do `h1`, 48px contra 56px,
-para o titulo continuar sendo o titulo. A frase atual cabe em **3 linhas do 768 ao 1920** e em 4 no
-390.
+e nos dois lia como legenda. Hoje e `font-display` em **28px no celular, 36px do `sm` ao `lg` e 40px no
+`xl`**, com entrelinha 1.1, abaixo do `h1` no desktop para o titulo continuar sendo o titulo. A
+pergunta atual tem **4 linhas do 768 ao 1920 e 5 no 390**.
+
+**Ela ja foi 40px no `lg` e 48px no `xl`**, e desceu com o texto de 19/11/2026: em 48px a pergunta,
+com o subtitulo longo e o botao, fazia o bloco subir 65px por cima do notch em 1366x768, e em 40px no
+`lg` dava 5 linhas em 1024. Voltar ao tamanho antigo pede refazer as medidas da secao abaixo.
 
 **O subtitulo e a outra fonte de proposito**: Instrument Sans, a do corpo do site, contra a serifa da
-headline. A diferenca de familia separa a promessa da explicacao sem precisar de cor nova. Ele vai em
-`porcelana/90`, com `leading-relaxed` e `max-w-2xl`, em **15px no celular, 18px no `sm` e 20px no
-`xl`**: 7 linhas em 390 e 5 do 768 ao 1920.
+headline. A diferenca de familia separa a pergunta da explicacao sem precisar de cor nova. Ele vai em
+`porcelana/90`, com `leading-relaxed` e `max-w-2xl`, em **15px no celular e 18px do `sm` para cima**:
+10 linhas em 390, 7 em 768 e 1024 e 6 do 1280 ao 1920. Ja teve 20px no `xl`, que saiu pelo mesmo
+motivo da headline.
 
 **A coluna para antes do carrossel**, que e absoluto no mesmo pe do painel e tem 320px: `max-w-xl` ate
 o `lg` e `max-w-3xl` no `xl`. Medido, sobram 88px ate o cartao em 1024, 152px em 1280 e 288px em 1440.
@@ -627,10 +649,39 @@ nessas folgas.
 
 **O texto subiu a pedido do cliente**, por dois caminhos. O subtitulo embaixo empurra a headline para
 cima, e o pe do bloco passou de `lg:pb-10` para `lg:pb-14`, com o carrossel acompanhando em
-`lg:bottom-14`. No celular o painel segue com 520px, e a headline, que tinha 6 linhas com a frase
-antiga, tem 4 e comeca a 144px do topo dele. **O caso mais apertado e janela baixa no `xl`**, com o
-painel no piso de 640px: medido em 1280x700, a headline comeca 69px abaixo do pe do notch. Texto mais
-longo come essa folga primeiro.
+`lg:bottom-14`.
+
+**A altura do painel e a maior de duas: o piso ou o texto.** O bloco da chamada fica em fluxo no pe do
+painel, por `flex-col justify-end`, e a midia e absoluta. O `pt` do painel reserva a faixa de cima, que
+o texto nunca invade; texto mais longo faz o painel crescer, em vez de subir por cima do notch ou
+passar do topo. Ate 18/11/2026 o painel tinha altura fixa e o bloco era absoluto, e o texto de
+19/11/2026 nao cabia: em 520px no celular o `overflow-hidden` cortaria a headline, e em 1366x768 ela
+subia 65px por cima do notch.
+
+- **Piso**: 520px no celular, 600px no `sm` e, no `lg`, `max(640px, 100vh - 6rem)`.
+- **Faixa de cima**: 160px de midia abaixo do `lg`, que e onde o veu esmaece. No `lg` e a altura do
+  notch mais 48px, pela conta da fonte do `h1`, em `lg:pt-[calc(2.08*clamp(2rem,4vw,3.5rem)_+_5rem)]`:
+  duas linhas de `display-lg` com entrelinha 1.04, mais os 32px do `pt-1` e do `pb-7`. Conferido no
+  estilo computado: 165px em 1024, 194px em 1366 e 196px em 1440, cada um a altura do notch mais 48.
+  **Mexeu na fonte, na entrelinha, no padding ou no numero de linhas do `h1`, mexa nessa conta.**
+
+Medido com o texto de 19/11/2026, posicao do botao contada do topo da pagina:
+
+| Janela | Painel | Botao | Na primeira tela |
+| --- | --- | --- | --- |
+| 360x740 | 761px | 847 a 903 | nao |
+| 390x844 | 717px | 823 a 879 | nao, por 35px |
+| 768x1024 | 679px | 805 a 861 | sim |
+| 1024x768 | 716px, cresceu 44 | 664 a 720 | sim |
+| 1280x700 | 690px, cresceu 50 | 674 a 730 | nao |
+| 1366x768 | 697px, cresceu 25 | 681 a 737 | sim |
+| 1440x900 | 804px, piso | 788 a 844 | sim |
+| 1920x960 | 864px, piso | 848 a 904 | sim |
+
+**No celular o botao fica logo abaixo da primeira tela**, e no navegador de verdade, com as barras, um
+pouco mais. Nao ha como subir sem cortar texto: a headline e o subtitulo ocupam 420px em 390. O
+WhatsApp flutuante segue visivel desde a abertura. Onde o painel cresce no `lg`, a headline comeca
+exatamente 48px abaixo do pe do notch; onde fica no piso, a folga e maior, 152px em 1440x900.
 
 **O veu mede o bloco da chamada, e nao o painel, e essa e a coisa mais importante desta secao.** A
 chamada e ancorada no pe do painel, entao texto maior empurra o topo dela para cima. Com veu de altura
@@ -674,8 +725,9 @@ Duas coisas sustentam a montagem:
   primeiro elemento lido. Se descer para depois do painel, o leitor de tela anuncia a chamada e o
   carrossel antes do `h1` da pagina.
 - **O painel e o unico filho em fluxo no `lg`.** E dai que sai a altura da caixa, e e por isso que o
-  CTA e o carrossel, absolutos, se alinham ao painel sem precisar estar dentro dele. Assim cada um e
-  montado uma vez so, em vez de uma copia para telefone e outra para desktop.
+  carrossel, absoluto, se alinha ao painel sem precisar estar dentro dele. Assim ele e montado uma vez
+  so, em vez de uma copia para telefone e outra para desktop. O botao de agendar mora dentro do bloco
+  da chamada, entao tambem e um so.
 
 Abaixo do `lg` o titulo e o carrossel saem de cima do painel, porque nao sobra largura para eles ao
 lado da midia: a pilha e titulo, painel e carrossel. O texto do hero continua sobre o painel, no pe
@@ -707,6 +759,12 @@ mostrava os 42% do meio do 16:9, entao quadro e video saem no recorte retrato do
 15.4 nao tira o `fetchPriority` do `priority`**, so o `loading="lazy"`: a prioridade alta vai
 explicita, e quem mexer nisso confira o atributo no HTML.
 
+**Com texto longo o painel do celular fica mais alto que 3:4**, porque a altura passou a vir do texto:
+em 390 sao 390x717 com o texto de 19/11/2026. O `object-cover` amplia o recorte 3:4 cerca de 1,4 vez
+para cobrir, e a midia pode sair um pouco mais macia. Quase tudo fica atras do veu, entao o recorte
+ficou. Se incomodar, a saida e um recorte mais alto, como `ar_9:16`, que custa mais bytes no celular;
+transformacao nova de video volta 423 ate o Cloudinary processar, como esta em Fundo em video.
+
 **O video do hero so ganha `src` depois do `load` da pagina.** Nenhum video sai com `src` no HTML: com
 `src` e `autoplay` no servidor, o hero e os dois fundos somavam 7,8 MB na abertura, e o do hero
 disputava banda com o proprio quadro que e o LCP. A entrega, retrato ou 16:9, e escolhida nesse
@@ -734,10 +792,12 @@ da tela deixa quatro falhas brancas nas pontas.
 
 **No `lg` o painel preenche o que sobra da janela**, `calc(100vh - 6rem)`, e os 6rem sao exatamente a
 altura do header. Com o `lg:pt-24` da secao valendo os mesmos 96px, o painel encosta no header sem
-folga e o pe dele cai na dobra. Nao ha mais altura fixa de 780px.
+folga e o pe dele cai na dobra. Nao ha mais altura fixa de 780px. Isso e o piso: texto que nao cabe
+faz o painel passar da dobra, como esta acima.
 
-**O `min-h` de 640px nao e enfeite.** A chamada e o carrossel sao absolutos no pe do painel; em janela
-baixa, sem o piso, os dois se espremem um sobre o outro.
+**O piso de 640px nao e enfeite.** O carrossel e absoluto no pe do painel e tem ~390px; em janela
+baixa, sem o piso, ele subiria ate a altura do notch, que em 1024 fica a poucos pixels dele na
+horizontal.
 
 O painel recorta vertical e sempre recortou: um video 9:16 aparece em cerca de um terco da altura,
 tirado do centro. No telefone o painel e quase quadrado e sobe para 84%. A foto vertical que estava ali

@@ -457,24 +457,23 @@ export const popularConteudo = async (payload: Payload) => {
     data: {
       nome: 'Léia Expert',
       chamada:
-        // A headline do hero. A pergunta ao sintoma ("Seu cabelo esta caindo,
-        // afinando ou abrindo falhas?") saiu daqui quando o `h1` passou a ser
-        // "Queda de cabelo tem tratamento.": quem nomeia a dor agora e o titulo,
-        // e a headline fica com o que a clinica faz. Antes da pergunta houve
-        // "Queda de cabelo, calvicie e alopecia tem causa", em tom clinico, e
-        // "Tricologia clinica", que so conversa com quem ja conhece o termo.
+        // A headline do hero, definida pela equipe em 19/11/2026 junto com o
+        // subtitulo. E a pergunta aos sintomas, que ja tinha saido uma vez
+        // porque o `h1`, "Queda de cabelo tem tratamento.", abre com a mesma
+        // queixa; voltou por escolha do cliente, com o `h1` como esta. Antes
+        // dela houve "Descobrimos por que o seu cabelo esta caindo...", sobre o
+        // que a clinica faz, "Queda de cabelo, calvicie e alopecia tem causa",
+        // em tom clinico, e "Tricologia clinica", que so conversa com quem ja
+        // conhece o termo.
         //
-        // Duas travas continuam valendo. Dizia "depende do diagnostico certo":
-        // diagnostico e ato privativo de medico e a Leia e tricologista, entao a
-        // frase afirmava o que a clinica nao pode oferecer. Nao reintroduza a
-        // palavra aqui, nem promessa de gratuidade, porque a consulta e cobrada.
-        'Descobrimos por que o seu cabelo está caindo e tratamos a causa, não só o sintoma.',
-      // Como funciona, por que ir, que tratamento e que resultado esperar, em tres
-      // frases. Os nomes das sessoes e o prazo vem do proprio site: oxigenacao e
-      // estimulo de crescimento ja apareceram nos tratamentos, e o "3o ao 6o mes"
-      // e o do FAQ. Fala em frear e fortalecer, nunca em cura.
+        // Nao prometa cura nem gratuidade aqui, porque a consulta e cobrada, e
+        // nao diga que a clinica faz diagnostico, ato privativo de medico.
+        'Queda de cabelo, falhas, fios afinando, entradas aumentando ou outro problema relacionado ao couro cabeludo?',
+      // Escrito pela equipe, em primeira pessoa, na voz da Leia. A palavra
+      // diagnostico aparece como o que a pessoa ja recebeu de fora, e nao como
+      // algo que a clinica faz, entao nao fere a trava acima.
       subtitulo:
-        'Na consulta, a tricoscopia digital amplia o couro cabeludo em até 200 vezes e mostra a causa da queda. A partir disso, montamos um protocolo de sessões na clínica, com oxigenação e estímulo de crescimento, para frear a queda e fortalecer os fios. A diferença costuma aparecer entre o 3º e o 6º mês.',
+        'Sou tricologista, especialista em saúde capilar. Se você percebe queda de cabelo, falhas, fios mais finos, perda de volume, entradas mais aparentes ou a risca do cabelo mais larga, tem alguma alteração no couro cabeludo ou já recebeu um diagnóstico de alopecia areata, calvície (alopecia androgenética) ou qualquer outro tipo de alopecia, vou te ajudar a entender o que está acontecendo e montar um plano de tratamento personalizado para o seu caso.',
       sobreRotulo: 'Minha história',
       // Textos da propria Leia. A abertura fica no resumo e a apresentacao no
       // `sobre`, que ja foi curto e hoje tem quatro paragrafos, enviados pelo

@@ -1,5 +1,6 @@
-import { Star } from 'lucide-react'
+import { ArrowUpRight, Star } from 'lucide-react'
 
+import { BotaoWhatsapp } from '@/components/BotaoWhatsapp'
 import { CarrosselTratamentos, type ItemCarrossel } from '@/components/ui/carrossel-tratamentos'
 import { MidiaRotativa } from '@/components/ui/midia-rotativa'
 import { urlDeEntrega } from '@/lib/cloudinary-url'
@@ -11,6 +12,9 @@ type Props = {
   nome: string
   chamada?: string | null
   subtitulo?: string | null
+  /** Numero da clinica. Vazio, o botao de agendar do hero nao aparece. */
+  whatsapp: string
+  mensagemWhatsapp?: string | null
   /**
    * O que o carrossel desenha, mais o segundo do quadro parado. Esse segundo so
    * serve aqui no servidor, para montar a URL da foto, e nao segue para o
@@ -34,7 +38,8 @@ type Props = {
  * arredondamento do bloco porcelana visto pelo lado de fora.
  *
  * O titulo fica **fora** da imagem, que e o que define este bloco. Dentro dela
- * ficam a headline, o subtitulo, as estrelas e o carrossel de tratamentos.
+ * ficam a headline, o subtitulo, o botao de agendar, as estrelas e o carrossel
+ * de tratamentos.
  *
  * Duas coisas sustentam a montagem e nao podem mudar sem quebrar o desenho:
  *
@@ -43,9 +48,9 @@ type Props = {
  *    depois do painel, o leitor de tela anuncia a chamada e o carrossel antes
  *    do `h1` da pagina.
  * 2. **O painel e o unico filho em fluxo no `lg`.** E por isso que a altura da
- *    caixa e a dele, e por isso que o CTA e o carrossel, absolutos, se alinham
- *    ao painel sem precisar estar dentro dele. Assim cada um e montado uma vez
- *    so, em vez de uma copia para telefone e outra para desktop.
+ *    caixa e a dele, e por isso que o carrossel, absoluto, se alinha ao painel
+ *    sem precisar estar dentro dele. Assim ele e montado uma vez so, em vez de
+ *    uma copia para telefone e outra para desktop.
  */
 /**
  * Filete que arredonda o canto da midia onde ela encosta no notch.
@@ -85,31 +90,40 @@ function FileteCanto({ lado, className }: { lado: 'esquerda' | 'direita'; classN
   )
 }
 
-export function Hero({ nome, chamada, subtitulo, tratamentos, painel, intervalo }: Props) {
+export function Hero({
+  nome,
+  chamada,
+  subtitulo,
+  whatsapp,
+  mensagemWhatsapp,
+  tratamentos,
+  painel,
+  intervalo,
+}: Props) {
   const texto =
     chamada ||
     // Reserva usada so quando a headline do painel esta vazia. Mesma redacao da
     // gravada no banco.
     //
-    // A dor ja esta nomeada no `h1`, entao a headline fica com o que a clinica
-    // faz: acha a causa e trata a causa. Ela ja abriu em pergunta ao sintoma
-    // ("Seu cabelo esta caindo, afinando ou abrindo falhas?"), que saiu quando o
-    // titulo passou a ser a propria queixa. Tres travas continuam valendo aqui:
-    // nao afirma diagnostico, que e ato privativo de medico e a Leia e
-    // tricologista; nao promete gratuidade, porque a consulta e cobrada; e nao
-    // promete cura, porque o proprio FAQ admite perda antiga que ja nao
-    // responde. Ela descreve o que a clinica faz, nao garante resultado.
-    'Descobrimos por que o seu cabelo está caindo e tratamos a causa, não só o sintoma.'
+    // **A pergunta aos sintomas voltou, e foi escolha do cliente.** Ela ja tinha
+    // saido uma vez, quando o `h1` passou a ser "Queda de cabelo tem
+    // tratamento.", porque as duas abrem com a mesma queixa, uma embaixo da
+    // outra. Em 19/11/2026 a equipe definiu esta frase e o subtitulo abaixo, com
+    // o `h1` como esta. A lista de sintomas e para a pessoa se reconhecer em um
+    // deles antes de decidir ficar.
+    'Queda de cabelo, falhas, fios afinando, entradas aumentando ou outro problema relacionado ao couro cabeludo?'
 
   const textoSubtitulo =
     subtitulo ||
-    // Reserva do subtitulo, com a redacao gravada no banco. Responde em tres
-    // frases o que a headline nao cabe: como funciona (a tricoscopia na
-    // consulta), que tratamento e (protocolo de sessoes na clinica) e o que
-    // esperar (frear a queda e fortalecer, com prazo). Os nomes das sessoes e o
-    // prazo vem do proprio site: oxigenacao e estimulo de crescimento ja
-    // estavam nos tratamentos, e o "3o ao 6o mes" e o do FAQ.
-    'Na consulta, a tricoscopia digital amplia o couro cabeludo em até 200 vezes e mostra a causa da queda. A partir disso, montamos um protocolo de sessões na clínica, com oxigenação e estímulo de crescimento, para frear a queda e fortalecer os fios. A diferença costuma aparecer entre o 3º e o 6º mês.'
+    // Reserva do subtitulo, com a redacao gravada no banco. Foi escrita pela
+    // equipe, em primeira pessoa, na voz da Leia: lista as queixas que a clinica
+    // atende e fecha no que ela faz, ajudar a entender a causa e montar um plano
+    // de tratamento, sem prometer cura nem gratuidade.
+    //
+    // **A palavra diagnostico aparece aqui sem ferir a trava.** O que a trava
+    // proibe e dizer que a clinica faz diagnostico, ato privativo de medico, e a
+    // Leia e tricologista. Aqui ele e o que a pessoa ja recebeu antes, de fora.
+    'Sou tricologista, especialista em saúde capilar. Se você percebe queda de cabelo, falhas, fios mais finos, perda de volume, entradas mais aparentes ou a risca do cabelo mais larga, tem alguma alteração no couro cabeludo ou já recebeu um diagnóstico de alopecia areata, calvície (alopecia androgenética) ou qualquer outro tipo de alopecia, vou te ajudar a entender o que está acontecendo e montar um plano de tratamento personalizado para o seu caso.'
 
   /*
     O video do painel aponta direto para a CDN do Cloudinary, com `f_auto,q_auto`.
@@ -274,19 +288,35 @@ export function Hero({ nome, chamada, subtitulo, tratamentos, painel, intervalo 
 
         {/* O painel e o LCP da pagina. */}
         {/*
-            No `lg` o painel preenche o que sobra da janela depois do header:
-            `100vh` menos os 96px dele. O pe do painel cai exatamente na dobra.
+            **A altura do painel e a maior de duas: o piso ou o texto.** O bloco
+            da chamada fica em fluxo, empurrado para o pe pelo `justify-end`, e o
+            `pt` guarda a faixa de cima, que o texto nunca invade. Texto curto
+            deixa o painel no piso; texto longo faz ele crescer, em vez de passar
+            do topo.
 
-            O `min-h` existe para janela baixa: sem ele, num notebook de 700px o
-            painel encolheria a ponto de a chamada e o carrossel, que sao
-            absolutos no pe, se espremerem um sobre o outro.
+            Com altura fixa, a redacao de 19/11/2026, com o botao embaixo, nao
+            cabia: em 520px no telefone o `overflow-hidden` cortaria a headline,
+            e em 1366x768 o bloco subia 65px por cima do notch.
+
+            - **Piso.** 520px no telefone e 600px no `sm`. No `lg` e o que sobra
+              da janela depois do header, `100vh` menos os 96px dele, com o pe
+              caindo na dobra, e nunca menos de 640px: em janela baixa, sem esse
+              minimo, o carrossel, absoluto no pe, subiria ate o notch.
+            - **Faixa de cima.** Abaixo do `lg` sao 160px de midia, onde o veu
+              esmaece. No `lg` e a altura do notch mais 48px de folga, pela
+              mesma conta da fonte do `h1`: duas linhas de `display-lg`, com
+              entrelinha 1.04, mais os 32px do `pt-1` e do `pb-7`. **Mexeu no
+              `h1`, mexa aqui.**
           */}
-        <div className="relative h-[520px] overflow-hidden bg-areia sm:h-[600px] lg:h-[calc(100vh-6rem)] lg:min-h-[640px]">
+        <div className="relative flex min-h-[520px] flex-col justify-end overflow-hidden bg-areia pt-40 sm:min-h-[600px] lg:min-h-[max(640px,calc(100vh-6rem))] lg:pt-[calc(2.08*clamp(2rem,4vw,3.5rem)_+_5rem)]">
           {/*
               O `retratoNoCelular` troca, abaixo do `sm`, o quadro e o video pelo
               recorte 3:4 do centro: o painel do telefone tem 3:4 e so mostrava
               os 42% do meio do 16:9. O `sizes` e `100vw` porque o painel vai de
               borda a borda em toda largura.
+
+              **A midia e absoluta para nao contar na altura.** Abaixo do `lg`
+              quem manda na altura do painel e o texto, e no `lg` e a janela.
           */}
           <MidiaRotativa
             itens={painelResolvido}
@@ -294,6 +324,7 @@ export function Hero({ nome, chamada, subtitulo, tratamentos, painel, intervalo 
             prioridade
             retratoNoCelular
             sizes="100vw"
+            className="absolute inset-0"
           />
 
           {/*
@@ -301,10 +332,11 @@ export function Hero({ nome, chamada, subtitulo, tratamentos, painel, intervalo 
               `container` de dentro e que traz o texto de volta para a coluna da
               pagina, agora que o painel nao esta mais dentro de um.
           */}
-          {/* O `lg:pb-14`, que ja foi `lg:pb-10`, e o pedido de subir o texto. O
+          {/* O bloco do texto fica em fluxo em toda largura, no pe do painel.
+              O `lg:pb-14`, que ja foi `lg:pb-10`, e o pedido de subir o texto. O
               resto da subida vem do proprio subtitulo, que empurra a headline
               para cima. O pe do carrossel acompanha. */}
-          <div className="absolute inset-x-0 bottom-0 pb-6 lg:pb-14">
+          <div className="relative pb-6 lg:pb-14">
             {/*
                 Veu de baixo para cima. Sobre foto qualquer, texto solto nao tem
                 contraste garantido, e e ele que mantem a chamada em porcelana
@@ -343,10 +375,15 @@ export function Hero({ nome, chamada, subtitulo, tratamentos, painel, intervalo 
                     **A headline e serifa grande, a pedido do cliente**, com uma
                     referencia em que a frase sobre a foto era o maior texto da
                     tela. Ela ja foi corpo de texto, `text-lg` e `text-2xl`, e
-                    lia como legenda. Fica um degrau abaixo do `h1` no desktop,
-                    48px contra 56px, para o titulo continuar sendo o titulo.
+                    lia como legenda. Fica abaixo do `h1` no desktop, para o
+                    titulo continuar sendo o titulo.
+
+                    **Ela desceu para 40px no `xl` e 36px no `lg` com a pergunta
+                    de 19/11/2026**, que tem 107 caracteres. Em 48px ela dava 4
+                    linhas e, com o subtitulo longo e o botao, o bloco passava
+                    por cima do notch em 1366x768.
                   */}
-                <p className="text-pretty font-display text-[1.75rem] leading-[1.12] text-porcelana sm:text-4xl sm:leading-[1.1] lg:text-[2.5rem] xl:text-5xl xl:leading-[1.1]">
+                <p className="text-pretty font-display text-[1.75rem] leading-[1.12] text-porcelana sm:text-4xl sm:leading-[1.1] xl:text-[2.5rem]">
                   {texto}
                 </p>
 
@@ -362,22 +399,49 @@ export function Hero({ nome, chamada, subtitulo, tratamentos, painel, intervalo 
                     primeira linha, onde o veu esta em ~`tinta/81` em 390 e em
                     1440, e nao cairia abaixo de **6.0** nem no topo do bloco.
                   */}
-                <p className="mt-4 max-w-2xl text-pretty font-sans text-[15px] leading-relaxed text-porcelana/90 sm:text-lg sm:leading-relaxed xl:text-xl xl:leading-relaxed">
+                <p className="mt-4 max-w-2xl text-pretty font-sans text-[15px] leading-relaxed text-porcelana/90 sm:text-lg sm:leading-relaxed">
                   {textoSubtitulo}
                 </p>
 
-                <div className="mt-5 flex items-center gap-2">
-                  <div className="flex" aria-hidden>
-                    {Array.from({ length: 5 }).map((_, indice) => (
-                      <Star
-                        key={indice}
-                        className="h-4 w-4 fill-caramelo-claro text-caramelo-claro"
-                      />
-                    ))}
+                {/*
+                    **O botao voltou ao hero, agora embaixo do texto**, a pedido
+                    do cliente. O de antes ficava no canto de cima do painel e
+                    saiu; sem ele, abaixo de 1280px nao havia botao de agendar na
+                    primeira tela, porque o do header so abre no `xl`.
+
+                    `destaque` porque fica sobre o veu escuro, como o da
+                    tricoscopia. **Sem `especular`**: cada um abre um contexto
+                    WebGL, e este ficaria justo na area que o PageSpeed mede.
+
+                    As estrelas ficam junto do botao, onde a pessoa decide: ao
+                    lado dele quando cabe, embaixo quando nao.
+                  */}
+                <div className="mt-6 flex flex-col items-start gap-x-6 gap-y-4 sm:flex-row sm:flex-wrap sm:items-center">
+                  <BotaoWhatsapp
+                    numero={whatsapp}
+                    mensagem={mensagemWhatsapp}
+                    local="hero"
+                    variant="destaque"
+                    size="lg"
+                    className="w-full sm:w-auto"
+                  >
+                    Agende sua consulta
+                    <ArrowUpRight aria-hidden className="h-4 w-4" />
+                  </BotaoWhatsapp>
+
+                  <div className="flex items-center gap-2">
+                    <div className="flex" aria-hidden>
+                      {Array.from({ length: 5 }).map((_, indice) => (
+                        <Star
+                          key={indice}
+                          className="h-4 w-4 fill-caramelo-claro text-caramelo-claro"
+                        />
+                      ))}
+                    </div>
+                    <span className="text-sm text-porcelana/85">
+                      Avaliações reais de pacientes no Google
+                    </span>
                   </div>
-                  <span className="text-sm text-porcelana/85">
-                    Avaliações reais de pacientes no Google
-                  </span>
                 </div>
               </div>
             </div>

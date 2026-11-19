@@ -40,7 +40,7 @@ export const Clinica: GlobalConfig = {
               label: 'Headline do hero',
               admin: {
                 description:
-                  'A frase grande sobre o vídeo, em serifa. Diz o que a clínica resolve. Sem "diagnóstico", sem promessa de cura e sem consulta gratuita.',
+                  'A frase grande sobre o vídeo, em serifa. Sem promessa de cura, sem consulta gratuita e sem dizer que a clínica faz diagnóstico.',
               },
             },
             {
@@ -49,7 +49,7 @@ export const Clinica: GlobalConfig = {
               label: 'Subtítulo do hero',
               admin: {
                 description:
-                  'Fica logo abaixo da headline, em texto corrido. Explica como o tratamento funciona e o que esperar dele. Duas ou três frases.',
+                  'Fica logo abaixo da headline, em texto corrido, com o botão "Agende sua consulta" embaixo. Quanto mais longo, mais o texto cobre o vídeo e mais o botão desce na tela.',
               },
             },
             {

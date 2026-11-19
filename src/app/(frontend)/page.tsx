@@ -134,6 +134,8 @@ export default async function Home() {
           nome={clinica?.nome || 'Léia Expert'}
           chamada={clinica?.chamada}
           subtitulo={clinica?.subtitulo}
+          whatsapp={whatsapp}
+          mensagemWhatsapp={clinica?.mensagemWhatsapp}
           // O hero usa os tratamentos duas vezes: no carrossel e nas pilulas.
           // Vai so o que as duas precisam, para nao mandar o documento inteiro
           // de cada tratamento para o cliente. O `quadroDoCartao` para no
